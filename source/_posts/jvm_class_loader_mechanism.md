@@ -1,0 +1,931 @@
+---
+title: dou ni wan
+date: 2019-12-10 08:28:15
+tags:
+- 生活
+- 测试
+category: china
+permalink: aboutAllVisa
+---
+### 前言
+- JVM在启动时, 会将所需Class文件加载到内存中去, 按需动态加载.
+
+### 双亲委托机制
+#### Java代码
+``` java
+public class Smile {
+
+    static {
+        System.out.println("smile static");
+    }
+
+    public Smile() {
+        System.out.println("smile init");
+    }
+}
+
+public class Lxy {
+
+    static {
+        System.out.println("lxy static");
+    }
+
+    public Lxy() {
+        System.out.println("lxy init");
+    }
+}
+
+public class ClassLoaderTest
+    public static void main(String[] args) {
+        new Smile();
+        System.out.println("---------------");
+        new Lxy();
+    }
+}
+
+```
+
+#### jvm中添加
+```
+ -verbose:class 或者 -XX:+TraceClassLoading
+```
+
+#### 轨迹展示
+
+``` log
+[Opened /Library/Java/JavaVirtualMachines/jdk1.8.0_181.jdk/Contents/Home/jre/lib/rt.jar]
+[Loaded java.lang.Object from /Library/Java/JavaVirtualMachines/jdk1.8.0_181.jdk/Contents/Home/jre/lib/rt.jar]
+[Loaded java.io.Serializable from /Library/Java/JavaVirtualMachines/jdk1.8.0_181.jdk/Contents/Home/jre/lib/rt.jar]
+[Loaded java.lang.Comparable from /Library/Java/JavaVirtualMachines/jdk1.8.0_181.jdk/Contents/Home/jre/lib/rt.jar]
+...
+
+[Loaded java.lang.Cloneable from /Library/Java/JavaVirtualMachines/jdk1.8.0_181.jdk/Contents/Home/jre/lib/rt.jar]
+[Loaded java.lang.ClassLoader from /Library/Java/JavaVirtualMachines/jdk1.8.0_181.jdk/Contents/Home/jre/lib/rt.jar]
+...
+[Loaded java.net.URLClassLoader from /Library/Java/JavaVirtualMachines/jdk1.8.0_181.jdk/Contents/Home/jre/lib/rt.jar]
+[Loaded java.net.URL from /Library/Java/JavaVirtualMachines/jdk1.8.0_181.jdk/Contents/Home/jre/lib/rt.jar]
+[Loaded java.util.jar.Manifest from /Library/Java/JavaVirtualMachines/jdk1.8.0_181.jdk/Contents/Home/jre/lib/rt.jar]
+[Loaded sun.misc.Launcher from /Library/Java/JavaVirtualMachines/jdk1.8.0_181.jdk/Contents/Home/jre/lib/rt.jar]
+[Loaded sun.misc.Launcher$AppClassLoader from /Library/Java/JavaVirtualMachines/jdk1.8.0_181.jdk/Contents/Home/jre/lib/rt.jar]
+[Loaded sun.misc.Launcher$ExtClassLoader from /Library/Java/JavaVirtualMachines/jdk1.8.0_181.jdk/Contents/Home/jre/lib/rt.jar]
+...
+[Loaded sun.launcher.LauncherHelper$FXHelper from /Library/Java/JavaVirtualMachines/jdk1.8.0_181.jdk/Contents/Home/jre/lib/rt.jar]
+[Loaded java.lang.Class$MethodArray from /Library/Java/JavaVirtualMachines/jdk1.8.0_181.jdk/Contents/Home/jre/lib/rt.jar]
+[Loaded java.net.AbstractPlainSocketImpl$1 from /Library/Java/JavaVirtualMachines/jdk1.8.0_181.jdk/Contents/Home/jre/lib/rt.jar]
+[Loaded java.lang.Void from /Library/Java/JavaVirtualMachines/jdk1.8.0_181.jdk/Contents/Home/jre/lib/rt.jar]
+[Loaded com.smile.Smile from file:/Users/smile/workSpace/resource/git/temp/smile-company/target/test-classes/]
+smile static
+smile init
+---------------
+[Loaded java.net.Inet6Address from /Library/Java/JavaVirtualMachines/jdk1.8.0_181.jdk/Contents/Home/jre/lib/rt.jar]
+[Loaded com.smile.Lxy from file:/Users/smile/workSpace/resource/git/temp/smile-company/target/test-classes/]
+lxy static
+lxy init
+[Loaded java.lang.Shutdown from /Library/Java/JavaVirtualMachines/jdk1.8.0_181.jdk/Contents/Home/jre/lib/rt.jar]
+[Loaded java.lang.Shutdown$Lock from /Library/Java/JavaVirtualMachines/jdk1.8.0_181.jdk/Contents/Home/jre/lib/rt.jar]
+[Loaded java.net.Inet6Address$Inet6AddressHolder from /Library/Java/JavaVirtualMachines/jdk1.8.0_181.jdk/Contents/Home/jre/lib/rt.jar]
+
+```
+
+#### 分析
+- 从上面轨迹中发现**ClassLoader**,**Launcher**,**AppClassLoader**,**ExtClassLoader**在项目启动时Jvm已初始化;
+- 类加载器初始化
+``` java
+public class Launcher {
+    private ClassLoader loader;
+
+    public Launcher() {
+        // 1. 创建 Ext 类加载器
+        ClassLoader extcl;
+        try {
+            extcl = ExtClassLoader.getExtClassLoader(); // Ext 类加载器
+        } catch (IOException e) {
+            throw new InternalError(
+                "Could not create extension class loader", e);
+        }
+
+        // 2. 创建 App 类加载器(加载器: Ext 类加载器)
+        try {
+            loader = AppClassLoader.getAppClassLoader(extcl); // App 类加载
+        } catch (IOException e) {
+            throw new InternalError(
+                "Could not create application class loader", e);
+        }
+
+        // 3. 配置当前线程上下文类加载器为APPClassLoader
+        Thread.currentThread().setContextClassLoader(loader);
+
+        // 4. 配置安全管理器
+        String s = System.getProperty("java.security.manager");
+        if (s != null) {
+            SecurityManager sm = null;
+            if ("".equals(s) || "default".equals(s)) {
+                sm = new java.lang.SecurityManager();
+            } else {
+                try {
+                    sm = (SecurityManager)loader.loadClass(s).newInstance();
+                } catch (IllegalAccessException e) {
+                } catch (InstantiationException e) {
+                } catch (ClassNotFoundException e) {
+                } catch (ClassCastException e) {
+                }
+            }
+            if (sm != null) {
+                System.setSecurityManager(sm);
+            } else {
+                throw new InternalError(
+                    "Could not create SecurityManager: " + s);
+            }
+        }
+    }
+
+    static class ExtClassLoader extends URLClassLoader {
+        static {
+            ClassLoader.registerAsParallelCapable(); // ExtClassLoader注册为可并行加载
+        }
+
+        public static ExtClassLoader getExtClassLoader() throws IOException
+        {
+            final File[] dirs = getExtDirs(); // 拓展文件的加载路径(Jvm启动时可通过'-Djava.ext.dirs'修改)
+
+            try {
+                // 以享有“特权”的方式执行run方法中的代码
+                return AccessController.doPrivileged(
+                    new PrivilegedExceptionAction<ExtClassLoader>() {
+                        public ExtClassLoader run() throws IOException {
+                            int len = dirs.length;
+                            for (int i = 0; i < len; i++) {
+                                MetaIndex.registerDirectory(dirs[i]); // 注册路径(相关方面请看'MetaIndex'方面文档解释)
+                            }
+                            return new ExtClassLoader(dirs); // 创建ExtClassLoader, 通过URL方式加载
+                        }
+                    });
+            } catch (java.security.PrivilegedActionException e) {
+                throw (IOException) e.getException();
+            }
+        }
+
+        public ExtClassLoader(File[] dirs) throws IOException {
+            super(getExtURLs(dirs), null, factory);
+        }
+
+        private static File[] getExtDirs() {
+            String s = System.getProperty("java.ext.dirs");
+            File[] dirs;
+            if (s != null) {
+                StringTokenizer st =
+                    new StringTokenizer(s, File.pathSeparator);
+                int count = st.countTokens();
+                dirs = new File[count];
+                for (int i = 0; i < count; i++) {
+                    dirs[i] = new File(st.nextToken());
+                }
+            } else {
+                dirs = new File[0];
+            }
+            return dirs;
+        }
+    }
+
+    static class AppClassLoader extends URLClassLoader {
+
+        static {
+            ClassLoader.registerAsParallelCapable(); // AppClassLoader注册为可并行加载
+        }
+
+        public static ClassLoader getAppClassLoader(final ClassLoader extcl)
+            throws IOException
+        {
+            final String s = System.getProperty("java.class.path"); // 应用文件的加载路径(Jvm启动时, 可通过'-Djava.class.path'修改)
+            final File[] path = (s == null) ? new File[0] : getClassPath(s);
+
+            return AccessController.doPrivileged(
+                new PrivilegedAction<AppClassLoader>() {
+                    public AppClassLoader run() {
+                    URL[] urls =
+                        (s == null) ? new URL[0] : pathToURLs(path);
+                    return new AppClassLoader(urls, extcl); // 创建AppClassLoader, 通过URL方式加载, 父类'ExtClassLoader'
+                }
+            });
+        }
+
+        AppClassLoader(URL[] urls, ClassLoader parent) {
+            super(urls, parent, factory);
+        }
+    }
+
+}   
+```
+- 从Launcher初始化过程看, 目前的类加载器已有**ExtClassLoader**和**AppClassLoader**, 我们可在Jvm启动时通过指定'-Djava.ext.dirs','-Djava.class.path'来修改**ExtClassLoader**和**AppClassLoader**加载文件的路径
+- 类初始化
+``` java
+public abstract class ClassLoader {
+    public Class<?> loadClass(String name) throws ClassNotFoundException {
+        return loadClass(name, false);
+    }
+
+    protected Class<?> loadClass(String name, boolean resolve)
+        throws ClassNotFoundException
+    {
+        synchronized (getClassLoadingLock(name)) {
+            // 1. 查看是否已加载
+            Class<?> c = findLoadedClass(name);
+            if (c == null) { // 未加载
+                long t0 = System.nanoTime();
+                try {
+                    if (parent != null) { // 若父类不为null, 委托父类加载
+                        c = parent.loadClass(name, false);
+                    } else { // 父类为null, 委托Bootstrap加载(JNI)
+                        c = findBootstrapClassOrNull(name);
+                    }
+                } catch (ClassNotFoundException e) {
+                    // ClassNotFoundException thrown if class not found
+                    // from the non-null parent class loader
+                }
+
+                if (c == null) { // 父类中不存在, 从当前加载器中寻找
+                    // If still not found, then invoke findClass in order
+                    // to find the class.
+                    long t1 = System.nanoTime();
+                    c = findClass(name);
+
+                    // this is the defining class loader; record the stats
+                    sun.misc.PerfCounter.getParentDelegationTime().addTime(t1 - t0);
+                    sun.misc.PerfCounter.getFindClassTime().addElapsedTimeFrom(t1);
+                    sun.misc.PerfCounter.getFindClasses().increment();
+                }
+            }
+            if (resolve) { // 是否解析
+                resolveClass(c);
+            }
+            return c;
+        }
+    }
+}  
+
+```
+- 可以看到是先从已检测缓存中获取, 有则[解析]返回, 无则委托父类加载.
+![](images/2019-12-09-09-09-32.png)
+![](images/2019-12-09-09-10-15.png)
+- 从依赖图来看, Jvm默认加载的两个类加载器继承ClassLoader, **parent.loadClass(name, false)**, 若子类没重写直接调用父类.
+``` java
+public class Launcher {
+    static class AppClassLoader extends URLClassLoader {
+        public Class<?> loadClass(String name, boolean resolve)
+            throws ClassNotFoundException
+        {
+            int i = name.lastIndexOf('.');
+            if (i != -1) {
+                SecurityManager sm = System.getSecurityManager();
+                if (sm != null) {
+                    sm.checkPackageAccess(name.substring(0, i)); // 检测文件路径是否允许访问
+                }
+            }
+            return (super.loadClass(name, resolve));
+        }        
+    }        
+}    
+```
+- 若parent不存在, 则调用**findBootstrapClassOrNull(name)**, 则说明除**ExtClassLoader**和**AppClassLoader**以外还有一个**BootstrapClassLoader**, 那为何初始化时没有看见呢...
+``` java
+public abstract class ClassLoader {
+
+    private final ClassLoader parent;
+    protected ClassLoader() {
+        this(checkCreateClassLoader(), getSystemClassLoader());
+    }
+
+    private ClassLoader(Void unused, ClassLoader parent) {
+        this.parent = parent;
+        if (ParallelLoaders.isRegistered(this.getClass())) {
+            parallelLockMap = new ConcurrentHashMap<>();
+            package2certs = new ConcurrentHashMap<>();
+            domains =
+                Collections.synchronizedSet(new HashSet<ProtectionDomain>());
+            assertionLock = new Object();
+        } else {
+            // no finer-grained lock; lock on the classloader instance
+            parallelLockMap = null;
+            package2certs = new Hashtable<>();
+            domains = new HashSet<>();
+            assertionLock = this;
+        }
+    }
+
+    @CallerSensitive
+    public static ClassLoader getSystemClassLoader() {
+        initSystemClassLoader();
+        if (scl == null) {
+            return null;
+        }
+        SecurityManager sm = System.getSecurityManager();
+        if (sm != null) {
+            checkClassLoaderPermission(scl, Reflection.getCallerClass());
+        }
+        return scl;
+    }
+
+    private static synchronized void initSystemClassLoader() {
+        if (!sclSet) {
+            if (scl != null)
+                throw new IllegalStateException("recursive invocation");
+            sun.misc.Launcher l = sun.misc.Launcher.getLauncher();
+            if (l != null) {
+                Throwable oops = null;
+                scl = l.getClassLoader();
+                try {
+                    scl = AccessController.doPrivileged(
+                        new SystemClassLoaderAction(scl));
+                } catch (PrivilegedActionException pae) {
+                    oops = pae.getCause();
+                    if (oops instanceof InvocationTargetException) {
+                        oops = oops.getCause();
+                    }
+                }
+                if (oops != null) {
+                    if (oops instanceof Error) {
+                        throw (Error) oops;
+                    } else {
+                        // wrap the exception
+                        throw new Error(oops);
+                    }
+                }
+            }
+            sclSet = true;
+        }
+    }    
+}    
+```
+- 从上所得, BootStrap是在ClassLoader初始化时初始化
+``` java
+public abstract class ClassLoader {
+    private Class<?> findBootstrapClassOrNull(String name)
+    {
+        if (!checkName(name)) return null;
+
+        return findBootstrapClass(name);
+    }
+
+    private native Class<?> findBootstrapClass(String name);
+}    
+```
+- 发现**findBootstrapClass**标有**native**, 底层实现使用C语言实现的, 所有无法看到java的实现
+- 若委托父类找不到, 则尝试从当前类加载器中 **findClass(name)** 加载
+``` java
+public class URLClassLoader extends SecureClassLoader implements Closeable {
+    private final URLClassPath ucp;
+
+    protected Class<?> findClass(final String name)
+         throws ClassNotFoundException
+    {
+        try {
+            return AccessController.doPrivileged(
+                new PrivilegedExceptionAction<Class<?>>() {
+                    public Class<?> run() throws ClassNotFoundException {
+                        String path = name.replace('.', '/').concat(".class"); // 拼装文件路径
+                        Resource res = ucp.getResource(path, false); // 从当前类加载器负责加载的路径中获取资源
+                        if (res != null) {
+                            try {
+                                return defineClass(name, res); // 将资源转换为Class
+                            } catch (IOException e) {
+                                throw new ClassNotFoundException(name, e);
+                            }
+                        } else {
+                            throw new ClassNotFoundException(name);
+                        }
+                    }
+                }, acc);
+        } catch (java.security.PrivilegedActionException pae) {
+            throw (ClassNotFoundException) pae.getException();
+        }
+    }
+
+    private Class<?> defineClass(String name, Resource res) throws IOException {
+        long t0 = System.nanoTime();
+        int i = name.lastIndexOf('.');
+        URL url = res.getCodeSourceURL();
+        if (i != -1) {
+            String pkgname = name.substring(0, i);
+            // 检测包是否已加载
+            Manifest man = res.getManifest(); // 编译后类的相关属性(编译版本号...)
+            if (getAndVerifyPackage(pkgname, man, url) == null) { // 未加载
+                try {
+                    if (man != null) {
+                        definePackage(pkgname, man, url);  // 定义包
+                    } else {
+                        definePackage(pkgname, null, null, null, null, null, null, null);
+                    }
+                } catch (IllegalArgumentException iae) {
+                    // parallel-capable class loaders: re-verify in case of a
+                    // race condition
+                    if (getAndVerifyPackage(pkgname, man, url) == null) {
+                        // Should never happen
+                        throw new AssertionError("Cannot find package " +
+                                                 pkgname);
+                    }
+                }
+            }
+        }
+        // Now read the class bytes and define the class
+        java.nio.ByteBuffer bb = res.getByteBuffer(); // 转换为字节
+        if (bb != null) {
+            // Use (direct) ByteBuffer:
+            CodeSigner[] signers = res.getCodeSigners(); // 资源签名
+            CodeSource cs = new CodeSource(url, signers); // 代码源
+            sun.misc.PerfCounter.getReadClassBytesTime().addElapsedTimeFrom(t0); // 用来监控加载该资源消耗时间
+            return defineClass(name, bb, cs); // 转换为Class
+        } else {
+            byte[] b = res.getBytes();
+            // must read certificates AFTER reading bytes.
+            CodeSigner[] signers = res.getCodeSigners();
+            CodeSource cs = new CodeSource(url, signers);
+            sun.misc.PerfCounter.getReadClassBytesTime().addElapsedTimeFrom(t0);
+            return defineClass(name, b, 0, b.length, cs);
+        }
+    }    
+
+
+}    
+
+public class URLClassPath {
+    public Resource getResource(String name, boolean check) {
+        if (DEBUG) {
+            System.err.println("URLClassPath.getResource(\"" + name + "\")");
+        }
+
+        Loader loader;
+        for (int i = 0; (loader = getLoader(i)) != null; i++) {
+            Resource res = loader.getResource(name, check);
+            if (res != null) {
+                return res;
+            }
+        }
+        return null;
+    }
+
+     private synchronized Loader getLoader(int index) {
+        if (closed) {
+            return null;
+        }
+         // Expand URL search path until the request can be satisfied
+         // or the URL stack is empty.
+        while (loaders.size() < index + 1) {
+            // Pop the next URL from the URL stack
+            URL url;
+            synchronized (urls) {
+                if (urls.empty()) {
+                    return null;
+                } else {
+                    url = urls.pop();
+                }
+            }
+            // Skip this URL if it already has a Loader. (Loader
+            // may be null in the case where URL has not been opened
+            // but is referenced by a JAR index.)
+            String urlNoFragString = URLUtil.urlNoFragString(url);
+            if (lmap.containsKey(urlNoFragString)) {
+                continue;
+            }
+            // Otherwise, create a new Loader for the URL.
+            Loader loader;
+            try {
+                loader = getLoader(url);
+                // If the loader defines a local class path then add the
+                // URLs to the list of URLs to be opened.
+                URL[] urls = loader.getClassPath();
+                if (urls != null) {
+                    push(urls);
+                }
+            } catch (IOException e) {
+                // Silently ignore for now...
+                continue;
+            }
+            // Finally, add the Loader to the search path.
+            loaders.add(loader);
+            lmap.put(urlNoFragString, loader);
+        }
+        return loaders.get(index);
+    }
+
+    /*
+     * Returns the Loader for the specified base URL.
+     */
+    private Loader getLoader(final URL url) throws IOException {
+        try {
+            return java.security.AccessController.doPrivileged(
+                new java.security.PrivilegedExceptionAction<Loader>() {
+                public Loader run() throws IOException {
+                    String file = url.getFile();
+                    if (file != null && file.endsWith("/")) {
+                        if ("file".equals(url.getProtocol())) {
+                            return new FileLoader(url);
+                        } else {
+                            return new Loader(url);
+                        }
+                    } else {
+                        return new JarLoader(url, jarHandler, lmap);
+                    }
+                }
+            });
+        } catch (java.security.PrivilegedActionException pae) {
+            throw (IOException)pae.getException();
+        }
+    }    
+
+    static class JarLoader extends Loader {
+        Resource getResource(final String name, boolean check) {
+            if (metaIndex != null) {
+                if (!metaIndex.mayContain(name)) {
+                    return null;
+                }
+            }
+
+            try {
+                ensureOpen();
+            } catch (IOException e) {
+                throw new InternalError(e);
+            }
+            final JarEntry entry = jar.getJarEntry(name);
+            if (entry != null)
+                return checkResource(name, check, entry);
+
+            if (index == null)
+                return null;
+
+            HashSet<String> visited = new HashSet<String>();
+            return getResource(name, check, visited);
+        }
+        private void ensureOpen() throws IOException {
+            if (jar == null) {
+                try {
+                    java.security.AccessController.doPrivileged(
+                        new java.security.PrivilegedExceptionAction<Void>() {
+                            public Void run() throws IOException {
+                                if (DEBUG) {
+                                    System.err.println("Opening " + csu);
+                                    Thread.dumpStack();
+                                }
+
+                                jar = getJarFile(csu);
+                                index = JarIndex.getJarIndex(jar, metaIndex);
+                                if (index != null) {
+                                    String[] jarfiles = index.getJarFiles();
+                                // Add all the dependent URLs to the lmap so that loaders
+                                // will not be created for them by URLClassPath.getLoader(int)
+                                // if the same URL occurs later on the main class path.  We set
+                                // Loader to null here to avoid creating a Loader for each
+                                // URL until we actually need to try to load something from them.
+                                    for(int i = 0; i < jarfiles.length; i++) {
+                                        try {
+                                            URL jarURL = new URL(csu, jarfiles[i]);
+                                            // If a non-null loader already exists, leave it alone.
+                                            String urlNoFragString = URLUtil.urlNoFragString(jarURL);
+                                            if (!lmap.containsKey(urlNoFragString)) {
+                                                lmap.put(urlNoFragString, null);
+                                            }
+                                        } catch (MalformedURLException e) {
+                                            continue;
+                                        }
+                                    }
+                                }
+                                return null;
+                            }
+                        }
+                    );
+                } catch (java.security.PrivilegedActionException pae) {
+                    throw (IOException)pae.getException();
+                }
+            }
+        }
+        ....
+    }        
+} 
+
+public class SecureClassLoader extends ClassLoader {
+    protected final Class<?> defineClass(String name,
+                                         byte[] b, int off, int len,
+                                         CodeSource cs)
+    {
+        return defineClass(name, b, off, len, getProtectionDomain(cs));
+    }
+
+    protected final Class<?> defineClass(String name, byte[] b, int off, int len,
+                                         ProtectionDomain protectionDomain)
+        throws ClassFormatError
+    {
+        protectionDomain = preDefineClass(name, protectionDomain);
+        String source = defineClassSourceLocation(protectionDomain);
+        Class<?> c = defineClass1(name, b, off, len, protectionDomain, source);
+        postDefineClass(c, protectionDomain);
+        return c;
+    }    
+}    
+
+```
+
+
+#### 结论
+- 从运行轨迹来看, 可以验证Jvm是**按需加载**Class.
+- Jvm默认的类加载器有 **AppClassLoader** -> **ExtClassLoader** -> **BootstrapClassLoader**
+
+### 破坏双亲委托机制
+#### 缘由
+- 受加载顺序的约束, 只要父类中含有, 子加载器中的类将无法被加载. 而特殊场景则需要子加载器加载
+  - SPI机制(例: JDBC)
+- 受加载顺序的影响, 保证加载一个相同的Class类库, 但特殊场景下需要加载不同版本的类库
+  - (例: Tomcat)
+
+#### 案例
+##### MySQL
+- JDBC的核心在Jdk的rt.jar中, 只是提供了统一的接口, 具体实现是各大厂商实现的. 若按照双亲委托的顺序, Jvm是无法加载各大厂商具体实现jar的.
+- Driver接口定义在JDK中, 实现由各个数据库的服务商来提供, DriverManager(JDK提供）要加载各个实现了Driver接口的实现类, 然后进行管理. DriverManager由BootStrap类加载器加载, 而其实现是由各服务商提供的, 这时就需要委托子类来加载Driver实现了.
+
+###### Java代码
+``` java
+public class JdbcClassLoaderTest {
+
+    public static void main(String[] args) {
+        Enumeration<Driver> drivers = DriverManager.getDrivers();
+        while (drivers.hasMoreElements()) {
+            Driver driver = drivers.nextElement();
+            System.out.println(String.format("driver: %s, classLoader: %s", driver.getClass(), driver.getClass().getClassLoader().getClass()));
+        }
+
+        System.err.println(String.format("driver: %s, classLoader: %s", DriverManager.class,
+            Objects.nonNull(DriverManager.class.getClassLoader()) 
+                ? DriverManager.class.getClassLoader().getClass()
+                : DriverManager.class.getClassLoader()));
+
+    }
+
+}
+
+```
+
+###### 结果展示
+``` log
+driver: class com.mysql.jdbc.Driver, classLoader: class sun.misc.Launcher$AppClassLoader
+driver: class com.mysql.fabric.jdbc.FabricMySQLDriver, classLoader: class sun.misc.Launcher$AppClassLoader
+driver: class com.alibaba.druid.proxy.DruidDriver, classLoader: class sun.misc.Launcher$AppClassLoader
+driver: class com.alibaba.druid.mock.MockDriver, classLoader: class sun.misc.Launcher$AppClassLoader
+driver: class java.sql.DriverManager, classLoader: null
+```
+
+###### 分析
+``` java
+public class DriverManager {
+    private final static CopyOnWriteArrayList<DriverInfo> registeredDrivers = new CopyOnWriteArrayList<>();
+
+     static {
+        loadInitialDrivers(); // 1. 初始化Drivers
+        println("JDBC DriverManager initialized");
+    }
+
+    private static void loadInitialDrivers() {
+        String drivers;
+        // 2. Jvm启动时指定驱动实现(多个驱动可用':'分隔), 将在下面采用BootStrapClassLoader加载.
+        try {
+            drivers = AccessController.doPrivileged(new PrivilegedAction<String>() {
+                public String run() {
+                    return System.getProperty("jdbc.drivers");
+                }
+            });
+        } catch (Exception ex) {
+            drivers = null;
+        }
+
+        // 通过SPI机制加载(ServiceLoader.load(Driver.class))
+        AccessController.doPrivileged(new PrivilegedAction<Void>() {
+            public Void run() {
+
+                ServiceLoader<Driver> loadedDrivers = ServiceLoader.load(Driver.class); // 3. SPI获取各厂商实现(懒加载)
+                Iterator<Driver> driversIterator = loadedDrivers.iterator(); // 4. 转换为Iterator
+
+                /* Load these drivers, so that they can be instantiated.
+                 * It may be the case that the driver class may not be there
+                 * i.e. there may be a packaged driver with the service class
+                 * as implementation of java.sql.Driver but the actual class
+                 * may be missing. In that case a java.util.ServiceConfigurationError
+                 * will be thrown at runtime by the VM trying to locate
+                 * and load the service.
+                 *
+                 * Adding a try catch block to catch those runtime errors
+                 * if driver not available in classpath but it's
+                 * packaged as service and that service is there in classpath.
+                 */
+                try{
+                    while(driversIterator.hasNext()) { // 5. 是否有元素(执行SPI解析)
+                        driversIterator.next(); // 6. 加载文件(Class.forName)
+                    }
+                } catch(Throwable t) {
+                // Do nothing
+                }
+                return null;
+            }
+        });
+
+        println("DriverManager.initialize: jdbc.drivers = " + drivers);
+
+        if (drivers == null || drivers.equals("")) {
+            return;
+        }
+        String[] driversList = drivers.split(":");
+        println("number of Drivers:" + driversList.length);
+        for (String aDriver : driversList) {
+            try {
+                println("DriverManager.Initialize: loading " + aDriver);
+                Class.forName(aDriver, true,
+                        ClassLoader.getSystemClassLoader());
+            } catch (Exception ex) {
+                println("DriverManager.Initialize: load failed: " + ex);
+            }
+        }
+    }
+
+}
+
+public final class ServiceLoader<S> implements Iterable<S> {
+
+    private static final String PREFIX = "META-INF/services/";
+
+    // The class or interface representing the service being loaded
+    private final Class<S> service;
+
+    // 用于加载对象的类加载器
+    private final ClassLoader loader;
+
+    // 加载对象时的权限上下文
+    private final AccessControlContext acc;
+
+    // 缓存
+    private LinkedHashMap<String,S> providers = new LinkedHashMap<>();
+
+    // 具体实现的迭代器(懒迭代)
+    private LazyIterator lookupIterator;
+
+    /**
+    * 使用当前线程类加载器加载具体实现
+    */
+    public static <S> ServiceLoader<S> load(Class<S> service) {
+        ClassLoader cl = Thread.currentThread().getContextClassLoader(); // 3.1 获取当前线程类加载器
+        return ServiceLoader.load(service, cl); // 3.2 使用当前线程类加载读取具体实现(这里就是**破坏双亲委托机制**的地方)
+    }   
+
+    public static <S> ServiceLoader<S> load(Class<S> service, ClassLoader loader) {
+        return new ServiceLoader<>(service, loader); // 3.2.1 创建对象
+    }
+
+    private ServiceLoader(Class<S> svc, ClassLoader cl) {
+        service = Objects.requireNonNull(svc, "Service interface cannot be null"); 
+        loader = (cl == null) ? ClassLoader.getSystemClassLoader() : cl; // 3.2.1.1 若没有提供类加载器, 则使用BootStrapClassLoader类加载器
+        acc = (System.getSecurityManager() != null) ? AccessController.getContext() : null; // 3.2.1.2 权限上下文
+        reload(); // 3.2.1.3 刷新缓存, 新建迭代器
+    } 
+
+    public void reload() {
+        providers.clear(); // 3.2.1.3.1 刷新缓存
+        lookupIterator = new LazyIterator(service, loader); // 3.2.1.3.2 新建迭代器
+    }
+
+   /**
+    * 封装迭代器
+    */
+    public Iterator<S> iterator() {
+        return new Iterator<S>() { // 4.1 转换为迭代器
+
+            Iterator<Map.Entry<String,S>> knownProviders
+                = providers.entrySet().iterator();
+
+            public boolean hasNext() { 
+                if (knownProviders.hasNext()) // 5.1 已知提供者是否存在元素
+                    return true;
+                return lookupIterator.hasNext(); // 5.2 懒迭代中是否存在
+            }
+
+            public S next() {
+                if (knownProviders.hasNext()) // 6.1 已知提供者是否存在元素
+                    return knownProviders.next().getValue();
+                return lookupIterator.next(); // 6.2 懒迭代中获取下一个元素
+            }
+
+            public void remove() {
+                throw new UnsupportedOperationException();
+            }
+
+        };
+    }   
+
+    private class LazyIterator implements Iterator<S> {
+
+        Class<S> service;
+        ClassLoader loader;
+        Enumeration<URL> configs = null;
+        Iterator<String> pending = null;
+        String nextName = null;
+
+        private LazyIterator(Class<S> service, ClassLoader loader) {
+            this.service = service; // 3.2.1.3.2.1 将要加载的接口
+            this.loader = loader; // 3.2.1.3.2.2 类加载器
+        }
+
+        private boolean hasNextService() {
+            if (nextName != null) { // 5.2.2.1 加载实现的接口名称
+                return true;
+            }
+            if (configs == null) {
+                try {
+                    String fullName = PREFIX + service.getName(); // 5.2.2.2 SPI读取文件的路径 META-INF/services/java.sql.Driver
+                    if (loader == null)
+                        configs = ClassLoader.getSystemResources(fullName);
+                    else
+                        configs = loader.getResources(fullName); // 5.2.2.3 类加载器加载资源 ClassLoader#getResources
+                } catch (IOException x) {
+                    fail(service, "Error locating configuration files", x);
+                }
+            }
+            while ((pending == null) || !pending.hasNext()) {
+                if (!configs.hasMoreElements()) {
+                    return false;
+                }
+                pending = parse(service, configs.nextElement()); // 5.2.2.4 解析URL元素获取实现名称s(com.mysql.jdbc.Driver, com.mysql.fabric.jdbc.FabricMySQLDriver)     
+            }
+            nextName = pending.next(); // 5.2.2.5 下个元素名称
+            return true;
+        }
+
+        private S nextService() {
+            if (!hasNextService()) // 6.2.2.1 是否存在具体实现
+                throw new NoSuchElementException();
+            String cn = nextName; // 6.2.2.2 (5.2.2.5 缓存的数据)
+            nextName = null;
+            Class<?> c = null;
+            try {
+                c = Class.forName(cn, false, loader); // 6.2.2.3 加载实现
+            } catch (ClassNotFoundException x) {
+                fail(service,
+                     "Provider " + cn + " not found");
+            }
+            if (!service.isAssignableFrom(c)) { // 6.2.2.4 SPI接口与 加载的类或超类是否相同
+                fail(service,
+                     "Provider " + cn  + " not a subtype");
+            }
+            try {
+                S p = service.cast(c.newInstance()); // 6.2.2.5 强行转换为SPI接口
+                providers.put(cn, p); // 6.2.2.6 缓存
+                return p;
+            } catch (Throwable x) {
+                fail(service,
+                     "Provider " + cn + " could not be instantiated",
+                     x);
+            }
+            throw new Error();          // This cannot happen
+        }
+
+        public boolean hasNext() {
+            if (acc == null) { // 5.2.1 权限上下文是否为null
+                return hasNextService(); // 5.2.2 真正执行SPI解析
+            } else {
+                PrivilegedAction<Boolean> action = new PrivilegedAction<Boolean>() {
+                    public Boolean run() { return hasNextService(); }
+                };
+                return AccessController.doPrivileged(action, acc);
+            }
+        }
+
+        public S next() {
+            if (acc == null) { // 6.2.1 权限上下文是否为null
+                return nextService(); // 6.2.2 类加载
+            } else {
+                PrivilegedAction<S> action = new PrivilegedAction<S>() {
+                    public S run() { return nextService(); }
+                };
+                return AccessController.doPrivileged(action, acc);
+            }
+        }
+
+        public void remove() {
+            throw new UnsupportedOperationException();
+        }
+    }
+}
+```
+
+![](images/2019-12-09-16-24-10.png)
+``` java
+com.mysql.jdbc.Driver
+com.mysql.fabric.jdbc.FabricMySQLDriver
+```
+
+###### 结论
+- 从 3.2 来看, SPI机制采用当前线程的类加载器来加载实现, 这样就破坏双亲委托机制
+
+##### Tomcat
+
+###### 说明
+- 因本地已没Tomcat的源码, 看下别人的分享吧..
+- [Tomcat的类加载机制](https://blog.csdn.net/sinat_34976604/article/details/86709870)
+
+### 引用
+- [浅谈双亲委派和破坏双亲委派](https://www.cnblogs.com/joemsu/p/9310226.html)
+- [超详细java中的ClassLoader详解](https://blog.csdn.net/briblue/article/details/54973413)
+- [双亲委派模式破坏-JDBC](https://blog.csdn.net/sinat_34976604/article/details/86723663)

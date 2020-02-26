@@ -1,0 +1,186 @@
+<style>
+    .fengmian {
+        float: left;
+        width: 400px;
+        height: 250px;
+    }
+
+    .article img {
+        margin: -1px 20px 5px -1px;
+        border-top-left-radius: 3px;
+        -webkit-border-radius-topleft: 3%;
+        -webkit-transition: all 0.5s;
+        -moz-transition: all 0.5s;
+        -o-transition: all 0.5s;
+    }
+
+    /*.article img:hover{*/
+    /*transform: scale(1, 1.05);*/
+    /*-webkit-transition:all 0.5s;*/
+    /*-moz-transition:all 0.5s;*/
+    /*-o-transition:all 0.5s;*/
+    /*}*/
+</style>
+
+
+<article id="<%= post.layout %>-<%= post.slug %>" class="article article-type-<%= post.layout %>" itemscope itemprop="blogPost">
+    <% if(post.noDate != "true"){ %>
+    <div class="article-meta">
+        <%- partial('post/date', {class_name: 'article-date', date_format: null}) %>
+    </div>
+    <% } %>
+    <div class="article-inner">
+        <% if (theme.fancybox){ %>
+        <input type="hidden" class="isFancy"/>
+        <% } %>
+        <div class="fengmian">
+            <img class="fengmian-image" id="<%= post.slug %>" src="http://image.smilelxy.cn/blog/abridge/bg-1.jpg" alt="舍弃欲望, 活在当下" onload="loadImage(this.id)"/>
+        </div>
+        <% if (post.link || post.title){ %>
+        <header class="article-header">
+            <%- partial('post/title', {class_name: 'article-title'}) %>
+        </header>
+        <% if (!index){ %>
+        <div class="article-info article-info-post">
+            <%- partial('post/category') %>
+            <%- partial('post/tag') %>
+            <!-- 访问量  -->
+            <!--<span id="busuanzi_container_page_pv" style='display:none'>-->
+            <!--<span id="page-visit"><i class="fa fa-eye" style="float: left;margin-top:5px" aria-hidden="true" title="文章访问量"></i>-->
+            <!--<span id="busuanzi_value_page_pv"></span>-->
+            <!--</span>-->
+            <!--</span>-->
+
+            <div class="clearfix"></div>
+        </div>
+        <% } %>
+        <% } %>
+        <div class="article-entry" itemprop="articleBody">
+            <% if (index && (post.description || post.excerpt)){ %>
+            <% if (post.description){ %>
+            <%- post.description %>
+            <% } else { %>
+            <%- post.excerpt %>
+            <% } %>
+            <% } else { %>
+            <% if (is_page()){ %>
+            <%- partial('_partial/page') %>
+            <% } %>
+            <%- post.content %>
+            <% } %>
+        </div>
+        <% if (index){ %>
+        <div class="article-info article-info-index">
+            <% if(post.top){ %>
+            <div class="article-pop-out tagcloud">
+                <a class="">置顶</a>
+            </div>
+            <% } %>
+            <%- partial('post/category') %>
+            <%- partial('post/tag') %>
+            <% if (index && (post.description || post.excerpt)){ %>
+            <p class="article-more-link">
+                <a href="<%- url_for(post.path) %>#more"><%= __('index.more') %> >></a>
+            </p>
+            <% } %>
+            <div class="clearfix"></div>
+        </div>
+        <% } %>
+    </div>
+    <% if (!index){ %>
+    <%- partial('post/nav') %>
+    <% } %>
+    <script>
+
+        function getPgjs() {
+            var agent = navigator.userAgent.toLowerCase();
+            var res = agent.match(/android/);
+            if (res == "android")
+                return res;
+            res = agent.match(/iphone/);
+            if (res == "iphone")
+                return "ios";
+            res = agent.match(/ipad/);
+            if (res == "ipad")
+                return "ios";
+            res = agent.match(/windows/);
+            if (res == "windows")
+                return "wp";
+            return "pc";
+        }
+
+        function loadImage(id) {
+            var page = window.location.pathname
+            if (page.indexOf("about") !== -1) {
+                return;
+            }
+//            var result = getPgjs();
+//            if(result=="wp"){
+//                $(".fengmian").hide();
+//                console.log(result);
+//                return;
+//            }
+            var backgroundnum = <%= theme.cover_image %>;
+            var randomIndex = Math.ceil(Math.random() * backgroundnum);
+            var result = randomIndex + "?version=" + (new Date() / 1000);
+            var backgroundimg = "http://image.smilelxy.cn/blog/abridge/bg-number.jpg".replace(/number/gi, randomIndex);
+            var key = "#" + id;
+            $(key).attr("src", backgroundimg);
+            $(".fengmian").show();
+        }
+
+        (function () {
+            var page = window.location.pathname
+            if (page.indexOf("about") !== -1) {
+                console.log(page)
+                $(".fenagmian").hide();
+//                $("#comments").remove();
+            }
+        })()
+    </script>
+</article>
+<!-- 代码1：放在页面需要展示的位置  -->
+<!-- 如果您配置过sourceid，建议在div标签中配置sourceid、cid(分类id)，没有请忽略  -->
+<!--<div id="cyReward" role="cylabs" data-use="reward" style="margin-left: 45%" ></div>-->
+<!--<div id="cyEmoji" role="cylabs" data-use="emoji"></div>-->
+
+
+<!--<script>-->
+<!--(function(){-->
+<!--var path = window.location.pathname;-->
+<!--if (path ==="/" || path=== undefined || path === null || path.indexOf("page") !== -1){-->
+<!--$("#cyReward").remove();-->
+<!--$("#cyEmoji").remove();-->
+<!--}-->
+<!--})()-->
+
+
+<!--</script>-->
+
+<!-- 代码2：用来读取评论框配置，此代码需放置在代码1之后。 -->
+<!-- 如果当前页面有评论框，代码2请勿放置在评论框代码之前。 -->
+<!-- 如果页面同时使用多个实验室项目，以下代码只需要引入一次，只配置上面的div标签即可 -->
+<!--<script type="text/javascript" charset="utf-8" src="https://changyan.sohu.com/js/changyan.labs.https.js?appid=cysUkgluO"></script>-->
+<% if (!index && ((post.toc != false && !is_page() && theme.toc) || post.toc)){ %>
+<%- partial('_partial/toc') %>
+<% } %>
+<% if (!index && theme.share.on && (post.share != false || post.share)){ %>
+<%- partial('post/share') %>
+<% } %>
+<% if (!index && post.comments){ %>
+<% if (theme.gitalk.on) { %>
+<%- partial('comments/gitalk') %>
+<% }  if (config.disqus_shortname) { %>
+<%- partial('comments/disqus', {
+    shortname: config.disqus_shortname
+}) %>
+<% } %>
+<% } %>
+<%- partial('_partial/post-nav-button') %>
+<% if (!index) { %>
+<script>
+    <% if (post.fancybox === false){ %>
+    yiliaConfig.fancybox = false;
+    <% } %>
+</script>
+<% } %>

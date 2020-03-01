@@ -66,6 +66,10 @@ subnav:
   #Tumblr: ""
   #_500px: ""
 
+# 网易云音乐插件
+music:
+  enable: true
+  id: 2109140602  # 网易云分享的ID
 # >>> Conments 评论系统 <<<
 # Chose ONE as your comment system and keep others disable.
 # 选一个作为网站评论系统，其他保持禁用。
@@ -81,6 +85,7 @@ gitalk:
   admin: ['smile-lxy']
   clientID: 1305dbf64dd1101187a6
   clientSecret: 67f4a6ebee76801d436ab55d771e105c37255690
+  distraction_free_mode: true
 
 
 # >>> Style Customisation 样式自定义 <<<

@@ -80,6 +80,12 @@
                                 <a class="fa <%= i %>" target="_blank" rel="external nofollow" href="<%- url_for(theme.subnav[i]) %>" title="<%= i %>"></a>
                             <%}%>
                         </ul>
+                        <!-- 网易云音乐插件 -->
+                        <% if (theme.music && theme.music.enable){ %>
+                            <div style="position:absolute; bottom:120px left:auto; width:85%; height: 110px;">
+                                <iframe frameborder="no" border="0" marginwidth="0" marginheight="0" width=330 height=450 src="//music.163.com/outchain/player?type=0&id=<%=theme.music.id||2109140602%>&auto=1&height=430"></iframe>
+                            </div>
+                        <% } %>
                     </nav>
                 </section>
                 

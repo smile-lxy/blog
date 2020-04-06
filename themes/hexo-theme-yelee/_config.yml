@@ -9,7 +9,8 @@ Yelee: "3.0"
 menu:
   回到主站: //smilelxy.cn
   技术系列: /categories/技术/
-  技术-Java系列: /categories/技术/Java
+#  技术-经验系列: /categories/技术/经验/
+#  技术-Java系列: /categories/技术/Java
 #  技术-Java系列: /tags/Java/
   生活系列: /categories/生活/
   所有文章: /archives/

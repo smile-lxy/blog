@@ -1,0 +1,1068 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+
+    <!--[if lt IE 9]>
+        <style>body {display: none; background: none !important} </style>
+        <meta http-equiv="Refresh" Content="0; url=//outdatedbrowser.com/" />
+    <![endif]-->
+
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge, chrome=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="format-detection" content="telephone=no" />
+<meta name="author" content="水云游" />
+<meta name="baidu-site-verification" content="qp2dTXVqvj" />
+
+
+
+<meta name="keywords" content="水云游, 蓝心语, 技术, java, 日语, 动漫">
+
+
+<meta name="description" content="系统在运行的过程中, 会创建许许多多的对象, 这些对象会经历生老死的历程, 而那些’死’的对象需要进行回收为新生对象提供空间.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Jvm垃圾回收">
+<meta property="og:url" content="https://blog.smilelxy.cn/2019/jvm-carbage-collect/index.html">
+<meta property="og:site_name" content="水云游的博客">
+<meta property="og:description" content="系统在运行的过程中, 会创建许许多多的对象, 这些对象会经历生老死的历程, 而那些’死’的对象需要进行回收为新生对象提供空间.">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://image.smilelxy.cn/blog/images/reference-count-method.png">
+<meta property="og:image" content="http://image.smilelxy.cn/blog/images/jvm-garbage-collection-mark-and-sweep.png">
+<meta property="og:image" content="http://image.smilelxy.cn/blog/images/jvm-garbage-collection-mark-and-compact.png">
+<meta property="og:image" content="http://image.smilelxy.cn/blog/images/jvm-garbage-collection-mark-and-copy.png">
+<meta property="og:image" content="http://image.smilelxy.cn/blog/images/jvm-garbage-collector-serial.png">
+<meta property="og:image" content="http://image.smilelxy.cn/blog/images/jvm-garbage-collector-parNew.png">
+<meta property="og:image" content="http://image.smilelxy.cn/blog/images/jvm-garbage-collection-concurrent-mark-sweep.png">
+<meta property="og:image" content="http://image.smilelxy.cn/blog/images/jvm-garbage-collector-cms-init-mark.png">
+<meta property="og:image" content="http://image.smilelxy.cn/blog/images/jvm-garbage-collector-cms-concurrent-mark.png">
+<meta property="og:image" content="http://image.smilelxy.cn/blog/images/jvm-garbage-collector-cms-pre-clean-one.png">
+<meta property="og:image" content="http://image.smilelxy.cn/blog/images/jvm-garbage-collector-cms-pre-clean-two.png">
+<meta property="og:image" content="http://image.smilelxy.cn/blog/images/jvm-garbage-collector-g1.png">
+<meta property="og:image" content="http://image.smilelxy.cn/blog/images/region_indicator.png">
+<meta property="article:published_time" content="2019-12-14T16:00:00.000Z">
+<meta property="article:modified_time" content="2021-05-27T16:24:28.669Z">
+<meta property="article:author" content="水云游">
+<meta property="article:tag" content="Java">
+<meta property="article:tag" content="Jvm">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://image.smilelxy.cn/blog/images/reference-count-method.png">
+<link rel="apple-touch-icon" href= "/apple-touch-icon.png">
+
+
+    <link rel="alternative" href="/atom.xml" title="水云游的博客" type="application/atom+xml">
+
+
+
+    <link rel="shortcut icon" href="http://image.smilelxy.cn/logo/logo.png">
+
+
+
+    <link href="//cdn.bootcss.com/animate.css/3.5.1/animate.min.css" rel="stylesheet">
+
+
+
+    <link href="//cdn.bootcss.com/fancybox/2.1.5/jquery.fancybox.min.css" rel="stylesheet">
+
+
+
+    <script src="//cdn.bootcss.com/pace/1.0.2/pace.min.js"></script>
+    <link href="//cdn.bootcss.com/pace/1.0.2/themes/green/pace-theme-minimal.css" rel="stylesheet">
+
+
+
+<link rel="stylesheet" href="/css/style.css">
+
+
+
+
+<link href="//cdn.bootcss.com/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet">
+
+
+<title>Jvm垃圾回收 | 水云游的博客</title>
+
+<script src="//cdn.bootcss.com/jquery/2.2.4/jquery.js"></script>
+<script src="//cdn.bootcss.com/clipboard.js/1.5.10/clipboard.min.js"></script>
+
+<script>
+    var yiliaConfig = {
+        fancybox: true,
+        animate: true,
+        isHome: false,
+        isPost: true,
+        isArchive: false,
+        isTag: false,
+        isCategory: false,
+        open_in_new: false,
+        fancybox_js: "//cdn.bootcss.com/fancybox/2.1.5/jquery.fancybox.min.js",
+        scrollreveal: "//cdn.bootcss.com/scrollReveal.js/3.1.4/scrollreveal.min.js",
+        search: true
+    }
+</script>
+
+
+    <script>
+        yiliaConfig.jquery_ui = [true, "//cdn.bootcss.com/jqueryui/1.10.4/jquery-ui.min.js", "//cdn.bootcss.com/jqueryui/1.10.4/css/jquery-ui.min.css"];
+    </script>
+
+
+
+    <script> yiliaConfig.rootUrl = "\/";</script>
+
+
+<meta name="generator" content="Hexo 4.2.1"></head>
+
+<body oncontextmenu="return false" onselectstart="return false">
+  <div id="container">
+    <div class="left-col">
+    <div class="overlay"></div>
+<div class="intrude-less">
+    <header id="header" class="inner">
+        <a href="https://blog.smilelxy.cn" target="_self" class="profilepic">
+            <img src="http://image.smilelxy.cn/logo/avatar.jpeg" alt="logo" class="animated zoomIn">
+        </a>
+        <hgroup>
+          <h1 class="header-author"><a href="/">水云游</a></h1>
+        </hgroup>
+
+        
+        <p class="header-subtitle">舍弃欲望, 活在当下</p>
+        
+
+        
+            <form id="search-form">
+            <input type="text" id="local-search-input" name="q" results="0" placeholder="search..." class="search form-control" autocomplete="off" autocorrect="off" searchonload="true" />
+            <i class="fa fa-times" onclick="resetSearch()"></i>
+            </form>
+            <div id="local-search-result"></div>
+            <p class='no-result'>No results found <i class='fa fa-spinner fa-pulse'></i></p>
+        
+
+
+        
+            <div id="switch-btn" class="switch-btn">
+                <div class="icon">
+                    <div class="icon-ctn">
+                        <div class="icon-wrap icon-house" data-idx="0">
+                            <div class="birdhouse"></div>
+                            <div class="birdhouse_holes"></div>
+                        </div>
+                        <div class="icon-wrap icon-ribbon hide" data-idx="1">
+                            <div class="ribbon"></div>
+                        </div>
+                        
+                        
+                        <div class="icon-wrap icon-me hide" data-idx="3">
+                            <div class="user"></div>
+                            <div class="shoulder"></div>
+                        </div>
+                        
+                    </div>
+                    
+                </div>
+                <div class="tips-box hide">
+                    <div class="tips-arrow"></div>
+                    <ul class="tips-inner">
+                        <li>菜单</li>
+                        <li>标签</li>
+                        
+                        
+                        <li>关于我</li>
+                        
+                    </ul>
+                </div>
+            </div>
+        
+
+        <div id="switch-area" class="switch-area">
+            <div class="switch-wrap">
+                <section class="switch-part switch-part1">
+                    <nav class="header-menu">
+                        <ul>
+                        
+                            <li><a href="//smilelxy.cn">回到主站</a></li>
+                        
+                            <li><a href="/categories/%E6%8A%80%E6%9C%AF/">技术系列</a></li>
+                        
+                            <li><a href="/categories/%E6%97%A5%E6%9C%AC/">日本相关</a></li>
+                        
+                            <li><a href="/categories/%E7%94%9F%E6%B4%BB/">生活系列</a></li>
+                        
+                            <li><a href="/archives/">所有文章</a></li>
+                        
+                            <li><a href="/about.html">关于我</a></li>
+                        
+                        </ul>
+                    </nav>
+                    <nav class="header-nav">
+                        <ul class="social">
+                            
+                                <a class="fa Email" target="_blank" rel="external nofollow" href="mailto:yiqiufengye@gmail.com" title="Email"></a>
+                            
+                                <a class="fa QQ" target="_blank" rel="external nofollow" href="http://wpa.qq.com/msgrd?v=3&uin=3133545802&site=qq&menu=yes" title="QQ"></a>
+                            
+                                <a class="fa 简书" target="_blank" rel="external nofollow" href="https://www.jianshu.com/u/d650053de64e" title="简书"></a>
+                            
+                                <a class="fa CSDN" target="_blank" rel="external nofollow" href="https://me.csdn.net/FengYe_YuLu" title="CSDN"></a>
+                            
+                        </ul>
+                        <!-- 网易云音乐插件 -->
+                        
+                            <div style="position:absolute; bottom:120px left:auto; width:85%; height: 110px;">
+                                <iframe frameborder="no" border="0" marginwidth="0" marginheight="0" width=330 height=450 src="//music.163.com/outchain/player?type=0&id=2109140602&auto=1&height=430"></iframe>
+                            </div>
+                        
+                    </nav>
+                </section>
+                
+                
+                <section class="switch-part switch-part2">
+                    <div class="widget tagcloud" id="js-tagcloud">
+                        <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/DB/" rel="tag">DB</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Java/" rel="tag">Java</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Jvm/" rel="tag">Jvm</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/framework/" rel="tag">framework</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/seata/" rel="tag">seata</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E5%AD%A6%E4%B9%A0/" rel="tag">学习</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E7%94%9F%E6%B4%BB/" rel="tag">生活</a></li></ul>
+                    </div>
+                </section>
+                
+                
+                
+
+                
+                
+                <section class="switch-part switch-part3">
+                
+                    <div id="js-aboutme">技术宅、 杭州、 夜猫子、 爱动漫、 爱日语 2017年毕业、 java开发、 生命不息折腾不止、</div>
+                </section>
+                
+            </div>
+        </div>
+    </header>                
+</div>
+    </div>
+    <div class="mid-col">
+      <nav id="mobile-nav">
+      <div class="overlay">
+          <div class="slider-trigger"></div>
+          <h1 class="header-author js-mobile-header hide"><a href="/" title="回到主页">水云游</a></h1>
+      </div>
+    <div class="intrude-less">
+        <header id="header" class="inner">
+            <a href="/" class="profilepic">
+                <img src="http://image.smilelxy.cn/logo/avatar.jpeg" alt="logo" class="animated zoomIn">
+            </a>
+            <hgroup>
+              <h1 class="header-author"><a href="/" title="回到主页">水云游</a></h1>
+            </hgroup>
+            
+            <p class="header-subtitle">舍弃欲望, 活在当下</p>
+            
+            <nav class="header-menu">
+                <ul>
+                
+                    <li><a href="//smilelxy.cn">回到主站</a></li>
+                
+                    <li><a href="/categories/%E6%8A%80%E6%9C%AF/">技术系列</a></li>
+                
+                    <li><a href="/categories/%E6%97%A5%E6%9C%AC/">日本相关</a></li>
+                
+                    <li><a href="/categories/%E7%94%9F%E6%B4%BB/">生活系列</a></li>
+                
+                    <li><a href="/archives/">所有文章</a></li>
+                
+                    <li><a href="/about.html">关于我</a></li>
+                
+                <div class="clearfix"></div>
+                </ul>
+            </nav>
+            <nav class="header-nav">
+                        <ul class="social">
+                            
+                                <a class="fa Email" target="_blank" rel="external nofollow" href="mailto:yiqiufengye@gmail.com" title="Email"></a>
+                            
+                                <a class="fa QQ" target="_blank" rel="external nofollow" href="http://wpa.qq.com/msgrd?v=3&uin=3133545802&site=qq&menu=yes" title="QQ"></a>
+                            
+                                <a class="fa 简书" target="_blank" rel="external nofollow" href="https://www.jianshu.com/u/d650053de64e" title="简书"></a>
+                            
+                                <a class="fa CSDN" target="_blank" rel="external nofollow" href="https://me.csdn.net/FengYe_YuLu" title="CSDN"></a>
+                            
+                        </ul>
+            </nav>
+        </header>                
+    </div>
+    <link class="menu-list" tags="标签" friends="友情链接" about="关于我"/>
+</nav>
+      <div class="body-wrap"><style>
+    .fengmian {
+        float: left;
+        width: 400px;
+        height: 250px;
+    }
+
+    .article img {
+        margin: -1px 20px 5px -1px;
+        border-top-left-radius: 3px;
+        -webkit-border-radius-topleft: 3%;
+        -webkit-transition: all 0.5s;
+        -moz-transition: all 0.5s;
+        -o-transition: all 0.5s;
+    }
+
+    /*.article img:hover{*/
+    /*transform: scale(1, 1.05);*/
+    /*-webkit-transition:all 0.5s;*/
+    /*-moz-transition:all 0.5s;*/
+    /*-o-transition:all 0.5s;*/
+    /*}*/
+</style>
+
+
+<article id="post-jvm-carbage-collect" class="article article-type-post" itemscope itemprop="blogPost">
+    
+    <div class="article-meta">
+        <a href="/2019/jvm-carbage-collect/" class="article-date">
+      <time datetime="2019-12-14T16:00:00.000Z" itemprop="datePublished">2019-12-15</time>
+</a>
+    </div>
+    
+    <div class="article-inner">
+        
+        <input type="hidden" class="isFancy"/>
+        
+        <div class="fengmian">
+            <img class="fengmian-image" id="jvm-carbage-collect" src="http://image.smilelxy.cn/blog/abridge/bg-1.jpg" alt="舍弃欲望, 活在当下" onload="loadImage(this.id)"/>
+        </div>
+        
+        <header class="article-header">
+            
+  
+    <h1 class="article-title" itemprop="name">
+      Jvm垃圾回收
+    </h1>
+  
+
+        </header>
+        
+        <div class="article-info article-info-post">
+            
+    <div class="article-category tagcloud">
+    <a class="article-category-link" href="/categories/%E6%8A%80%E6%9C%AF/">技术</a><a class="article-category-link" href="/categories/%E6%8A%80%E6%9C%AF/Java/">Java</a><a class="article-category-link" href="/categories/%E6%8A%80%E6%9C%AF/Java/Jvm/">Jvm</a>
+    </div>
+
+
+            
+    <div class="article-tag tagcloud">
+        <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Java/" rel="tag">Java</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Jvm/" rel="tag">Jvm</a></li></ul> </div>
+
+
+
+            <!-- 访问量  -->
+            <!--<span id="busuanzi_container_page_pv" style='display:none'>-->
+            <!--<span id="page-visit"><i class="fa fa-eye" style="float: left;margin-top:5px" aria-hidden="true" title="文章访问量"></i>-->
+            <!--<span id="busuanzi_value_page_pv"></span>-->
+            <!--</span>-->
+            <!--</span>-->
+
+            <div class="clearfix"></div>
+        </div>
+        
+        
+        <div class="article-entry" itemprop="articleBody">
+            
+            
+            <ul>
+<li>系统在运行的过程中, 会创建许许多多的对象, 这些对象会经历生老死的历程, 而那些’死’的对象需要进行回收为新生对象提供空间.<a id="more"></a>
+</li>
+</ul>
+<h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><ul>
+<li>系统在运行的过程中, 会创建许许多多的对象, 这些对象会经历生老死的历程, 而那些’死’的对象需要进行回收为新生对象提供空间.</li>
+</ul>
+<h3 id="回收算法"><a href="#回收算法" class="headerlink" title="回收算法"></a>回收算法</h3><h4 id="引用计数算法"><a href="#引用计数算法" class="headerlink" title="引用计数算法"></a>引用计数算法</h4><h5 id="描述"><a href="#描述" class="headerlink" title="描述"></a>描述</h5><ul>
+<li>每个对象均配有一个引用计数器, 当对象被引用一次, 计数器+1, 反之移除对该对象的引用时,计数器-1, 当值为0时, 将被GC列为回收对象.</li>
+</ul>
+<h5 id="优点"><a href="#优点" class="headerlink" title="优点"></a>优点</h5><ul>
+<li>算法简单</li>
+</ul>
+<h5 id="缺点"><a href="#缺点" class="headerlink" title="缺点"></a>缺点</h5><ul>
+<li>当出现循环依赖时, 造成彼此间计数器不为0, 则不能被GC回收, 因此产生内存泄漏问题</li>
+</ul>
+<h5 id="例子"><a href="#例子" class="headerlink" title="例子"></a>例子</h5><h6 id="代码"><a href="#代码" class="headerlink" title="代码"></a>代码</h6><figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ReferenceCountTest</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">        ReferenceObject object01 = <span class="keyword">new</span> ReferenceObject(); <span class="comment">// Step 01</span></span><br><span class="line">        ReferenceObject object02 = <span class="keyword">new</span> ReferenceObject(); <span class="comment">// Step 02</span></span><br><span class="line"></span><br><span class="line">        object01.setInstance(object02); <span class="comment">// Step 03</span></span><br><span class="line">        object02.setInstance(object01); <span class="comment">// Step 04</span></span><br><span class="line"></span><br><span class="line">        object01 = <span class="keyword">null</span>; <span class="comment">// Step 05</span></span><br><span class="line">        object02 = <span class="keyword">null</span>; <span class="comment">// Step 06</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">ReferenceObject</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> Object instance;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> ReferenceObject <span class="title">setInstance</span><span class="params">(Object instance)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">this</span>.instance = instance;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">this</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h6 id="图解"><a href="#图解" class="headerlink" title="图解"></a>图解</h6><p><img src="http://image.smilelxy.cn/blog/images/reference-count-method.png" alt=""></p>
+<h6 id="分析"><a href="#分析" class="headerlink" title="分析"></a>分析</h6><ul>
+<li>Step 01: ReferenceObject01实例引用计数+1 计数器01=1</li>
+<li>Step 02: ReferenceObject02实例引用计数+1 计数器02=1</li>
+<li>Step 03: ReferenceObject02实例引用计数+1 计数器02=2</li>
+<li>Step 04: ReferenceObject01实例引用计数+1 计数器01=2</li>
+<li>Step 05: ReferenceObject01实例引用计数- 1 计数器01=1</li>
+<li>Step 06: ReferenceObject02实例引用计数- 1 计数器02=1</li>
+</ul>
+<h6 id="结果"><a href="#结果" class="headerlink" title="结果"></a>结果</h6><ul>
+<li>循环依赖时, 造成彼此间计数器不为0, 则不能被GC回收, 因此产生内存泄漏问题</li>
+</ul>
+<h4 id="可达性分析算法"><a href="#可达性分析算法" class="headerlink" title="可达性分析算法"></a>可达性分析算法</h4><h5 id="描述-1"><a href="#描述-1" class="headerlink" title="描述"></a>描述</h5><ul>
+<li>从<strong>GC Roots</strong>节点向下搜索, 所走的路径称之为’<strong>引用链</strong>‘, 当一个对象对GC Roots节点没有任何引用链相连接时, 则认为该对象是不可用的(即使该对象还与其他对象相关联).</li>
+</ul>
+<h5 id="例子-1"><a href="#例子-1" class="headerlink" title="例子"></a>例子</h5><h6 id="代码-1"><a href="#代码-1" class="headerlink" title="代码"></a>代码</h6><figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">FinalizeEscapeGC</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> FinalizeEscapeGC HOOK = <span class="keyword">null</span>;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">log</span><span class="params">()</span></span>&#123;</span><br><span class="line">        System.out.println(<span class="string">"I am still alive."</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> <span class="keyword">throws</span> Throwable</span>&#123;</span><br><span class="line">        System.out.println(<span class="string">"gc roots tracing start."</span>);</span><br><span class="line"></span><br><span class="line">        HOOK = <span class="keyword">new</span> FinalizeEscapeGC();</span><br><span class="line"></span><br><span class="line">        HOOK = <span class="keyword">null</span>;</span><br><span class="line">        <span class="comment">/** 对象不可达, 进行自救 &#123;<span class="doctag">@link</span> FinalizeEscapeGC#finalize()&#125;, finalize()仅且执行一次. 自救成功*/</span></span><br><span class="line">        System.gc();</span><br><span class="line"></span><br><span class="line">        TimeUnit.SECONDS.sleep(<span class="number">1</span>); <span class="comment">// 执行筛选'F-Queue'的线程优先级较低, 休息一下...</span></span><br><span class="line">        <span class="keyword">if</span>(Objects.nonNull(HOOK))&#123;</span><br><span class="line">            HOOK.log();</span><br><span class="line">        &#125;<span class="keyword">else</span>&#123;</span><br><span class="line">            System.out.println(<span class="string">"oh, I am dead."</span>);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        HOOK = <span class="keyword">null</span>;</span><br><span class="line">        <span class="comment">/** 对象不可达, 进行自救, 因finalize()仅且执行一次, 将不再执行, 自救失败 */</span></span><br><span class="line">        System.gc();</span><br><span class="line"></span><br><span class="line">        TimeUnit.SECONDS.sleep(<span class="number">1</span>); <span class="comment">// 执行筛选'F-Queue'的线程优先级较低, 休息一下...</span></span><br><span class="line">        <span class="keyword">if</span>(Objects.nonNull(HOOK))&#123;</span><br><span class="line">            HOOK.log();</span><br><span class="line">        &#125;<span class="keyword">else</span>&#123;</span><br><span class="line">            System.out.println(<span class="string">"oh, I am dead."</span>);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        System.out.println(<span class="string">"gc roots tracing end."</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">finalize</span><span class="params">()</span> <span class="keyword">throws</span> Throwable </span>&#123;</span><br><span class="line">        <span class="keyword">super</span>.finalize();</span><br><span class="line">        System.out.println(<span class="string">"help me!!!"</span>);</span><br><span class="line">        HOOK = <span class="keyword">this</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line">`</span><br></pre></td></tr></table></figure>
+<h6 id="输出"><a href="#输出" class="headerlink" title="输出"></a>输出</h6><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">gc roots tracing start.</span><br><span class="line">help me!!!</span><br><span class="line">I am still alive.</span><br><span class="line">oh, I am dead.</span><br><span class="line">gc roots tracing end.</span><br></pre></td></tr></table></figure>
+<h6 id="分析-1"><a href="#分析-1" class="headerlink" title="分析"></a>分析</h6><ul>
+<li>经可达性分析算法所标记的对象, 会经过第一次标记与筛选(有没有必要执行finalize() (对象有没有覆盖finalize()方法)):<ul>
+<li>有必要, 将对象放入<strong>F-Queue</strong>队列中, 稍后由Jvm自动创建一个<strong>低优先级</strong>的<strong>FinalizerThread</strong>执行扫描该队列, 进行第二次筛选(执行finalize() 俗称: 自救), 对象在该过程期间是否与引用链上的任何一个对象建立关联:<ul>
+<li>有, 从回收集合中移除;</li>
+<li>没有, 进行回收</li>
+</ul>
+</li>
+<li>没有必要, 加入回收集合;</li>
+</ul>
+</li>
+</ul>
+<h6 id="使用finalize注意"><a href="#使用finalize注意" class="headerlink" title="使用finalize注意"></a>使用finalize注意</h6><ul>
+<li>因<strong>FinalizerThread</strong>是一个低优先级的线程, 启动后<strong>F-Queue</strong>队列中的元素排队执行<strong>finalize()</strong>方法, 使用不合理情况下, 将导致这些对象长时间堆积在内存中, 到达已经程度可能会引发<strong>OOM</strong>;</li>
+</ul>
+<h5 id="GC-Roots对象包含-但不限于"><a href="#GC-Roots对象包含-但不限于" class="headerlink" title="GC Roots对象包含 (但不限于)"></a>GC Roots对象包含 (但不限于)</h5><ul>
+<li>启动类(Bootstrap)加载的类和创建的对象;</li>
+<li>栈中引用的对象(栈帧中的本地变量表引用的对象);</li>
+<li>元数据区类静态属性引用的对象;</li>
+<li>元数据区常量引用的对象;</li>
+<li>JNI(Native方法)引用的对象;</li>
+</ul>
+<h5 id="引用"><a href="#引用" class="headerlink" title="引用"></a>引用</h5><ul>
+<li>分为, 强引用, 软引用, 弱引用, 虚引用. 引用强度依次逐渐减弱<h6 id="强引用-Strong-Reference"><a href="#强引用-Strong-Reference" class="headerlink" title="强引用(Strong Reference)"></a>强引用(Strong Reference)</h6></li>
+<li>类似<strong>Object obj = new Object();</strong>, 可以直接访问目标对象, 强引用执行的对象在任何时候都不会被系统回收(Jvm宁愿抛出<strong>OOM</strong>, 也不会回收强引用所指向对象, 因此可能会导致内存泄漏);</li>
+</ul>
+<h6 id="软引用-Soft-Reference"><a href="#软引用-Soft-Reference" class="headerlink" title="软引用(Soft Reference)"></a>软引用(Soft Reference)</h6><ul>
+<li>SoftReference 来实现软引用, 用来描述一些还有用但非必需的对象, 在系统要发生内存溢出之前, 将这些对象列入回收范围进行回收. 若回收后还不足用于创建新对象的空间, 则抛出<strong>OOM</strong>;</li>
+</ul>
+<h6 id="弱引用-Weak-Reference"><a href="#弱引用-Weak-Reference" class="headerlink" title="弱引用(Weak Reference)"></a>弱引用(Weak Reference)</h6><ul>
+<li>WeakReference 来实现弱引用, 用描述一些非必需的对象, 只能生存到下一次垃圾收集发生之前(无论内存是否充足, 都是回收);</li>
+</ul>
+<h6 id="虚引用-Phantom-Reference"><a href="#虚引用-Phantom-Reference" class="headerlink" title="虚引用(Phantom Reference)"></a>虚引用(Phantom Reference)</h6><ul>
+<li>PhantomReference 来实现虚引用, 对象是否有虚引用的存在, 完全不会对其生存时间构成影响, 无法通过虚引用来取得一个对象实例;</li>
+<li>作用: 可以在垃圾收集器回收时收到一个通知;</li>
+</ul>
+<h3 id="垃圾回收算法"><a href="#垃圾回收算法" class="headerlink" title="垃圾回收算法"></a>垃圾回收算法</h3><h4 id="标记-清除算法"><a href="#标记-清除算法" class="headerlink" title="标记-清除算法"></a>标记-清除算法</h4><h5 id="描述-2"><a href="#描述-2" class="headerlink" title="描述"></a>描述</h5><ol>
+<li>标记存活的对象;</li>
+<li>统一回收未标记的对象;</li>
+</ol>
+<p><img src="http://image.smilelxy.cn/blog/images/jvm-garbage-collection-mark-and-sweep.png" alt="标记-清除算法"></p>
+<h5 id="缺点-1"><a href="#缺点-1" class="headerlink" title="缺点"></a>缺点</h5><ul>
+<li>效率问题(执行期间会<strong>Stop The World</strong>)</li>
+<li>空间问题(容易产生大量不连续的空间碎片, 无法分配大对象, 会导致频繁<strong>Minjor GC</strong>, 以至导致<strong>Full GC</strong>, 最终<strong>OOM</strong>)</li>
+</ul>
+<h5 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h5><ul>
+<li>适用于单核机器上;</li>
+</ul>
+<h4 id="标记-整理算法"><a href="#标记-整理算法" class="headerlink" title="标记-整理算法"></a>标记-整理算法</h4><h5 id="描述-3"><a href="#描述-3" class="headerlink" title="描述"></a>描述</h5><ul>
+<li>该算法是对’<strong>标记-清除算法</strong>‘的优化;</li>
+</ul>
+<ol>
+<li>标记存活对象;</li>
+<li>存活对象向一端一端, 清理存活边界以外内存;</li>
+</ol>
+<p><img src="http://image.smilelxy.cn/blog/images/jvm-garbage-collection-mark-and-compact.png" alt="标记-整理算法"></p>
+<h5 id="优点-1"><a href="#优点-1" class="headerlink" title="优点"></a>优点</h5><ul>
+<li>不会产生内存碎片;</li>
+</ul>
+<h5 id="总结-1"><a href="#总结-1" class="headerlink" title="总结"></a>总结</h5><ul>
+<li>该算法适用于对象’存活率高’的区域;</li>
+<li>适用于老年代区;</li>
+</ul>
+<h4 id="标记-复制算法"><a href="#标记-复制算法" class="headerlink" title="标记-复制算法"></a>标记-复制算法</h4><h5 id="描述-4"><a href="#描述-4" class="headerlink" title="描述"></a>描述</h5><ol>
+<li>标记存活对象;</li>
+<li>将存活对象复制到另外一半内存;</li>
+<li>清除当前这一半的内存区域;</li>
+</ol>
+<p><img src="http://image.smilelxy.cn/blog/images/jvm-garbage-collection-mark-and-copy.png" alt="标记-复制算法"></p>
+<h5 id="优点-2"><a href="#优点-2" class="headerlink" title="优点"></a>优点</h5><ul>
+<li>对象存活率低, 复制的对象就少, 进而效率高(每次最多浪费10%的内存(Eden : Survivor From : Survivor To = 8 : 1 : 1));</li>
+</ul>
+<h5 id="缺点-2"><a href="#缺点-2" class="headerlink" title="缺点"></a>缺点</h5><ul>
+<li>可使用内存只有一半(该算法不适合对象存活率较高场景, 老年代一般不采用该算法);</li>
+</ul>
+<h5 id="总结-2"><a href="#总结-2" class="headerlink" title="总结"></a>总结</h5><ul>
+<li>该算法适用于对象’存活率低’的区域;</li>
+<li>适用于新生代(Eden)区</li>
+</ul>
+<h3 id="垃圾收集器"><a href="#垃圾收集器" class="headerlink" title="垃圾收集器"></a>垃圾收集器</h3><h4 id="Serial-收集器"><a href="#Serial-收集器" class="headerlink" title="Serial 收集器"></a>Serial 收集器</h4><p><img src="http://image.smilelxy.cn/blog/images/jvm-garbage-collector-serial.png" alt="垃圾收集器-Serial"></p>
+<h5 id="描述-5"><a href="#描述-5" class="headerlink" title="描述"></a>描述</h5><ul>
+<li>基于’标记-复制算法’的单线程收集器;</li>
+<li>单线程收集器, 执行期间<strong>用户线程</strong>暂停(俗称:<strong>Stop The World(STW)</strong>);</li>
+</ul>
+<h5 id="使用方式"><a href="#使用方式" class="headerlink" title="使用方式"></a>使用方式</h5><figure class="highlight css"><table><tr><td class="code"><pre><span class="line"><span class="selector-tag">-XX</span><span class="selector-pseudo">:+UseSerialGC</span></span><br></pre></td></tr></table></figure>
+<h5 id="总结-3"><a href="#总结-3" class="headerlink" title="总结"></a>总结</h5><ul>
+<li>适用于新生代;</li>
+<li>在单核机器上适用场景较多;</li>
+</ul>
+<h4 id="ParNew-收集器"><a href="#ParNew-收集器" class="headerlink" title="ParNew 收集器"></a>ParNew 收集器</h4><p><img src="http://image.smilelxy.cn/blog/images/jvm-garbage-collector-parNew.png" alt="垃圾收集器-Serial"></p>
+<h5 id="描述-6"><a href="#描述-6" class="headerlink" title="描述"></a>描述</h5><ul>
+<li>基于’标记-复制算法’ ‘并行’的多线程收集器(Serial收集器的多线程版本);</li>
+<li>以获取最短回收停顿时间为目标的收集器;</li>
+<li>默认垃圾收集线程数与CPU数量相同;</li>
+</ul>
+<h5 id="使用方式-1"><a href="#使用方式-1" class="headerlink" title="使用方式"></a>使用方式</h5><figure class="highlight groovy"><table><tr><td class="code"><pre><span class="line">-<span class="string">XX:</span>+UseParNewGC </span><br><span class="line">-<span class="string">XX:</span>ParallelGCThreads=n <span class="comment">// 设置垃圾收集的线程数</span></span><br></pre></td></tr></table></figure>
+<h5 id="总结-4"><a href="#总结-4" class="headerlink" title="总结"></a>总结</h5><ul>
+<li>适用于新生代;</li>
+</ul>
+<h4 id="Parallel-Scavenge收集器"><a href="#Parallel-Scavenge收集器" class="headerlink" title="Parallel Scavenge收集器"></a>Parallel Scavenge收集器</h4><h5 id="描述-7"><a href="#描述-7" class="headerlink" title="描述"></a>描述</h5><ul>
+<li>基于’标记-复制算法’ ‘并行’的多线程收集器;</li>
+<li>以吞吐量优先的收集器(运行用户代码时间/(运行用户代码时间 + 垃圾回收时间));</li>
+</ul>
+<h5 id="使用方式-2"><a href="#使用方式-2" class="headerlink" title="使用方式"></a>使用方式</h5><figure class="highlight groovy"><table><tr><td class="code"><pre><span class="line">-<span class="string">XX:</span>+UseParallelGC </span><br><span class="line">-<span class="string">XX:</span>MaxGCPauseMillis=n <span class="comment">// 设置最大垃圾收集停顿时间 n(ms) (停顿时间缩短是以牺牲吞吐量和新生代(Eden)区来换取), 过小会导致频繁GC, 默认: 200</span></span><br><span class="line">-<span class="string">XX:</span>GCTimeRatio=n <span class="comment">// 设置吞吐量大小 n%</span></span><br><span class="line">-<span class="string">XX:</span>+UseAdaptiveSizePolicy <span class="comment">// 自适应调节策略(根据当前系统运行情况收集性能监控, 动态调整'-Xmn','-XX: SurvivorRatio', '-XX: PretenureSizeThreshold'以提供最合适的停顿时间和最大的吞吐量)</span></span><br></pre></td></tr></table></figure>
+<h5 id="总结-5"><a href="#总结-5" class="headerlink" title="总结"></a>总结</h5><ul>
+<li>适用于新生代;</li>
+<li>未知情况下, 可使用自适应调节策略来动态调整(出现问题时, 会增大排除问题难度…);</li>
+</ul>
+<h4 id="Serial-Old-收集器"><a href="#Serial-Old-收集器" class="headerlink" title="Serial Old 收集器"></a>Serial Old 收集器</h4><h5 id="描述-8"><a href="#描述-8" class="headerlink" title="描述"></a>描述</h5><ul>
+<li>基于’标记-整理算法’的单线程收集器;</li>
+<li>单线程收集器, 执行期间<strong>用户线程</strong>暂停(俗称:<strong>Stop The World(STW)</strong>);</li>
+</ul>
+<h4 id="Parallel-Old-收集器"><a href="#Parallel-Old-收集器" class="headerlink" title="Parallel Old 收集器"></a>Parallel Old 收集器</h4><h5 id="描述-9"><a href="#描述-9" class="headerlink" title="描述"></a>描述</h5><ul>
+<li>基于’标记-整理算法’ ‘并行’的多线程收集器;</li>
+<li>以吞吐量优先的收集器</li>
+</ul>
+<h5 id="使用方式-3"><a href="#使用方式-3" class="headerlink" title="使用方式"></a>使用方式</h5><figure class="highlight css"><table><tr><td class="code"><pre><span class="line"><span class="selector-tag">-XX</span><span class="selector-pseudo">:+UseParallelOldGC</span></span><br></pre></td></tr></table></figure>
+<h4 id="CMS-Concurrent-Mark-Sweep-收集器"><a href="#CMS-Concurrent-Mark-Sweep-收集器" class="headerlink" title="CMS(Concurrent Mark Sweep) 收集器"></a>CMS(Concurrent Mark Sweep) 收集器</h4><p><img src="http://image.smilelxy.cn/blog/images/jvm-garbage-collection-concurrent-mark-sweep.png" alt="垃圾收集器-CMS"></p>
+<h5 id="描述-10"><a href="#描述-10" class="headerlink" title="描述"></a>描述</h5><ul>
+<li>以获取最短回收停顿时间为目标的收集器;</li>
+<li>基于 <strong>标记-清除</strong>算法实现的;</li>
+<li>CS(Collection Set): 一组可被回收的Region的集合; 解决<strong>并发标记</strong>阶段, Old -&gt; Young 或 Young -&gt; Old 跨代引用的问题;<ul>
+<li><strong>Points-Out</strong>(我引用了谁的对象)</li>
+</ul>
+</li>
+<li>步骤:<ol>
+<li>初始化标记(STW: 速度很快)</li>
+<li>并发标记</li>
+<li>预清理</li>
+<li>可被终止的预清理</li>
+<li>重新标记(STW: 持续时间最长)</li>
+<li>并发清除</li>
+<li>并发重置状态 </li>
+</ol>
+</li>
+</ul>
+<hr>
+<h6 id="初始化标记-STW"><a href="#初始化标记-STW" class="headerlink" title="初始化标记(STW)"></a>初始化标记(STW)</h6><p><img src="http://image.smilelxy.cn/blog/images/jvm-garbage-collector-cms-init-mark.png" alt="垃圾收集器-CMS-初始化标记"></p>
+<ul>
+<li>标记老年代所有GC Roots对象(从根集合可直接到达的对象);</li>
+<li>标记年轻代所有GC Roots引用老年代的对象;</li>
+<li>该阶段是基于单线程的, 可通过”-XX: +CMSParallelInitialMarkEnabled” 和 ‘-XX: ParallelGCThreads=n’ 来调改变单线程的操作, 开启并行处理;</li>
+</ul>
+<h6 id="并发标记"><a href="#并发标记" class="headerlink" title="并发标记"></a>并发标记</h6><p><img src="http://image.smilelxy.cn/blog/images/jvm-garbage-collector-cms-concurrent-mark.png" alt="垃圾收集器-CMS-并发标记"></p>
+<ul>
+<li>从GC Roots进行追踪(tracing), 找出并标记所有存活对象;</li>
+<li>因该阶段与用户线程并发执行, 可能会引发”<strong>Concurrent Model Failure</strong>“;</li>
+</ul>
+<p><img src="http://image.smilelxy.cn/blog/images/jvm-garbage-collector-cms-pre-clean-one.png" alt="垃圾收集器-CMS-应用程序操作导致"></p>
+<ul>
+<li>该阶段是与用户线程并发执行的, 运行过程中, 对象可能存在多种情况: “新生代对象普生至老年代”, “大对象直接进入老年代”, “老年代中对象间引用关系变动”. 为杜防这些情况发生, 会将这些对象重新标记, 对象对应Card上的标识改为<strong>Dirty</strong>(<strong>并发标记</strong>阶段只负责标识, <strong>重新标记</strong>阶段会只扫描这些的对象, 避免扫描整个老年代.);</li>
+</ul>
+<h6 id="预清理"><a href="#预清理" class="headerlink" title="预清理"></a>预清理</h6><p><img src="http://image.smilelxy.cn/blog/images/jvm-garbage-collector-cms-pre-clean-two.png" alt="垃圾收集器-CMS-预清理02"></p>
+<ul>
+<li>处理<strong>并发标记</strong>阶段Card上标识为<strong>Dirty</strong>的对象;</li>
+</ul>
+<h6 id="可被终止的预清理"><a href="#可被终止的预清理" class="headerlink" title="可被终止的预清理"></a>可被终止的预清理</h6><ul>
+<li>尝试分担<strong>重新标记</strong>阶段的工作; </li>
+<li>该阶段是重复做相同的事情, 直到发生<strong>abort</strong>的条件(重复次数, 持续时间等), 可通过”-XX:CMSMaxAbortablePrecleanTime=n” , “-XX:CMSScheduleRemarkEdenPenetration=n”, “-XX:CMSScheduleRemarkEdenSizeThreshold=n”等参数来调整;</li>
+</ul>
+<h6 id="重新标记-STW"><a href="#重新标记-STW" class="headerlink" title="重新标记(STW)"></a>重新标记(STW)</h6><ul>
+<li>标记老年代所有的存活对象, 重新扫描整个堆;<ul>
+<li>因老年代中的对象可能被新生代中对象引用, 所以需要扫描新生代;<ul>
+<li>因扫描时, 会使用新生代中不可达的对象当做”GC Roots”对象, 来扫描老年代. 当这些不可达的对象引用老年代中对象太多情况下, 会导致该阶段耗时过长(实际这些扫描是没必要的). 出现这种情况下可通过”-XX: +CMSScavengeBeforeRemark”来优化该阶段, 在重新标记前, 先执行一次”YGC”, 回收不可达的对象, 可达的对象移入幸存区(Survivor)或老年代, 以减少年轻代对老年代的无效引用, 再执行<strong>重新标记</strong>时, 只需扫描幸存区即可, 这样就减少了扫描时间.</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>该阶段是基于单线程的, 可通过”-XX: +CMSParallelRemarkEnabled”开启并行处理;</li>
+</ul>
+<h6 id="并发清除"><a href="#并发清除" class="headerlink" title="并发清除"></a>并发清除</h6><ul>
+<li>根据清除算法清除不可用对象回收内存空间;</li>
+<li>因基于”<strong>并发-标记-清除</strong>“算法, 清除后不会对内存做整理, 可能就会出现内存碎片, 造成OOM, 可通过”-XX: +UseCMSCompactAtFullCollection”和”-XX: CMSFullGCsBeforeCompaction=n”指定执行’n’次后做一次内存整理(默认: 0, 每次Full GC都会执行内存整理);</li>
+<li>因该阶段与用户线程并发执行, 可能会产生新的垃圾, 这部分垃圾称为”浮动垃圾”, 留在下次GC时清除;</li>
+</ul>
+<h6 id="并发清除-1"><a href="#并发清除-1" class="headerlink" title="并发清除"></a>并发清除</h6><ul>
+<li>清除内部状态</li>
+</ul>
+<h5 id="使用方式-4"><a href="#使用方式-4" class="headerlink" title="使用方式"></a>使用方式</h5><figure class="highlight groovy"><table><tr><td class="code"><pre><span class="line">-<span class="string">XX:</span>+UseConcMarkSweepGC <span class="comment">// 开始使用CMS垃圾收集器</span></span><br><span class="line">-<span class="string">XX:</span>+CMSScavengeBeforeRemark <span class="comment">// "重新标记"阶段前, 先执行一次YGC</span></span><br><span class="line">-<span class="string">XX:</span>+ScavengeBeforeFullGC <span class="comment">// "并发清除"阶段前, 先执行一次YGC</span></span><br><span class="line">-<span class="string">XX:</span>UseCMSInitiatingOccupancyOnly <span class="comment">// 配置JVM不基于运行时收集的数据来动态调整垃圾收集周期(关闭自适应调节策略)</span></span><br><span class="line">-<span class="string">XX:</span>CMSInitiatingOccupancyFraction=n <span class="comment">// 配置JVM在老年代内存占用达到n%时触发GC(需搭配"-XX: UseCMSInitiatingOccupancyOnly"使用, 否则仅在第一次使用该配置, 后续依然使用自适应调节策略) 默认: 92</span></span><br><span class="line">-<span class="string">XX:</span>+UseCMSCompactAtFullCollection <span class="comment">// 开启对老年代进行内存整理, 以消除内存空间碎片化</span></span><br><span class="line">-<span class="string">XX:</span> CMSFullGCsBeforeCompaction=n <span class="comment">// 执行n次后进行内存整理</span></span><br><span class="line">-<span class="string">XX:</span>+CMSParallelInitialMarkEnabled <span class="comment">// 初始化标记阶段开启并行操作</span></span><br><span class="line">-<span class="string">XX:</span>+CMSParallelRemarkEnabled <span class="comment">// "重新标记"阶段开启并行操作</span></span><br><span class="line">-<span class="string">XX:</span>ParallelGCThreads=n <span class="comment">// 并发回收线程数, 默认: (cpus &lt;= 8) ? cpus : 3 + ((cpus * 5) / 8)</span></span><br><span class="line">-<span class="string">XX:</span>CMSMaxAbortablePrecleanTime=n <span class="comment">// 预清理阶段, 最大持续时间(ms) 默认: 5000</span></span><br><span class="line">-<span class="string">XX:</span>CMSScheduleRemarkEdenPenetration=n <span class="comment">// "可被终止的预清理"阶段, Eden区域内存达到n%后, 进入"重新标记阶段"阶段, 默认: 50</span></span><br><span class="line">-<span class="string">XX:</span>CMSScheduleRemarkEdenSizeThreshold=n <span class="comment">// "可被终止的预清理"阶段, Eden区域内存达到nM后, 进入"重新标记阶段"阶段, 默认: 2</span></span><br><span class="line"></span><br><span class="line">-<span class="string">XX:</span>+CMSIncrementalMode <span class="comment">// (i-cms)增量的进行垃圾收集, 并发阶段, 不会独占整个周期, 周期性暂停, 唤醒应用线程. 收集器把并发工作划分为片段, 安排在次级(minor)回收间执行(在少量CPU, 需低延迟服务器上优势会高些).</span></span><br><span class="line">-<span class="string">XX:</span>+CMSIncrementalPacing <span class="comment">// 开启基于运行时收集的数据动态调整垃圾回收任务的数量</span></span><br><span class="line">-<span class="string">XX:</span>CMSIncrementalDutyCycle=n <span class="comment">// 每次增量回收垃圾占总垃圾的比例   默认: 10</span></span><br><span class="line">-<span class="string">XX:</span>CMSIncrementalDutyCycleMin=n <span class="comment">// 每次增量回收垃圾站总垃圾的最小比例 默认: 0</span></span><br><span class="line"></span><br><span class="line">-<span class="string">XX:</span>ExplicitGCInvokesConcurrent <span class="comment">// System::gc时做background模式的Full GC(默认会STW)</span></span><br><span class="line">-<span class="string">XX:</span>+DisableExplicitGC <span class="comment">// 禁止在运行期间显式调用System::gc</span></span><br><span class="line"></span><br><span class="line">-<span class="string">XX:</span>-ReduceInitialCardMarks <span class="comment">// 禁止并发初始化新对象与RS更新放到一起执行</span></span><br></pre></td></tr></table></figure>
+<h5 id="问题"><a href="#问题" class="headerlink" title="问题"></a>问题</h5><h6 id="Concurrent-Model-Failure"><a href="#Concurrent-Model-Failure" class="headerlink" title="Concurrent Model Failure"></a>Concurrent Model Failure</h6><ul>
+<li>GC执行过程中, 用户线程也在运行, 当年轻代空间不足时触发”Minjor GC”, “Minjor GC”执行过程中可能会有幸存者进入老年代, 此时老年代内存不足, 然后就抛出”concurrent mode failure”;</li>
+<li>可通过”-XX: +UseCMSInitiatingOccupancyOnly”和”-XX: CMSInitiatingOccupancyFraction=n” 合理配置来解决该问题;</li>
+</ul>
+<h6 id="Promotion-Failed"><a href="#Promotion-Failed" class="headerlink" title="Promotion Failed"></a>Promotion Failed</h6><ul>
+<li>GC执行过程中, “Survivor Space”空间不足, 对象直接进入老年代, 此时老年代内存不足, 然后抛出”promotion failed”(可能是老年代空间足够, 是碎片化的, 转入老年代的对象找不到连续的空间存放导致的);<ul>
+<li>过早提升: Minor GC过程中, “Surevivor To” 不足以存储”Eden”和”Surevivor From”中存活的对象, 多余的对象将被移入老年代(该种情况可调整Survivor空间大小);</li>
+</ul>
+</li>
+<li>视情况而定, 可通过”-XX: CMSFullGCsBeforeCompaction=n”进行空间整理……</li>
+</ul>
+<h5 id="缺点-3"><a href="#缺点-3" class="headerlink" title="缺点"></a>缺点</h5><ul>
+<li>只回收老年代, 以吞吐量换取停顿时间;</li>
+<li>应用长时间运行情况下, 容易造成严重的内存碎片化(可解决);</li>
+<li>无法解决<strong>浮动垃圾</strong>问题;</li>
+</ul>
+<h4 id="G1-收集器"><a href="#G1-收集器" class="headerlink" title="G1 收集器"></a>G1 收集器</h4><p><img src="http://image.smilelxy.cn/blog/images/jvm-garbage-collector-g1.png" alt="垃圾收集器-G1"></p>
+<h5 id="描述-11"><a href="#描述-11" class="headerlink" title="描述"></a>描述</h5><ul>
+<li><p>使用相对较短的停顿时间来达到最大吞吐量的收集器;</p>
+</li>
+<li><p>SATB(Snapshot At The Beginning): <strong>并发标记</strong>阶段, 用户线程与垃圾收集线程并发执行, 就可能出现<strong>突变者</strong>(对象被引用或取消引用),根据”<strong>三色标记法</strong>“维护并发GC的正确性;</p>
+<ul>
+<li>白色: 对象没有被标记到, 标记阶段结束后, 会被当做垃圾回收掉;</li>
+<li>灰色: 对象已被标记, 但里面还有field没有被标记;</li>
+<li>黑色: 对象已被标记, 且里面所有field也已被标记;</li>
+</ul>
+</li>
+<li>TAMS(Top At Mark Start): 解决<strong>并发标记</strong>阶段, 新对象被new, 但未被引用, 而导致漏标的情况;<ul>
+<li>并发标记中用到的两个Bitmap<ul>
+<li>prev Bitmap: 记录第n-1轮Concurrent Marking所得的对象存活状态. (由于第n－1轮Concurrent Marking已经完成, 这个Bitmap的信息可以直接使用);</li>
+<li>next Bitmap: 记录第n轮Concurrent Marking的结果. (这个Bitmap是当前将要或正在进行的Concurrent Marking的结果, 尚未完成, 所以还不能使用);</li>
+</ul>
+</li>
+<li>Region中几个指针<br><img src="http://image.smilelxy.cn/blog/images/region_indicator.png" alt="垃圾收集器-G1-Region内指针"><ul>
+<li>(Bottom - Top): 已使用的空间;<ol>
+<li>(Bottom - Prev TAMS): 已确定存活的对象;</li>
+<li>(Prev TAMS - Next TAMS): 在第n-1轮Concurrent Marking隐式存活的对象;</li>
+<li>(Next TAMS - Top): 在第n轮Concurrent Marking隐式存活的对象;</li>
+</ol>
+</li>
+<li>(Top - End): 尚未使用, 可分配的空间;</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>RS(Remembered Set): 解决<strong>并发标记</strong>阶段, Old -&gt; Young 或 Young -&gt; Old 跨代引用的问题;<ul>
+<li>每个Region附有个RS, 用于记录其他Region中的对象引用本Region中对象的关系, <strong>Points-Into</strong>(谁引用了我)</li>
+</ul>
+</li>
+<li>CS(Collection Set): 一组可被回收的Region的集合;</li>
+<li>TLAB(Thread Local Allocation Buffer): 本地线程缓冲区, 为了使对象尽快分配到内存空间, 每个线程都有固定的分区用于分配对象;</li>
+<li>Humongous: 存放大对象的Region(空间占Region一半及以上的对象)<ul>
+<li>在Mixed GC和Full GC 回收</li>
+</ul>
+</li>
+<li>步骤:<ol>
+<li>初始化标记(STW: 速度很快)</li>
+<li>并发标记</li>
+<li>最终标记(STW)</li>
+<li>清理(STW)</li>
+</ol>
+</li>
+</ul>
+<hr>
+<h6 id="初始化标记-STW-1"><a href="#初始化标记-STW-1" class="headerlink" title="初始化标记(STW)"></a>初始化标记(STW)</h6><ul>
+<li>标记GC Roots对象(从根集合可直接到达的对象); </li>
+<li>将字段压入扫描栈(marking stack), 等待后续的扫描;</li>
+<li>使用外部bitmap记录扫mark信息(未使用对象头中 mark word里的 mark bit来记录);</li>
+</ul>
+<h6 id="并发标记-并发"><a href="#并发标记-并发" class="headerlink" title="并发标记(并发)"></a>并发标记(并发)</h6><ul>
+<li>从扫描栈中取出对象引用, 递归扫描整个堆获取的对象图;</li>
+<li>对对象图上对象标记, 压入扫描栈;</li>
+<li>重复执行上两步, 知道扫描栈为空;</li>
+<li>扫描SATB write barrier所记录的引用(扫描栈中执行完, 就撤出);</li>
+</ul>
+<p>===================</p>
+<ul>
+<li>该阶段是并发进行的, 就需要解决程序进行的过程中未标, 漏标的情况. G1通过Writer barrier(Logging barrier)来实现;</li>
+</ul>
+<h6 id="最终标记-STW"><a href="#最终标记-STW" class="headerlink" title="最终标记(STW)"></a>最终标记(STW)</h6><ul>
+<li>扫描<strong>并发标记</strong>后剩下的SATB write barrier所记录的引用;</li>
+<li>扫描弱引用;</li>
+</ul>
+<h6 id="清理-STW"><a href="#清理-STW" class="headerlink" title="清理(STW)"></a>清理(STW)</h6><ul>
+<li>清除未标记的对象(将Region中存活(标记过)的对象拷贝到空的Region中, 回收原Region);<ul>
+<li>可以自由选择任意多个Region来独立构成收集集合CS(Collection Set)(靠Per-Region Remembered Set实现);</li>
+<li>选择CS后, 采用并行复制算法将CS中每个Region里存活的对象拷贝到新的Region中;</li>
+<li>回收原Region;</li>
+</ul>
+</li>
+<li>重置标记状态;</li>
+</ul>
+<h5 id="模式"><a href="#模式" class="headerlink" title="模式"></a>模式</h5><ul>
+<li>Young GC<ul>
+<li>当年轻代无法分配新对象时, 选定所有年轻代里的Region进行收集清理(可通过控制年轻代里的Region个数来控制Young GC的开销(-XX:NewRatio=n))</li>
+</ul>
+</li>
+<li>Mixed GC<ul>
+<li>视全局并发标记后统计, 选定所有年轻代里的Region进行收集清理, 根据Global Concurrent Marking统计得出收集收益高的若干老年代里的Region, 在用户指定的开销目标范围内尽可能选择收益高的老年代里的Region进行收集清理;<ul>
+<li>Global Concurrent Marking主要是为Mixed GC提供服务,</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p>==================</p>
+<ul>
+<li>Full GC(G1 GC的控制范围内没有Full GC)<ul>
+<li>若Mixed GC无法跟上程序分配内存的速度, 导致老年代填满无法继续进行Mixed GC, 就默认采用 Serial Old算法(和 -XX:+UseSerialGC 一样)堆整个堆内存进行收集清理;</li>
+</ul>
+</li>
+</ul>
+<hr>
+<ul>
+<li>Young GC 与Mixed GC之间视运行情况切换, 虚拟机会定时做全局并发标记;<ul>
+<li>初始化标记默认在Young GC阶段执行;</li>
+<li>全局并发标记进行时, 虚拟机不会执行Mixed GC;</li>
+<li>Mixed GC进行时, 虚拟机不能执行初始化标记;</li>
+<li><strong>Tip</strong>: 正常流程中没有 Full GC, 老年代里的Region收集清理靠 Mixed GC来完成.(视用户Jvm配置与程序运行情况而定);</li>
+</ul>
+</li>
+</ul>
+<h5 id="使用方式-5"><a href="#使用方式-5" class="headerlink" title="使用方式"></a>使用方式</h5><figure class="highlight groovy"><table><tr><td class="code"><pre><span class="line">-<span class="string">XX:</span>+UseG1GC <span class="comment">// 开启使用G1垃圾收集器</span></span><br><span class="line">-<span class="string">XX:</span>G1HeapRegionSize=nm <span class="comment">// 设置G1区域(Region)大小(范围 1 ~ 32MB), 堆为 2048 * Region (为减少过多分配Humongous对GC的影响, 特殊场景下可适当调整大小)</span></span><br><span class="line">-<span class="string">XX:</span>MaxGCPauseMillis=n <span class="comment">// 期望GC最大的暂停时间, 默认: 200</span></span><br><span class="line">-<span class="string">XX:</span>ParallelGCThreads=n <span class="comment">// GC过程中并行线程数, 默认: cpu &lt;= 8 时, 8; &gt;8时, 5/8 * cpu core</span></span><br><span class="line">-<span class="string">XX:</span>G1ConcRefinementThreads=n <span class="comment">// 扫描log Buffer, 更新Rset时, 并发优化线程数</span></span><br><span class="line">-<span class="string">XX:</span>ConcGCThreads=n <span class="comment">// 并发标记线程数, 默认: -XX:ParallelGCThreads 的1/4</span></span><br><span class="line">-<span class="string">XX:</span>+ParallelRefProcEnabled <span class="comment">// 开启并行对象引用处理</span></span><br><span class="line">-<span class="string">XX:</span>ReferencesPerThread=n <span class="comment">// 处理对象引用并行线程数, 最大线程数受 -XX:ParallelGCThreads 限制</span></span><br><span class="line">-<span class="string">XX:</span>NewRatio=n <span class="comment">// 新老年代比例, 默认: 2 (1:2)</span></span><br><span class="line">-<span class="string">XX:</span>SurvivorRatio=n <span class="comment">// Survivor与Eden比例, 默认: 8 (2:8)</span></span><br><span class="line">-<span class="string">XX:</span>G1NewSizePercent=n <span class="comment">// 年轻代占堆的n%内存, 默认: 5</span></span><br><span class="line">-<span class="string">XX:</span>G1MaxNewSizePercent=n <span class="comment">// 年轻代占堆的最大内存, 默认: 60</span></span><br><span class="line">-<span class="string">XX:</span>MaxTenuringThreshold=n <span class="comment">// 对象在新生代经过n次YGC方可进入老年代, 默认: 15</span></span><br><span class="line">-<span class="string">XX:</span>InitiatingHeapOccupancyPercent=n <span class="comment">// 触发标记的堆占用内存阈值(non_young_capacity_bytes: Old Generadion Region + Humongous), 默认: 45</span></span><br><span class="line">-<span class="string">XX:</span>G1HeapWastePercent=n <span class="comment">// 愿意浪费堆的n%, Global Concurrent Marking后可回收内存小于n, 则不会触发Mixed GC, 默认: 5</span></span><br><span class="line">-<span class="string">XX:</span>G1ReservePercent=n <span class="comment">// 预留G1HeapWastePercent堆的n%内存, 防止普升失败, 默认: 10</span></span><br><span class="line">-<span class="string">XX:</span>G1MixedGCLiveThresholdPercent=n <span class="comment">// 一个Region中存活的对象超过n%, 就不会被认为可垃圾Region, 通过该参数可影响每次Mixed GC回收的Region数(n越大, 越容易被认为是垃圾分区), 默认: 85 [^1],[^2]</span></span><br><span class="line">-<span class="string">XX:</span>G1MixedGCCountTarget=n <span class="comment">// 经过n次Mixed GC, 老年代所有Region将被回收一遍. 如果 Mixed GC中STW的时间过长, 可以考虑增大这个参数.(可用来调整每次Mixed GC回收多少个Region, 即有助于调节Mixed GC的停顿时间), 默认: 8 [^3]</span></span><br><span class="line">-<span class="string">XX:</span>G1RSetUpdatingPauseTimePercent=n <span class="comment">// GC 清除阶段更新RSet的时间百分比, 默认: 10</span></span><br><span class="line"></span><br><span class="line">-<span class="string">XX:</span>+G1SummarizeRSetStats <span class="comment">// 显示RS粗化过程</span></span><br><span class="line">-<span class="string">XX:</span>G1SummarizeRSetStatsPeriod=n <span class="comment">// 每隔n次GC后收集一次RS的统计信息</span></span><br><span class="line">-<span class="string">XX:</span>+PrintAdaptiveSizePolicy <span class="comment">// 打印"自适应调节策略"模式下运行的决策细节</span></span><br><span class="line">-<span class="string">XX:</span>+PrintReferenceGC <span class="comment">// 打印详细的引用信息</span></span><br></pre></td></tr></table></figure>
+<h5 id="优点-3"><a href="#优点-3" class="headerlink" title="优点"></a>优点</h5><ul>
+<li>并行性: 回收期间, 可由多个GC线程同时工作, 有效利用多核计算能力;</li>
+<li>分代GC: 同时兼顾年轻代与老年代;</li>
+<li>空间整理: 在每次回收时有效的复制对象, 减少空间碎片;</li>
+<li>停顿时间可控: 在停顿时间上添加了预测机制, 收集器将根据用户指定期望停顿时间回收收益率越高的Region;</li>
+</ul>
+<h5 id="缺点-4"><a href="#缺点-4" class="headerlink" title="缺点"></a>缺点</h5><ul>
+<li>Region空间的大小与大对象占用空间很难保证一致, 这将导致空间浪费(Region设置过小, 分配超过一个Region空间的大对象时, 有时寻找连续的空间会有麻烦);</li>
+</ul>
+<h5 id="总结-6"><a href="#总结-6" class="headerlink" title="总结"></a>总结</h5><ul>
+<li>清理算法区别<ul>
+<li>G1的清理算法从根集合遍历对象图来判定对象的生死, 不需要依赖Global Concurrent Marking的结果, 有就用, 没有也行;</li>
+<li>标记-清除算法依赖于标记阶段对对象生死的判定;</li>
+</ul>
+</li>
+</ul>
+<h3 id="引用-1"><a href="#引用-1" class="headerlink" title="引用"></a>引用</h3><ul>
+<li><strong>&lt;&lt;深入了解Java虚拟机II&gt;&gt;</strong></li>
+<li><a href="https://docs.oracle.com/javase/8/docs/technotes/guides/vm/gctuning/cms.html">Concurrent Mark Sweep (CMS) Collector</a></li>
+<li><a href="https://juejin.im/post/5c7262a15188252f30484351">CMS垃圾收集器</a></li>
+<li><a href="https://www.cnblogs.com/mockitobuilder/p/3754509.html">Tomcat GC参数详解</a></li>
+<li><a href="https://mp.weixin.qq.com/s/NJm28LyDWFYvNDR5yU9dag?">java垃圾回收以及jvm参数调优概述</a></li>
+<li><a href="http://www.javaadu.online/?p=460">CMS垃圾收集器详解</a></li>
+<li><p><a href="https://www.cnblogs.com/littleLord/p/5380624.html">详解CMS垃圾回收机制</a></p>
+</li>
+<li><p><a href="http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.63.6386&amp;rep=rep1&amp;type=pdf">G1论文</a></p>
+</li>
+<li><a href="https://hllvm-group.iteye.com/group/topic/21468">G1-名词</a></li>
+<li><a href="https://hllvm-group.iteye.com/group/topic/44381">G1-算法原理</a></li>
+<li><a href="https://hllvm-group.iteye.com/group/topic/44529">关于incremental update与SATB的一点理解</a></li>
+<li><a href="https://plumbr.io/handbook/garbage-collection-algorithms-implementations">JAVA GARBAGE COLLECTION HANDBOOK</a></li>
+<li><a href="http://www.javaadu.online/?p=465">G1垃圾收集器详解</a></li>
+<li><a href="https://www.oracle.com/technetwork/cn/articles/java/g1gc-1984535-zhs.html">垃圾优先型垃圾回收器调优-中文</a></li>
+<li><a href="https://www.oracle.com/technical-resources/articles/java/g1gc.html">垃圾优先型垃圾回收器调优-英文</a></li>
+<li><a href="https://www.infoq.com/articles/tuning-tips-G1-GC/">Tips for Tuning the Garbage First Garbage Collector</a></li>
+<li><a href="http://www.narihiro.info/g1gc-impl-book/">徹底解剖「G1GC」実装編</a></li>
+<li><p><a href="https://www.infoq.com/articles/G1-One-Garbage-Collector-To-Rule-Them-All/">G1GC日志解析</a></p>
+</li>
+<li><p><a href="https://www.oracle.com/webfolder/technetwork/tutorials/obe/java/G1GettingStarted/index.html">G1GC学习-官方</a></p>
+</li>
+<li><a href="https://docs.oracle.com/javase/8/docs/technotes/guides/vm/gctuning/toc.html">虚拟机收集器-官方</a></li>
+</ul>
+<h3 id="工具"><a href="#工具" class="headerlink" title="工具"></a>工具</h3><ul>
+<li><a href="https://gceasy.io/gc-index.jsp">gceasy</a></li>
+<li><a href="https://console.perfma.com/">perfma</a></li>
+<li><a href="https://plumbr.io/">plumbr</a></li>
+</ul>
+<h3 id="案例"><a href="#案例" class="headerlink" title="案例"></a>案例</h3><ul>
+<li><a href="https://mp.weixin.qq.com/s/HKdpmmvJKq45QZdV4Q2cYQ?">-XX:+CMSScavengeBeforeRemark</a></li>
+<li><a href="https://blog.csdn.net/qiang_zi_/article/details/100700784">-XX:SoftRefLRUPolicyMSPerMB</a></li>
+<li><a href="https://zhuanlan.zhihu.com/p/54546684">-XX:G1MixedGCLiveThresholdPercent=n</a></li>
+</ul>
+<h3 id="常用参数"><a href="#常用参数" class="headerlink" title="常用参数"></a>常用参数</h3><figure class="highlight groovy"><table><tr><td class="code"><pre><span class="line">-<span class="string">verbose:</span> gc 或者 -<span class="string">Xlog:</span>gc</span><br><span class="line">-<span class="string">XX:</span>+PrintGCDateStamps <span class="comment">// 打印GC的时间戳</span></span><br><span class="line">-<span class="string">XX:</span>+PrintGCDetails  <span class="comment">// 打印详细的GC日志</span></span><br><span class="line">-<span class="string">XX:</span>+PrintGCApplicationStoppedTime <span class="comment">// 打印GC期间应用停止响应的时间</span></span><br><span class="line">-<span class="string">XX:</span>+PrintGCApplicationConcurrentTime <span class="comment">// 答应GC期间应用运行时间</span></span><br><span class="line"></span><br><span class="line">-<span class="string">XX:</span>+UseGCLogFileRotation <span class="comment">// 滚动输出GC日志</span></span><br><span class="line">-<span class="string">XX:</span>NumberOfGCLogFiles=<span class="number">10</span> </span><br><span class="line">-<span class="string">XX:</span>GCLogFileSize=<span class="number">10</span>M</span><br><span class="line">-<span class="string">Xloggc:</span> <span class="regexp">/home/</span>XX<span class="regexp">/gc/</span>XX_gc.log</span><br><span class="line"></span><br><span class="line">-<span class="string">XX:</span>NewRatio=n <span class="comment">// 新老年代比例(默认: 2 (1:2))</span></span><br><span class="line">-<span class="string">XX:</span>SurvivorRatio=n <span class="comment">// Survivor与Eden比例(默认: 8 (2:8))</span></span><br><span class="line">-<span class="string">XX:</span>MaxTenuringThreshold=n <span class="comment">// 对象在新生代经过n次YGC方可进入老年代(默认: 15)</span></span><br><span class="line"></span><br><span class="line">-<span class="string">XX:</span>+UnlockDiagnosticVMOptions    <span class="comment">//后面2个参数的需要</span></span><br><span class="line">-<span class="string">XX:</span>+PrintCompilation   <span class="comment">//打印JIT编译详情</span></span><br><span class="line">-<span class="string">XX:</span>+PrintInlining    <span class="comment">//打印内联详情</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// OOM输出</span></span><br><span class="line">-<span class="string">XX:</span>+HeapDumpOnOutOfMemoryError </span><br><span class="line">-<span class="string">XX:</span>HeapDumpPath=<span class="regexp">/home/</span>XX/dump_OOME.hprof</span><br><span class="line"></span><br><span class="line">-<span class="string">XX:</span>+DisableExplicitGC</span><br><span class="line"></span><br><span class="line"><span class="comment">// 收集器</span></span><br><span class="line">-<span class="string">XX:</span>+UseSerialGC <span class="comment">// 串行收集器</span></span><br><span class="line">-<span class="string">XX:</span>+UseParallelGC <span class="comment">// 并行收集器</span></span><br><span class="line">-<span class="string">XX:</span>+UseParalledlOldGC <span class="comment">// 并行老年代收集器</span></span><br><span class="line">-<span class="string">XX:</span>+UseConcMarkSweepGC <span class="comment">// 并发收集器</span></span><br></pre></td></tr></table></figure>
+<h3 id="标注"><a href="#标注" class="headerlink" title="标注"></a>标注</h3>
+            
+        </div>
+        
+    </div>
+    
+    
+    <div class="copyright">
+        <p><span>本文标题:</span><a href="/2019/jvm-carbage-collect/">Jvm垃圾回收</a></p>
+        <p><span>文章作者:</span><a href="/" title="回到主页">水云游</a></p>
+        <p><span>发布时间:</span>2019-12-15, 00:00:00</p>
+        <p><span>最后更新:</span>2021-05-28, 01:24:28</p>
+        <p>
+            <span>原始链接:</span><a class="post-url" href="/2019/jvm-carbage-collect/" title="Jvm垃圾回收">https://blog.smilelxy.cn/2019/jvm-carbage-collect/</a>
+            <span class="copy-path" data-clipboard-text="原文: https://blog.smilelxy.cn/2019/jvm-carbage-collect/　　作者: 水云游" title="点击复制文章链接"><i class="fa fa-clipboard"></i></span>
+            <script> var clipboard = new Clipboard('.copy-path'); </script>
+        </p>
+        <p>
+            <span>许可协议:</span><i class="fa fa-creative-commons"></i> <a rel="license" href="http://creativecommons.org/licenses/by-nc-sa/4.0/" title="CC BY-NC-SA 4.0 International" target = "_blank">"署名-非商用-相同方式共享"</a> 转载请保留原文链接及作者。
+        </p>
+    </div>
+
+
+
+    <nav id="article-nav">
+        
+            <div id="article-nav-newer" class="article-nav-title">
+                <a href="/2020/jvm-tools-instruct/">
+                    Java性能调优-指令(Java8)
+                </a>
+            </div>
+        
+        
+            <div id="article-nav-older" class="article-nav-title">
+                <a href="/2019/jvm-running-data-area/">
+                    Jvm运行时数据区
+                </a>
+            </div>
+        
+    </nav>
+
+    
+    <script>
+
+        function getPgjs() {
+            var agent = navigator.userAgent.toLowerCase();
+            var res = agent.match(/android/);
+            if (res == "android")
+                return res;
+            res = agent.match(/iphone/);
+            if (res == "iphone")
+                return "ios";
+            res = agent.match(/ipad/);
+            if (res == "ipad")
+                return "ios";
+            res = agent.match(/windows/);
+            if (res == "windows")
+                return "wp";
+            return "pc";
+        }
+
+        function loadImage(id) {
+            var page = window.location.pathname
+            if (page.indexOf("about") !== -1) {
+                return;
+            }
+//            var result = getPgjs();
+//            if(result=="wp"){
+//                $(".fengmian").hide();
+//                console.log(result);
+//                return;
+//            }
+            var backgroundnum = 40;
+            var randomIndex = Math.ceil(Math.random() * backgroundnum);
+            var result = randomIndex + "?version=" + (new Date() / 1000);
+            var backgroundimg = "http://image.smilelxy.cn/blog/abridge/bg-number.jpg".replace(/number/gi, randomIndex);
+            var key = "#" + id;
+            $(key).attr("src", backgroundimg);
+            $(".fengmian").show();
+        }
+
+        (function () {
+            var page = window.location.pathname
+            if (page.indexOf("about") !== -1) {
+                console.log(page)
+                $(".fenagmian").hide();
+//                $("#comments").remove();
+            }
+        })()
+    </script>
+</article>
+<!-- 代码1：放在页面需要展示的位置  -->
+<!-- 如果您配置过sourceid，建议在div标签中配置sourceid、cid(分类id)，没有请忽略  -->
+<!--<div id="cyReward" role="cylabs" data-use="reward" style="margin-left: 45%" ></div>-->
+<!--<div id="cyEmoji" role="cylabs" data-use="emoji"></div>-->
+
+
+<!--<script>-->
+<!--(function(){-->
+<!--var path = window.location.pathname;-->
+<!--if (path ==="/" || path=== undefined || path === null || path.indexOf("page") !== -1){-->
+<!--$("#cyReward").remove();-->
+<!--$("#cyEmoji").remove();-->
+<!--}-->
+<!--})()-->
+
+
+<!--</script>-->
+
+<!-- 代码2：用来读取评论框配置，此代码需放置在代码1之后。 -->
+<!-- 如果当前页面有评论框，代码2请勿放置在评论框代码之前。 -->
+<!-- 如果页面同时使用多个实验室项目，以下代码只需要引入一次，只配置上面的div标签即可 -->
+<!--<script type="text/javascript" charset="utf-8" src="https://changyan.sohu.com/js/changyan.labs.https.js?appid=cysUkgluO"></script>-->
+
+<div id="toc" class="toc-article">
+    <strong class="toc-title">文章目录</strong>
+    <ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#前言"><span class="toc-number">1.</span> <span class="toc-text">前言</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#回收算法"><span class="toc-number">2.</span> <span class="toc-text">回收算法</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#引用计数算法"><span class="toc-number">2.1.</span> <span class="toc-text">引用计数算法</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#描述"><span class="toc-number">2.1.1.</span> <span class="toc-text">描述</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#优点"><span class="toc-number">2.1.2.</span> <span class="toc-text">优点</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#缺点"><span class="toc-number">2.1.3.</span> <span class="toc-text">缺点</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#例子"><span class="toc-number">2.1.4.</span> <span class="toc-text">例子</span></a><ol class="toc-child"><li class="toc-item toc-level-6"><a class="toc-link" href="#代码"><span class="toc-number">2.1.4.1.</span> <span class="toc-text">代码</span></a></li><li class="toc-item toc-level-6"><a class="toc-link" href="#图解"><span class="toc-number">2.1.4.2.</span> <span class="toc-text">图解</span></a></li><li class="toc-item toc-level-6"><a class="toc-link" href="#分析"><span class="toc-number">2.1.4.3.</span> <span class="toc-text">分析</span></a></li><li class="toc-item toc-level-6"><a class="toc-link" href="#结果"><span class="toc-number">2.1.4.4.</span> <span class="toc-text">结果</span></a></li></ol></li></ol></li><li class="toc-item toc-level-4"><a class="toc-link" href="#可达性分析算法"><span class="toc-number">2.2.</span> <span class="toc-text">可达性分析算法</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#描述-1"><span class="toc-number">2.2.1.</span> <span class="toc-text">描述</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#例子-1"><span class="toc-number">2.2.2.</span> <span class="toc-text">例子</span></a><ol class="toc-child"><li class="toc-item toc-level-6"><a class="toc-link" href="#代码-1"><span class="toc-number">2.2.2.1.</span> <span class="toc-text">代码</span></a></li><li class="toc-item toc-level-6"><a class="toc-link" href="#输出"><span class="toc-number">2.2.2.2.</span> <span class="toc-text">输出</span></a></li><li class="toc-item toc-level-6"><a class="toc-link" href="#分析-1"><span class="toc-number">2.2.2.3.</span> <span class="toc-text">分析</span></a></li><li class="toc-item toc-level-6"><a class="toc-link" href="#使用finalize注意"><span class="toc-number">2.2.2.4.</span> <span class="toc-text">使用finalize注意</span></a></li></ol></li><li class="toc-item toc-level-5"><a class="toc-link" href="#GC-Roots对象包含-但不限于"><span class="toc-number">2.2.3.</span> <span class="toc-text">GC Roots对象包含 (但不限于)</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#引用"><span class="toc-number">2.2.4.</span> <span class="toc-text">引用</span></a><ol class="toc-child"><li class="toc-item toc-level-6"><a class="toc-link" href="#强引用-Strong-Reference"><span class="toc-number">2.2.4.1.</span> <span class="toc-text">强引用(Strong Reference)</span></a></li><li class="toc-item toc-level-6"><a class="toc-link" href="#软引用-Soft-Reference"><span class="toc-number">2.2.4.2.</span> <span class="toc-text">软引用(Soft Reference)</span></a></li><li class="toc-item toc-level-6"><a class="toc-link" href="#弱引用-Weak-Reference"><span class="toc-number">2.2.4.3.</span> <span class="toc-text">弱引用(Weak Reference)</span></a></li><li class="toc-item toc-level-6"><a class="toc-link" href="#虚引用-Phantom-Reference"><span class="toc-number">2.2.4.4.</span> <span class="toc-text">虚引用(Phantom Reference)</span></a></li></ol></li></ol></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#垃圾回收算法"><span class="toc-number">3.</span> <span class="toc-text">垃圾回收算法</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#标记-清除算法"><span class="toc-number">3.1.</span> <span class="toc-text">标记-清除算法</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#描述-2"><span class="toc-number">3.1.1.</span> <span class="toc-text">描述</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#缺点-1"><span class="toc-number">3.1.2.</span> <span class="toc-text">缺点</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#总结"><span class="toc-number">3.1.3.</span> <span class="toc-text">总结</span></a></li></ol></li><li class="toc-item toc-level-4"><a class="toc-link" href="#标记-整理算法"><span class="toc-number">3.2.</span> <span class="toc-text">标记-整理算法</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#描述-3"><span class="toc-number">3.2.1.</span> <span class="toc-text">描述</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#优点-1"><span class="toc-number">3.2.2.</span> <span class="toc-text">优点</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#总结-1"><span class="toc-number">3.2.3.</span> <span class="toc-text">总结</span></a></li></ol></li><li class="toc-item toc-level-4"><a class="toc-link" href="#标记-复制算法"><span class="toc-number">3.3.</span> <span class="toc-text">标记-复制算法</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#描述-4"><span class="toc-number">3.3.1.</span> <span class="toc-text">描述</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#优点-2"><span class="toc-number">3.3.2.</span> <span class="toc-text">优点</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#缺点-2"><span class="toc-number">3.3.3.</span> <span class="toc-text">缺点</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#总结-2"><span class="toc-number">3.3.4.</span> <span class="toc-text">总结</span></a></li></ol></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#垃圾收集器"><span class="toc-number">4.</span> <span class="toc-text">垃圾收集器</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#Serial-收集器"><span class="toc-number">4.1.</span> <span class="toc-text">Serial 收集器</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#描述-5"><span class="toc-number">4.1.1.</span> <span class="toc-text">描述</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#使用方式"><span class="toc-number">4.1.2.</span> <span class="toc-text">使用方式</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#总结-3"><span class="toc-number">4.1.3.</span> <span class="toc-text">总结</span></a></li></ol></li><li class="toc-item toc-level-4"><a class="toc-link" href="#ParNew-收集器"><span class="toc-number">4.2.</span> <span class="toc-text">ParNew 收集器</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#描述-6"><span class="toc-number">4.2.1.</span> <span class="toc-text">描述</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#使用方式-1"><span class="toc-number">4.2.2.</span> <span class="toc-text">使用方式</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#总结-4"><span class="toc-number">4.2.3.</span> <span class="toc-text">总结</span></a></li></ol></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Parallel-Scavenge收集器"><span class="toc-number">4.3.</span> <span class="toc-text">Parallel Scavenge收集器</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#描述-7"><span class="toc-number">4.3.1.</span> <span class="toc-text">描述</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#使用方式-2"><span class="toc-number">4.3.2.</span> <span class="toc-text">使用方式</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#总结-5"><span class="toc-number">4.3.3.</span> <span class="toc-text">总结</span></a></li></ol></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Serial-Old-收集器"><span class="toc-number">4.4.</span> <span class="toc-text">Serial Old 收集器</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#描述-8"><span class="toc-number">4.4.1.</span> <span class="toc-text">描述</span></a></li></ol></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Parallel-Old-收集器"><span class="toc-number">4.5.</span> <span class="toc-text">Parallel Old 收集器</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#描述-9"><span class="toc-number">4.5.1.</span> <span class="toc-text">描述</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#使用方式-3"><span class="toc-number">4.5.2.</span> <span class="toc-text">使用方式</span></a></li></ol></li><li class="toc-item toc-level-4"><a class="toc-link" href="#CMS-Concurrent-Mark-Sweep-收集器"><span class="toc-number">4.6.</span> <span class="toc-text">CMS(Concurrent Mark Sweep) 收集器</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#描述-10"><span class="toc-number">4.6.1.</span> <span class="toc-text">描述</span></a><ol class="toc-child"><li class="toc-item toc-level-6"><a class="toc-link" href="#初始化标记-STW"><span class="toc-number">4.6.1.1.</span> <span class="toc-text">初始化标记(STW)</span></a></li><li class="toc-item toc-level-6"><a class="toc-link" href="#并发标记"><span class="toc-number">4.6.1.2.</span> <span class="toc-text">并发标记</span></a></li><li class="toc-item toc-level-6"><a class="toc-link" href="#预清理"><span class="toc-number">4.6.1.3.</span> <span class="toc-text">预清理</span></a></li><li class="toc-item toc-level-6"><a class="toc-link" href="#可被终止的预清理"><span class="toc-number">4.6.1.4.</span> <span class="toc-text">可被终止的预清理</span></a></li><li class="toc-item toc-level-6"><a class="toc-link" href="#重新标记-STW"><span class="toc-number">4.6.1.5.</span> <span class="toc-text">重新标记(STW)</span></a></li><li class="toc-item toc-level-6"><a class="toc-link" href="#并发清除"><span class="toc-number">4.6.1.6.</span> <span class="toc-text">并发清除</span></a></li><li class="toc-item toc-level-6"><a class="toc-link" href="#并发清除-1"><span class="toc-number">4.6.1.7.</span> <span class="toc-text">并发清除</span></a></li></ol></li><li class="toc-item toc-level-5"><a class="toc-link" href="#使用方式-4"><span class="toc-number">4.6.2.</span> <span class="toc-text">使用方式</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#问题"><span class="toc-number">4.6.3.</span> <span class="toc-text">问题</span></a><ol class="toc-child"><li class="toc-item toc-level-6"><a class="toc-link" href="#Concurrent-Model-Failure"><span class="toc-number">4.6.3.1.</span> <span class="toc-text">Concurrent Model Failure</span></a></li><li class="toc-item toc-level-6"><a class="toc-link" href="#Promotion-Failed"><span class="toc-number">4.6.3.2.</span> <span class="toc-text">Promotion Failed</span></a></li></ol></li><li class="toc-item toc-level-5"><a class="toc-link" href="#缺点-3"><span class="toc-number">4.6.4.</span> <span class="toc-text">缺点</span></a></li></ol></li><li class="toc-item toc-level-4"><a class="toc-link" href="#G1-收集器"><span class="toc-number">4.7.</span> <span class="toc-text">G1 收集器</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#描述-11"><span class="toc-number">4.7.1.</span> <span class="toc-text">描述</span></a><ol class="toc-child"><li class="toc-item toc-level-6"><a class="toc-link" href="#初始化标记-STW-1"><span class="toc-number">4.7.1.1.</span> <span class="toc-text">初始化标记(STW)</span></a></li><li class="toc-item toc-level-6"><a class="toc-link" href="#并发标记-并发"><span class="toc-number">4.7.1.2.</span> <span class="toc-text">并发标记(并发)</span></a></li><li class="toc-item toc-level-6"><a class="toc-link" href="#最终标记-STW"><span class="toc-number">4.7.1.3.</span> <span class="toc-text">最终标记(STW)</span></a></li><li class="toc-item toc-level-6"><a class="toc-link" href="#清理-STW"><span class="toc-number">4.7.1.4.</span> <span class="toc-text">清理(STW)</span></a></li></ol></li><li class="toc-item toc-level-5"><a class="toc-link" href="#模式"><span class="toc-number">4.7.2.</span> <span class="toc-text">模式</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#使用方式-5"><span class="toc-number">4.7.3.</span> <span class="toc-text">使用方式</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#优点-3"><span class="toc-number">4.7.4.</span> <span class="toc-text">优点</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#缺点-4"><span class="toc-number">4.7.5.</span> <span class="toc-text">缺点</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#总结-6"><span class="toc-number">4.7.6.</span> <span class="toc-text">总结</span></a></li></ol></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#引用-1"><span class="toc-number">5.</span> <span class="toc-text">引用</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#工具"><span class="toc-number">6.</span> <span class="toc-text">工具</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#案例"><span class="toc-number">7.</span> <span class="toc-text">案例</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#常用参数"><span class="toc-number">8.</span> <span class="toc-text">常用参数</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#标注"><span class="toc-number">9.</span> <span class="toc-text">标注</span></a></li></ol>
+</div>
+<style>
+    .left-col .switch-btn,
+    .left-col .switch-area {
+        display: none;
+    }
+</style>
+
+<input type="button" id="tocButton" value="隐藏目录"  title="点击按钮隐藏或者显示文章目录">
+
+<script>
+    yiliaConfig.toc = ["隐藏目录", "显示目录", !!"false"];
+</script>
+
+
+
+
+<link rel="stylesheet" href="https://unpkg.com/gitalk/dist/gitalk.css">
+<script src="https://unpkg.com/gitalk/dist/gitalk.min.js"></script>
+<hr/>
+<br/>
+<br/>
+<br/>
+<div id="gitalk-container" style="margin: 1% 3%"></div>
+<h3 style="text-align: center">如果想及时收到回复,可在 <a href="https://github.com/settings/notifications" target="_blank">订阅中心</a>的 <code>Participating</code>中勾选Email</h3>
+<script type="text/javascript">
+    var gitalk = new Gitalk({
+        clientID: '1305dbf64dd1101187a6',
+        clientSecret: '67f4a6ebee76801d436ab55d771e105c37255690',
+        id: window.location.pathname,
+        repo: 'blog',
+        owner: 'smile-lxy',
+        admin: 'smile-lxy',
+        distractionFreeMode: false
+    })
+    gitalk.render('gitalk-container')
+</script>
+
+
+
+
+
+
+    <div class="scroll" id="post-nav-button">
+        
+            <a href="/2020/jvm-tools-instruct/" title="上一篇: Java性能调优-指令(Java8)">
+                <i class="fa fa-angle-left"></i>
+            </a>
+        
+
+        <a title="文章列表"><i class="fa fa-bars"></i><i class="fa fa-times"></i></a>
+
+        
+            <a href="/2019/jvm-running-data-area/" title="下一篇: Jvm运行时数据区">
+                <i class="fa fa-angle-right"></i>
+            </a>
+        
+    </div>
+
+    <ul class="post-list"><li class="post-list-item"><a class="post-list-link" href="/2021/fukushi-kannjyoukeiyoushi/">学习-日语-感情形容词</a></li><li class="post-list-item"><a class="post-list-link" href="/2021/fukushi-zokuseikeiyoushi/">学习-日语-属性形容词</a></li><li class="post-list-item"><a class="post-list-link" href="/2021/fukushi-wagoshi-meishi/">学习-日语-和语词和名词</a></li><li class="post-list-item"><a class="post-list-link" href="/2021/fukushi-katarikuchi-koou/">学习-日语-副词(语气和呼应)</a></li><li class="post-list-item"><a class="post-list-link" href="/2021/nihonngo-bunnpou-chigai/">学习-日语-语法的区别总结</a></li><li class="post-list-item"><a class="post-list-link" href="/2021/nihonngo-bunpou/">学习-日语-语法总结(N3-2)</a></li><li class="post-list-item"><a class="post-list-link" href="/2021/nihonngo-tanngo/">学习-日语-单词要点</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/nihonngo-%20poinnto/">学习-日语-要点</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/nihonngo-henkei/">学习-日语-日语动词变形总结</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/nihonngo-bunpou/">学习-日语-语法总结</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/framework-study-seata-top/">Seata总结</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/egg-toon/">生活-美食-鸡蛋爆香椿</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/jvm-tools-instruct/">Java性能调优-指令(Java8)</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/jvm-carbage-collect/">Jvm垃圾回收</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/jvm-running-data-area/">Jvm运行时数据区</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/jvm-class-loader-mechanism/">JVM类加载机制</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/framework-distributed-transaction/">分布式事务总结</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/exp-db-data-pagination/">分库分表后-数据分页</a></li></ul>
+
+<style>
+    #post-nav-button a{
+        background-color: skyblue;
+    }
+</style>
+
+
+
+<script>
+    
+</script>
+
+</div>
+      <footer id="footer">
+    <div class="outer">
+        <div id="footer-info">
+            <div class="footer-left">
+                <i class="fa fa-copyright"></i>
+                
+                    2020-
+                
+                2021 水云游
+                
+            </div>
+            <div class="footer-right">
+                <a href="https://blog.smilelxy.cn/" target="_blank" title="欢迎来到水云游的博客">Blog </a> Created by <a
+                        href="https://github.com/smile-lxy" target="_blank" rel="external nofollow"
+                        title="希望这里的文章对你有所帮助  v3.0">shuiyy</a>
+                <a href="/record.html"><i class="fa fa-heart animated infinite pulse"></i></a>
+            </div>
+        </div>
+        
+            <div class="visit">
+                
+                    <span id="busuanzi_container_site_pv" style='display:none'>
+                        <span id="site-visit">总访问数:
+                            <span id="busuanzi_value_site_pv"></span>
+                        </span>
+                    </span>
+                
+                <span style="color: grey;">(<a href="https://www.upyun.com/" rel="external nofollow" target="_blank">背景随机加载-资源存储于又拍云</a>) | 本站己运行<span
+                            id="day_count">222</span>天<span id="time_now">1</span></span>
+            </div>
+        
+    </div>
+    <script src="/js/activate-power-mode.js" ></script>
+</footer>
+<script>
+    // 添加输入效果
+    POWERMODE.colorful = true; // make power mode colorful
+    POWERMODE.shake = false; // turn off shake
+    document.body.addEventListener('input', POWERMODE);
+
+    (function () {
+        function current() {
+            var d = new Date(), str = '';
+            str += d.getHours() + '小时';
+            str += d.getMinutes() + '分';
+            str += d.getSeconds() + '秒';
+            return str;
+        }
+
+        setInterval(function () {
+            $("#time_now").html(current)
+        }, 1000);
+
+        var dateFrom = new Date(2020, 2, 1);
+        var dateTo = new Date();
+        var diff = dateTo.valueOf() - dateFrom.valueOf();
+        var diff_day = parseInt(diff / (1000 * 60 * 60 * 24));
+        $("#day_count").html(diff_day);
+    })();
+</script>
+<a href="https://github.com/smile-lxy/blog"><img style="position: fixed; top: 0;left: 0;" width="140" height="140" src="https://github.blog/wp-content/uploads/2008/12/forkme_left_gray_6d6d6d.png?resize=149%2C149" class="attachment-full size-full" alt="Fork me on GitHub" data-recalc-dims="1"></a>
+
+    </div>
+    
+    
+<script src="/js/GithubRepoWidget.js"></script>
+
+
+<script data-main="/js/main.js" src="//cdn.bootcss.com/require.js/2.2.0/require.min.js"></script>
+
+    <script>
+        $(document).ready(function() {
+            var iPad = window.navigator.userAgent.indexOf('iPad');
+            if (iPad > -1 || $(".left-col").css("display") === "none") {
+                var bgColorList = ["#9db3f4", "#414141", "#e5a859", "#f5dfc6", "#c084a0", "#847e72", "#cd8390", "#996731"];
+                var bgColor = Math.ceil(Math.random() * (bgColorList.length - 1));
+                $("body").css({"background-color": bgColorList[bgColor], "background-size": "cover"});
+            }
+            else {
+                var backgroundnum = 36;
+                // var randomIndex = Math.ceil(Math.random() * backgroundnum);
+                var randomIndex = 1;
+                var result = randomIndex+".jpg?version="+(new Date()/1000);
+                var backgroundimg = "url(http://image.smilelxy.cn/blog/background/bg-number)".replace(/number/gi,result);
+//                console.info("加载图片"+backgroundimg);
+                $("body").css({"background": backgroundimg, "background-attachment": "fixed", "background-size": "cover","background-color":"rgba(255,255,255,0.5)","background-blend-mode":"lighten"});
+            }
+        })
+    </script>
+
+
+    <script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+    tex2jax: {
+        inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+        processEscapes: true,
+        skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+    }
+});
+
+MathJax.Hub.Queue(function() {
+    var all = MathJax.Hub.getAllJax(), i;
+    for(i=0; i < all.length; i += 1) {
+        all[i].SourceElement().parentNode.className += ' has-jax';                 
+    }       
+});
+</script>
+
+<script src="//cdn.bootcss.com/mathjax/2.6.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script>
+
+
+<div class="scroll" id="scroll">
+    <a href="#" title="返回顶部"><i class="fa fa-arrow-up"></i></a>
+    <a href="#comments" onclick="load$hide();" title="查看评论"><i class="fa fa-comments-o"></i></a>
+    <a href="#footer" title="转到底部"><i class="fa fa-arrow-down"></i></a>
+</div>
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+  </div>
+</body>
+</html>

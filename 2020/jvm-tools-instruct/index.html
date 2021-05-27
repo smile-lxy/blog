@@ -1,0 +1,1081 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+
+    <!--[if lt IE 9]>
+        <style>body {display: none; background: none !important} </style>
+        <meta http-equiv="Refresh" Content="0; url=//outdatedbrowser.com/" />
+    <![endif]-->
+
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge, chrome=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="format-detection" content="telephone=no" />
+<meta name="author" content="水云游" />
+<meta name="baidu-site-verification" content="qp2dTXVqvj" />
+
+
+
+<meta name="keywords" content="水云游, 蓝心语, 技术, java, 日语, 动漫">
+
+
+<meta name="description" content="在实际项目过程中, 受事业环境因素影响, 线上排查问题等情况下, 更多的是通过java指令来查看项目性能情况.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Java性能调优-指令(Java8)">
+<meta property="og:url" content="https://blog.smilelxy.cn/2020/jvm-tools-instruct/index.html">
+<meta property="og:site_name" content="水云游的博客">
+<meta property="og:description" content="在实际项目过程中, 受事业环境因素影响, 线上排查问题等情况下, 更多的是通过java指令来查看项目性能情况.">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2020-02-14T16:00:00.000Z">
+<meta property="article:modified_time" content="2021-05-27T16:24:28.669Z">
+<meta property="article:author" content="水云游">
+<meta property="article:tag" content="Java">
+<meta property="article:tag" content="Jvm">
+<meta name="twitter:card" content="summary">
+<link rel="apple-touch-icon" href= "/apple-touch-icon.png">
+
+
+    <link rel="alternative" href="/atom.xml" title="水云游的博客" type="application/atom+xml">
+
+
+
+    <link rel="shortcut icon" href="http://image.smilelxy.cn/logo/logo.png">
+
+
+
+    <link href="//cdn.bootcss.com/animate.css/3.5.1/animate.min.css" rel="stylesheet">
+
+
+
+    <link href="//cdn.bootcss.com/fancybox/2.1.5/jquery.fancybox.min.css" rel="stylesheet">
+
+
+
+    <script src="//cdn.bootcss.com/pace/1.0.2/pace.min.js"></script>
+    <link href="//cdn.bootcss.com/pace/1.0.2/themes/green/pace-theme-minimal.css" rel="stylesheet">
+
+
+
+<link rel="stylesheet" href="/css/style.css">
+
+
+
+
+<link href="//cdn.bootcss.com/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet">
+
+
+<title>Java性能调优-指令(Java8) | 水云游的博客</title>
+
+<script src="//cdn.bootcss.com/jquery/2.2.4/jquery.js"></script>
+<script src="//cdn.bootcss.com/clipboard.js/1.5.10/clipboard.min.js"></script>
+
+<script>
+    var yiliaConfig = {
+        fancybox: true,
+        animate: true,
+        isHome: false,
+        isPost: true,
+        isArchive: false,
+        isTag: false,
+        isCategory: false,
+        open_in_new: false,
+        fancybox_js: "//cdn.bootcss.com/fancybox/2.1.5/jquery.fancybox.min.js",
+        scrollreveal: "//cdn.bootcss.com/scrollReveal.js/3.1.4/scrollreveal.min.js",
+        search: true
+    }
+</script>
+
+
+    <script>
+        yiliaConfig.jquery_ui = [true, "//cdn.bootcss.com/jqueryui/1.10.4/jquery-ui.min.js", "//cdn.bootcss.com/jqueryui/1.10.4/css/jquery-ui.min.css"];
+    </script>
+
+
+
+    <script> yiliaConfig.rootUrl = "\/";</script>
+
+
+<meta name="generator" content="Hexo 4.2.1"></head>
+
+<body oncontextmenu="return false" onselectstart="return false">
+  <div id="container">
+    <div class="left-col">
+    <div class="overlay"></div>
+<div class="intrude-less">
+    <header id="header" class="inner">
+        <a href="https://blog.smilelxy.cn" target="_self" class="profilepic">
+            <img src="http://image.smilelxy.cn/logo/avatar.jpeg" alt="logo" class="animated zoomIn">
+        </a>
+        <hgroup>
+          <h1 class="header-author"><a href="/">水云游</a></h1>
+        </hgroup>
+
+        
+        <p class="header-subtitle">舍弃欲望, 活在当下</p>
+        
+
+        
+            <form id="search-form">
+            <input type="text" id="local-search-input" name="q" results="0" placeholder="search..." class="search form-control" autocomplete="off" autocorrect="off" searchonload="true" />
+            <i class="fa fa-times" onclick="resetSearch()"></i>
+            </form>
+            <div id="local-search-result"></div>
+            <p class='no-result'>No results found <i class='fa fa-spinner fa-pulse'></i></p>
+        
+
+
+        
+            <div id="switch-btn" class="switch-btn">
+                <div class="icon">
+                    <div class="icon-ctn">
+                        <div class="icon-wrap icon-house" data-idx="0">
+                            <div class="birdhouse"></div>
+                            <div class="birdhouse_holes"></div>
+                        </div>
+                        <div class="icon-wrap icon-ribbon hide" data-idx="1">
+                            <div class="ribbon"></div>
+                        </div>
+                        
+                        
+                        <div class="icon-wrap icon-me hide" data-idx="3">
+                            <div class="user"></div>
+                            <div class="shoulder"></div>
+                        </div>
+                        
+                    </div>
+                    
+                </div>
+                <div class="tips-box hide">
+                    <div class="tips-arrow"></div>
+                    <ul class="tips-inner">
+                        <li>菜单</li>
+                        <li>标签</li>
+                        
+                        
+                        <li>关于我</li>
+                        
+                    </ul>
+                </div>
+            </div>
+        
+
+        <div id="switch-area" class="switch-area">
+            <div class="switch-wrap">
+                <section class="switch-part switch-part1">
+                    <nav class="header-menu">
+                        <ul>
+                        
+                            <li><a href="//smilelxy.cn">回到主站</a></li>
+                        
+                            <li><a href="/categories/%E6%8A%80%E6%9C%AF/">技术系列</a></li>
+                        
+                            <li><a href="/categories/%E6%97%A5%E6%9C%AC/">日本相关</a></li>
+                        
+                            <li><a href="/categories/%E7%94%9F%E6%B4%BB/">生活系列</a></li>
+                        
+                            <li><a href="/archives/">所有文章</a></li>
+                        
+                            <li><a href="/about.html">关于我</a></li>
+                        
+                        </ul>
+                    </nav>
+                    <nav class="header-nav">
+                        <ul class="social">
+                            
+                                <a class="fa Email" target="_blank" rel="external nofollow" href="mailto:yiqiufengye@gmail.com" title="Email"></a>
+                            
+                                <a class="fa QQ" target="_blank" rel="external nofollow" href="http://wpa.qq.com/msgrd?v=3&uin=3133545802&site=qq&menu=yes" title="QQ"></a>
+                            
+                                <a class="fa 简书" target="_blank" rel="external nofollow" href="https://www.jianshu.com/u/d650053de64e" title="简书"></a>
+                            
+                                <a class="fa CSDN" target="_blank" rel="external nofollow" href="https://me.csdn.net/FengYe_YuLu" title="CSDN"></a>
+                            
+                        </ul>
+                        <!-- 网易云音乐插件 -->
+                        
+                            <div style="position:absolute; bottom:120px left:auto; width:85%; height: 110px;">
+                                <iframe frameborder="no" border="0" marginwidth="0" marginheight="0" width=330 height=450 src="//music.163.com/outchain/player?type=0&id=2109140602&auto=1&height=430"></iframe>
+                            </div>
+                        
+                    </nav>
+                </section>
+                
+                
+                <section class="switch-part switch-part2">
+                    <div class="widget tagcloud" id="js-tagcloud">
+                        <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/DB/" rel="tag">DB</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Java/" rel="tag">Java</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Jvm/" rel="tag">Jvm</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/framework/" rel="tag">framework</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/seata/" rel="tag">seata</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E5%AD%A6%E4%B9%A0/" rel="tag">学习</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E7%94%9F%E6%B4%BB/" rel="tag">生活</a></li></ul>
+                    </div>
+                </section>
+                
+                
+                
+
+                
+                
+                <section class="switch-part switch-part3">
+                
+                    <div id="js-aboutme">技术宅、 杭州、 夜猫子、 爱动漫、 爱日语 2017年毕业、 java开发、 生命不息折腾不止、</div>
+                </section>
+                
+            </div>
+        </div>
+    </header>                
+</div>
+    </div>
+    <div class="mid-col">
+      <nav id="mobile-nav">
+      <div class="overlay">
+          <div class="slider-trigger"></div>
+          <h1 class="header-author js-mobile-header hide"><a href="/" title="回到主页">水云游</a></h1>
+      </div>
+    <div class="intrude-less">
+        <header id="header" class="inner">
+            <a href="/" class="profilepic">
+                <img src="http://image.smilelxy.cn/logo/avatar.jpeg" alt="logo" class="animated zoomIn">
+            </a>
+            <hgroup>
+              <h1 class="header-author"><a href="/" title="回到主页">水云游</a></h1>
+            </hgroup>
+            
+            <p class="header-subtitle">舍弃欲望, 活在当下</p>
+            
+            <nav class="header-menu">
+                <ul>
+                
+                    <li><a href="//smilelxy.cn">回到主站</a></li>
+                
+                    <li><a href="/categories/%E6%8A%80%E6%9C%AF/">技术系列</a></li>
+                
+                    <li><a href="/categories/%E6%97%A5%E6%9C%AC/">日本相关</a></li>
+                
+                    <li><a href="/categories/%E7%94%9F%E6%B4%BB/">生活系列</a></li>
+                
+                    <li><a href="/archives/">所有文章</a></li>
+                
+                    <li><a href="/about.html">关于我</a></li>
+                
+                <div class="clearfix"></div>
+                </ul>
+            </nav>
+            <nav class="header-nav">
+                        <ul class="social">
+                            
+                                <a class="fa Email" target="_blank" rel="external nofollow" href="mailto:yiqiufengye@gmail.com" title="Email"></a>
+                            
+                                <a class="fa QQ" target="_blank" rel="external nofollow" href="http://wpa.qq.com/msgrd?v=3&uin=3133545802&site=qq&menu=yes" title="QQ"></a>
+                            
+                                <a class="fa 简书" target="_blank" rel="external nofollow" href="https://www.jianshu.com/u/d650053de64e" title="简书"></a>
+                            
+                                <a class="fa CSDN" target="_blank" rel="external nofollow" href="https://me.csdn.net/FengYe_YuLu" title="CSDN"></a>
+                            
+                        </ul>
+            </nav>
+        </header>                
+    </div>
+    <link class="menu-list" tags="标签" friends="友情链接" about="关于我"/>
+</nav>
+      <div class="body-wrap"><style>
+    .fengmian {
+        float: left;
+        width: 400px;
+        height: 250px;
+    }
+
+    .article img {
+        margin: -1px 20px 5px -1px;
+        border-top-left-radius: 3px;
+        -webkit-border-radius-topleft: 3%;
+        -webkit-transition: all 0.5s;
+        -moz-transition: all 0.5s;
+        -o-transition: all 0.5s;
+    }
+
+    /*.article img:hover{*/
+    /*transform: scale(1, 1.05);*/
+    /*-webkit-transition:all 0.5s;*/
+    /*-moz-transition:all 0.5s;*/
+    /*-o-transition:all 0.5s;*/
+    /*}*/
+</style>
+
+
+<article id="post-jvm-tools-instruct" class="article article-type-post" itemscope itemprop="blogPost">
+    
+    <div class="article-meta">
+        <a href="/2020/jvm-tools-instruct/" class="article-date">
+      <time datetime="2020-02-14T16:00:00.000Z" itemprop="datePublished">2020-02-15</time>
+</a>
+    </div>
+    
+    <div class="article-inner">
+        
+        <input type="hidden" class="isFancy"/>
+        
+        <div class="fengmian">
+            <img class="fengmian-image" id="jvm-tools-instruct" src="http://image.smilelxy.cn/blog/abridge/bg-1.jpg" alt="舍弃欲望, 活在当下" onload="loadImage(this.id)"/>
+        </div>
+        
+        <header class="article-header">
+            
+  
+    <h1 class="article-title" itemprop="name">
+      Java性能调优-指令(Java8)
+    </h1>
+  
+
+        </header>
+        
+        <div class="article-info article-info-post">
+            
+    <div class="article-category tagcloud">
+    <a class="article-category-link" href="/categories/%E6%8A%80%E6%9C%AF/">技术</a><a class="article-category-link" href="/categories/%E6%8A%80%E6%9C%AF/Java/">Java</a><a class="article-category-link" href="/categories/%E6%8A%80%E6%9C%AF/Java/Jvm/">Jvm</a>
+    </div>
+
+
+            
+    <div class="article-tag tagcloud">
+        <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Java/" rel="tag">Java</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Jvm/" rel="tag">Jvm</a></li></ul> </div>
+
+
+
+            <!-- 访问量  -->
+            <!--<span id="busuanzi_container_page_pv" style='display:none'>-->
+            <!--<span id="page-visit"><i class="fa fa-eye" style="float: left;margin-top:5px" aria-hidden="true" title="文章访问量"></i>-->
+            <!--<span id="busuanzi_value_page_pv"></span>-->
+            <!--</span>-->
+            <!--</span>-->
+
+            <div class="clearfix"></div>
+        </div>
+        
+        
+        <div class="article-entry" itemprop="articleBody">
+            
+            
+            <ul>
+<li>在实际项目过程中, 受事业环境因素影响, 线上排查问题等情况下, 更多的是通过java指令来查看项目性能情况.<a id="more"></a>
+</li>
+</ul>
+<p>#Java性能调优-指令(Java8)</p>
+<h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><ul>
+<li>在实际项目过程中, 受事业环境因素影响, 线上排查问题等情况下, 更多的是通过java指令来查看项目性能情况;</li>
+<li>以下是自己在Java8版本上常用指令总结, 若有总结错误/不到位/..问题, 请联系更正, 谢谢!</li>
+</ul>
+<h3 id="jps"><a href="#jps" class="headerlink" title="jps"></a>jps</h3><ul>
+<li>显示当前所有Java进程相关信息;</li>
+</ul>
+<blockquote>
+<p>jps -h </p>
+</blockquote>
+<figure class="highlight vim"><table><tr><td class="code"><pre><span class="line">➜  ~ jps -h</span><br><span class="line">usage: jps [--<span class="keyword">help</span>]</span><br><span class="line">       jps [-q] [-mlvV] [<span class="symbol">&lt;hostid&gt;</span>]</span><br><span class="line"></span><br><span class="line">Definition<span class="variable">s:</span></span><br><span class="line">    <span class="symbol">&lt;hostid&gt;</span>:      <span class="symbol">&lt;hostname&gt;</span>[:<span class="symbol">&lt;port&gt;</span>]</span><br><span class="line">    -? -h --<span class="keyword">help</span> -<span class="keyword">help</span>: <span class="keyword">Print</span> this <span class="keyword">help</span> message <span class="built_in">and</span> <span class="keyword">exit</span>.</span><br></pre></td></tr></table></figure>
+<h4 id="q"><a href="#q" class="headerlink" title="-q"></a>-q</h4><ul>
+<li>显示Java线程Pid<blockquote>
+<p>jps -q</p>
+</blockquote>
+</li>
+</ul>
+<figure class="highlight angelscript"><table><tr><td class="code"><pre><span class="line">➜  ~ jps -q</span><br><span class="line"><span class="number">708</span></span><br><span class="line"><span class="number">789</span></span><br><span class="line"><span class="number">1719</span></span><br><span class="line"><span class="number">1289</span></span><br><span class="line"><span class="number">1290</span></span><br></pre></td></tr></table></figure>
+<h4 id="l"><a href="#l" class="headerlink" title="-l"></a>-l</h4><ul>
+<li>显示Pid 应用程序启动类的包名<blockquote>
+<p>jps -l</p>
+</blockquote>
+</li>
+</ul>
+<figure class="highlight stylus"><table><tr><td class="code"><pre><span class="line">➜  ~ jps -l</span><br><span class="line"><span class="number">708</span> </span><br><span class="line"><span class="number">789</span> org<span class="selector-class">.jetbrains</span><span class="selector-class">.idea</span><span class="selector-class">.maven</span><span class="selector-class">.server</span>.RemoteMavenServer</span><br><span class="line"><span class="number">1289</span> org<span class="selector-class">.jetbrains</span><span class="selector-class">.jps</span><span class="selector-class">.cmdline</span>.Launcher</span><br><span class="line"><span class="number">1290</span> com<span class="selector-class">.smile</span>.SmileCompanyApplication</span><br><span class="line"><span class="number">1725</span> jdk.jcmd/sun<span class="selector-class">.tools</span><span class="selector-class">.jps</span>.Jps</span><br></pre></td></tr></table></figure>
+<h4 id="v"><a href="#v" class="headerlink" title="-v"></a>-v</h4><ul>
+<li>显示Pid 应用程序类名 配置的JVM参数</li>
+</ul>
+<blockquote>
+<p>jps -v</p>
+</blockquote>
+<figure class="highlight routeros"><table><tr><td class="code"><pre><span class="line">➜  ~ jps -v</span><br><span class="line">1731 Jps -Dapplication.<span class="attribute">home</span>=/Library/Java/JavaVirtualMachines/jdk-13.0.1.jdk/Contents/Home -Xms8m -Djdk.module.<span class="attribute">main</span>=jdk.jcmd</span><br><span class="line">708  -Xms128m -Xmx2048m -XX:<span class="attribute">ReservedCodeCacheSize</span>=240m -XX:+UseCompressedOops -Dfile.<span class="attribute">encoding</span>=UTF-8 -XX:+UseConcMarkSweepGC -XX:<span class="attribute">SoftRefLRUPolicyMSPerMB</span>=50 -ea -XX:<span class="attribute">CICompilerCount</span>=2 -Dsun.io.<span class="attribute">useCanonPrefixCache</span>=<span class="literal">false</span> -Djava.net.<span class="attribute">preferIPv4Stack</span>=<span class="literal">true</span> -Djdk.http.auth.tunneling.<span class="attribute">disabledSchemes</span>=<span class="string">""</span> -XX:+HeapDumpOnOutOfMemoryError -XX:-OmitStackTraceInFastThrow -Djdk.attach.allowAttachSelf -Dkotlinx.coroutines.<span class="attribute">debug</span>=off -Djdk.module.illegalAccess.<span class="attribute">silent</span>=<span class="literal">true</span> -Xverify:none -XX:<span class="attribute">ErrorFile</span>=/Users/smile/java_error_in_idea_%p.log -XX:<span class="attribute">HeapDumpPath</span>=/Users/smile/java_error_in_idea.hprof -javaagent:/Users/smile/workSpace/idea/jetbrains-agent.jar -Djb.<span class="attribute">vmOptionsFile</span>=/Users/smile/Library/Preferences/IntelliJIdea2019.2/idea.vmoptions -Didea.home.<span class="attribute">path</span>=/Applications/IntelliJ IDEA.app/Contents -Didea.<span class="attribute">executable</span>=idea -Didea.paths.<span class="attribute">selector</span>=IntelliJIdea2019.2</span><br><span class="line">789 RemoteMavenServer -Djava.awt.<span class="attribute">headless</span>=<span class="literal">true</span> -Dmaven.defaultProjectBuilder.<span class="attribute">disableGlobalModelCache</span>=<span class="literal">true</span> -Xmx768m -Didea.maven.embedder.<span class="attribute">version</span>=3.5.4 -Dmaven.ext.class.<span class="attribute">path</span>=/Applications/IntelliJ IDEA.app/Contents/plugins/maven/lib/maven-event-listener.jar -Dfile.<span class="attribute">encoding</span>=UTF-8</span><br><span class="line">1289 Launcher -Xmx700m -Djava.awt.<span class="attribute">headless</span>=<span class="literal">true</span> -Djava.endorsed.<span class="attribute">dirs</span>=<span class="string">""</span> -Djdt.compiler.<span class="attribute">useSingleThread</span>=<span class="literal">true</span> -Dpreload.project.<span class="attribute">path</span>=/Users/smile/workSpace/resource/git/temp/smile-company -Dpreload.config.<span class="attribute">path</span>=/Users/smile/Library/Preferences/IntelliJIdea2019.2/options -Dcompile.<span class="attribute">parallel</span>=<span class="literal">false</span> -Drebuild.on.dependency.<span class="attribute">change</span>=<span class="literal">true</span> -Djava.net.<span class="attribute">preferIPv4Stack</span>=<span class="literal">true</span> -Dio.netty.<span class="attribute">initialSeedUniquifier</span>=8732127973280526886 -Dfile.<span class="attribute">encoding</span>=UTF-8 -Duser.<span class="attribute">language</span>=ja -Duser.<span class="attribute">country</span>=CN -Didea.paths.<span class="attribute">selector</span>=IntelliJIdea2019.2 -Didea.home.<span class="attribute">path</span>=/Applications/IntelliJ IDEA.app/Contents -Didea.config.<span class="attribute">path</span>=/Users/smile/Library/Preferences/IntelliJIdea2019.2 -Didea.plugins.<span class="attribute">path</span>=/Users/smile/Library/Application Support/IntelliJIdea2019.2 -Djps.log.<span class="attribute">dir</span>=/Users/smile/Library/Logs/IntelliJIdea2019.2/build-log -Djps.fallback.jdk.<span class="attribute">home</span>=/Applications/IntelliJ IDEA.app/Contents/jbr/Contents/Home -Djps.fallback.jdk.<span class="attribute">version</span>=11.0.4 -Dio.netty.<span class="attribute">noUnsafe</span>=<span class="literal">true</span> -Djava.io.<span class="attribute">tmpdir</span>=/Users/smile/Library/Caches/IntelliJIdea2019.2/compile-server/smile-company_f76f6fba/_t</span><br><span class="line">1290 SmileCompanyApplication -verbose:gc -XX:+UseG1GC -XX:+PrintGCDetails -XX:-PrintCommandLineFlags -XX:+ExplicitGCInvokesConcurrent -XX:<span class="attribute">TieredStopAtLevel</span>=1 -Xverify:none -Dspring.profiles.<span class="attribute">active</span>=local -Dspring.output.ansi.<span class="attribute">enabled</span>=always -Dcom.sun.management.jmxremote -Dspring.jmx.<span class="attribute">enabled</span>=<span class="literal">true</span> -Dspring.liveBeansView.mbeanDomain -Dspring.application.admin.<span class="attribute">enabled</span>=<span class="literal">true</span> -javaagent:/Applications/IntelliJ IDEA.app/Contents/lib/idea_rt.<span class="attribute">jar</span>=49797:/Applications/IntelliJ IDEA.app/Contents/bin -Dfile.<span class="attribute">encoding</span>=UTF-8</span><br></pre></td></tr></table></figure>
+<h4 id="常用方式"><a href="#常用方式" class="headerlink" title="常用方式"></a>常用方式</h4><figure class="highlight mipsasm"><table><tr><td class="code"><pre><span class="line"><span class="keyword">jps </span>-l</span><br><span class="line"><span class="keyword">jps </span>-lv</span><br></pre></td></tr></table></figure>
+<h3 id="jinfo"><a href="#jinfo" class="headerlink" title="jinfo"></a>jinfo</h3><ul>
+<li>显示对应Java进程的Jvm配置信息</li>
+</ul>
+<blockquote>
+<p>jinfo -h </p>
+</blockquote>
+<figure class="highlight routeros"><table><tr><td class="code"><pre><span class="line">➜  ~ jinfo -h</span><br><span class="line">Usage:</span><br><span class="line">    jinfo &lt;option&gt; &lt;pid&gt;</span><br><span class="line">       (<span class="keyword">to</span> connect <span class="keyword">to</span> a running process)</span><br><span class="line"></span><br><span class="line">where &lt;option&gt; is one of:</span><br><span class="line">    -flag &lt;name&gt;         <span class="keyword">to</span> <span class="builtin-name">print</span> the value of the named VM flag</span><br><span class="line">    -flag [+|-]&lt;name&gt;    <span class="keyword">to</span> <span class="builtin-name">enable</span> <span class="keyword">or</span> <span class="builtin-name">disable</span> the named VM flag</span><br><span class="line">    -flag &lt;name&gt;=&lt;value&gt; <span class="keyword">to</span> <span class="builtin-name">set</span> the named VM flag <span class="keyword">to</span> the given value</span><br><span class="line">    -flags               <span class="keyword">to</span> <span class="builtin-name">print</span> VM flags</span><br><span class="line">    -sysprops            <span class="keyword">to</span> <span class="builtin-name">print</span> Java<span class="built_in"> system </span>properties</span><br><span class="line">    &lt;<span class="literal">no</span> option&gt;          <span class="keyword">to</span> <span class="builtin-name">print</span> both VM flags <span class="keyword">and</span><span class="built_in"> system </span>properties</span><br><span class="line">    -? | -h | --help | -help <span class="keyword">to</span> <span class="builtin-name">print</span> this help message</span><br></pre></td></tr></table></figure>
+<h4 id="flags"><a href="#flags" class="headerlink" title="-flags"></a>-flags</h4><ul>
+<li>显示对应进程所有Jvm属性信息</li>
+</ul>
+<blockquote>
+<p>jps -flags pid</p>
+</blockquote>
+<figure class="highlight groovy"><table><tr><td class="code"><pre><span class="line">➜  ~ jinfo -flags <span class="number">1290</span> </span><br><span class="line">VM <span class="string">Flags:</span></span><br><span class="line">-<span class="string">XX:</span>-BytecodeVerificationLocal -<span class="string">XX:</span>-BytecodeVerificationRemote -<span class="string">XX:</span>CICompilerCount=<span class="number">4</span> -<span class="string">XX:</span>ConcGCThreads=<span class="number">3</span> -<span class="string">XX:</span>+ExplicitGCInvokesConcurrent -<span class="string">XX:</span>G1HeapRegionSize=<span class="number">2097152</span> -<span class="string">XX:</span>InitialHeapSize=<span class="number">536870912</span> -<span class="string">XX:</span>+ManagementServer -<span class="string">XX:</span>MarkStackSize=<span class="number">4194304</span> -<span class="string">XX:</span>MaxHeapSize=<span class="number">8589934592</span> -<span class="string">XX:</span>MaxNewSize=<span class="number">5152702464</span> -<span class="string">XX:</span>MinHeapDeltaBytes=<span class="number">2097152</span> -<span class="string">XX:</span>-PrintCommandLineFlags -<span class="string">XX:</span>+PrintGC -<span class="string">XX:</span>+PrintGCDetails -<span class="string">XX:</span>TieredStopAtLevel=<span class="number">1</span> -<span class="string">XX:</span>+UseCompressedClassPointers -<span class="string">XX:</span>+UseCompressedOops -<span class="string">XX:</span>+UseFastUnorderedTimeStamps -<span class="string">XX:</span>+UseG1GC</span><br></pre></td></tr></table></figure>
+<h4 id="flag"><a href="#flag" class="headerlink" title="-flag "></a>-flag <name></h4><ul>
+<li>显示对应Java进程Jvm属性名的值</li>
+</ul>
+<blockquote>
+<p>jinfo -flag name pid</p>
+</blockquote>
+<figure class="highlight angelscript"><table><tr><td class="code"><pre><span class="line">➜  ~ jinfo -flag MinHeapDeltaBytes <span class="number">1290</span></span><br><span class="line">-XX:MinHeapDeltaBytes=<span class="number">2097152</span></span><br></pre></td></tr></table></figure>
+<h4 id="flag-1"><a href="#flag-1" class="headerlink" title="-flag [+|-] "></a>-flag [+|-] <name></h4><ul>
+<li>为对应Java进程添加/减少Jvm属性</li>
+</ul>
+<blockquote>
+<p>jinfo -flag +|- name pid</p>
+</blockquote>
+<figure class="highlight groovy"><table><tr><td class="code"><pre><span class="line">➜  ~ jinfo -flags <span class="number">1290</span>                 </span><br><span class="line">VM <span class="string">Flags:</span></span><br><span class="line">-<span class="string">XX:</span>-BytecodeVerificationLocal -<span class="string">XX:</span>-BytecodeVerificationRemote -<span class="string">XX:</span>CICompilerCount=<span class="number">4</span> -<span class="string">XX:</span>ConcGCThreads=<span class="number">3</span> -<span class="string">XX:</span>+ExplicitGCInvokesConcurrent -<span class="string">XX:</span>G1HeapRegionSize=<span class="number">2097152</span> -<span class="string">XX:</span>InitialHeapSize=<span class="number">536870912</span> -<span class="string">XX:</span>+ManagementServer -<span class="string">XX:</span>MarkStackSize=<span class="number">4194304</span> -<span class="string">XX:</span>MaxHeapSize=<span class="number">8589934592</span> -<span class="string">XX:</span>MaxNewSize=<span class="number">5152702464</span> -<span class="string">XX:</span>MinHeapDeltaBytes=<span class="number">2097152</span> -<span class="string">XX:</span>-PrintCommandLineFlags -<span class="string">XX:</span>+PrintGC -<span class="string">XX:</span>+PrintGCDetails -<span class="string">XX:</span>TieredStopAtLevel=<span class="number">1</span> -<span class="string">XX:</span>+UseCompressedClassPointers -<span class="string">XX:</span>+UseCompressedOops -<span class="string">XX:</span>+UseFastUnorderedTimeStamps -<span class="string">XX:</span>+UseG1GC </span><br><span class="line">➜  ~ jinfo -flag +PrintGCDateStamps <span class="number">1290</span></span><br><span class="line">➜  ~ jinfo -flags <span class="number">1290</span>                  </span><br><span class="line">VM <span class="string">Flags:</span></span><br><span class="line">-<span class="string">XX:</span>-BytecodeVerificationLocal -<span class="string">XX:</span>-BytecodeVerificationRemote -<span class="string">XX:</span>CICompilerCount=<span class="number">4</span> -<span class="string">XX:</span>ConcGCThreads=<span class="number">3</span> -<span class="string">XX:</span>+ExplicitGCInvokesConcurrent -<span class="string">XX:</span>G1HeapRegionSize=<span class="number">2097152</span> -<span class="string">XX:</span>InitialHeapSize=<span class="number">536870912</span> -<span class="string">XX:</span>+ManagementServer -<span class="string">XX:</span>MarkStackSize=<span class="number">4194304</span> -<span class="string">XX:</span>MaxHeapSize=<span class="number">8589934592</span> -<span class="string">XX:</span>MaxNewSize=<span class="number">5152702464</span> -<span class="string">XX:</span>MinHeapDeltaBytes=<span class="number">2097152</span> -<span class="string">XX:</span>-PrintCommandLineFlags -<span class="string">XX:</span>+PrintGC -<span class="string">XX:</span>+PrintGCDateStamps -<span class="string">XX:</span>+PrintGCDetails -<span class="string">XX:</span>TieredStopAtLevel=<span class="number">1</span> -<span class="string">XX:</span>+UseCompressedClassPointers -<span class="string">XX:</span>+UseCompressedOops -<span class="string">XX:</span>+UseFastUnorderedTimeStamps -<span class="string">XX:</span>+UseG1GC</span><br></pre></td></tr></table></figure>
+<h4 id="sysprops"><a href="#sysprops" class="headerlink" title="-sysprops"></a>-sysprops</h4><ul>
+<li>显示对应Java进程在当前系统的属性信息</li>
+</ul>
+<blockquote>
+<p>jinfo -sysprops pid</p>
+</blockquote>
+<figure class="highlight dts"><table><tr><td class="code"><pre><span class="line">➜  ~ jinfo -flags <span class="number">1290</span>                  </span><br><span class="line">VM Flags:</span><br><span class="line">-XX:-BytecodeVerificationLocal -XX:-BytecodeVerificationRemote -XX:CICompilerCount=<span class="number">4</span> -XX:ConcGCThreads=<span class="number">3</span> -XX:+ExplicitGCInvokesConcurrent -XX:G1HeapRegionSize=<span class="number">2097152</span> -XX:InitialHeapSize=<span class="number">536870912</span> -XX:+ManagementServer -XX:MarkStackSize=<span class="number">4194304</span> -XX:MaxHeapSize=<span class="number">8589934592</span> -XX:MaxNewSize=<span class="number">5152702464</span> -XX:MinHeapDeltaBytes=<span class="number">2097152</span> -XX:-PrintCommandLineFlags -XX:+PrintGC -XX:+PrintGCDateStamps -XX:+PrintGCDetails -XX:TieredStopAtLevel=<span class="number">1</span> -XX:+UseCompressedClassPointers -XX:+UseCompressedOops -XX:+UseFastUnorderedTimeStamps -XX:+UseG1GC </span><br><span class="line">➜  ~ jinfo -sysprops <span class="number">1290</span></span><br><span class="line">Java System Properties:</span><br><span class="line"><span class="meta">#Sun Feb 23 13:07:20 CST 2020</span></span><br><span class="line">spring.output.ansi.enabled=always</span><br><span class="line">java.runtime.name=Java(TM) SE Runtime Environment</span><br><span class="line">sun.boot.library.path=/Library/Java/JavaVirtualMachines/jdk1<span class="number">.8</span><span class="number">.0</span>_181.jdk/Contents/Home<span class="meta-keyword">/jre/</span>lib</span><br><span class="line">java.vm.version=<span class="number">25.181</span>-b13</span><br><span class="line">gopherProxySet=false</span><br><span class="line">java.vm.vendor=Oracle Corporation</span><br><span class="line">java.vendor.url=http\:<span class="comment">//java.oracle.com/</span></span><br><span class="line">path.separator=\:</span><br><span class="line">java.rmi.server.randomIDs=true</span><br><span class="line">java.vm.name=Java HotSpot(TM) <span class="number">64</span>-Bit Server VM</span><br><span class="line">file.encoding.pkg=sun.io</span><br><span class="line">user.country=CN</span><br><span class="line">sun.java.launcher=SUN_STANDARD</span><br><span class="line">sun.os.patch.level=unknown</span><br><span class="line">java.vm.specification.name=Java Virtual Machine Specification</span><br><span class="line">user.dir=/Users<span class="meta-keyword">/smile/</span>workSpace<span class="meta-keyword">/resource/</span>git<span class="meta-keyword">/temp/</span>smile-company</span><br><span class="line">PID=<span class="number">1290</span></span><br><span class="line">java.runtime.version=<span class="number">1.8</span><span class="number">.0</span>_181-b13</span><br><span class="line">java.awt.graphicsenv=sun.awt.CGraphicsEnvironment</span><br><span class="line">java.endorsed.dirs=/Library/Java/JavaVirtualMachines/jdk1<span class="number">.8</span><span class="number">.0</span>_181.jdk/Contents/Home<span class="meta-keyword">/jre/</span>lib/endorsed</span><br><span class="line">os.arch=x86_64</span><br><span class="line">spring.profiles.active=local</span><br><span class="line">java.io.tmpdir=<span class="meta-keyword">/var/</span>folders<span class="meta-keyword">/yx/</span>vrd87ppn3rxbmqh0h6k6vl500000gn/T/</span><br><span class="line">line.separator=\n</span><br><span class="line">java.vm.specification.vendor=Oracle Corporation</span><br><span class="line">os.name=Mac OS X</span><br><span class="line">sun.jnu.encoding=UTF<span class="number">-8</span></span><br><span class="line">java.library.path=/Users<span class="meta-keyword">/smile/</span>Library/Java/Extensions\:/Library/Java/Extensions\:/Network/Library/Java/Extensions\:/System/Library/Java/Extensions\:<span class="meta-keyword">/usr/</span>lib/java\:.</span><br><span class="line">spring.beaninfo.ignore=true</span><br><span class="line">spring.jmx.enabled=true</span><br><span class="line">java.specification.name=Java Platform API Specification</span><br><span class="line">java.class.version=<span class="number">52.0</span></span><br><span class="line">sun.management.compiler=HotSpot <span class="number">64</span>-Bit Tiered Compilers</span><br><span class="line">spring.liveBeansView.mbeanDomain=</span><br><span class="line">os.version=<span class="number">10.15</span><span class="number">.3</span></span><br><span class="line">user.home=/Users/smile</span><br><span class="line">user.timezone=Asia/Shanghai</span><br><span class="line">java.awt.printerjob=sun.lwawt.macosx.CPrinterJob</span><br><span class="line">file.encoding=UTF<span class="number">-8</span></span><br><span class="line">java.specification.version=<span class="number">1.8</span></span><br><span class="line">java.class.path=/Library/Java/JavaVirtualMachines/jdk1<span class="number">.8</span><span class="number">.0</span>_181.jdk/Contents/Home<span class="meta-keyword">/jre/</span>lib/charsets.jar\:/Library/Java/JavaVirtualMachines/jdk1<span class="number">.8</span><span class="number">.0</span>_181.jdk/Contents/Home<span class="meta-keyword">/jre/</span>lib/deploy.jar\:/Library/Java/JavaVirtualMachines/jdk1<span class="number">.8</span><span class="number">.0</span>_181.jdk/Contents/Home<span class="meta-keyword">/jre/</span>lib<span class="meta-keyword">/ext/</span>cldrdata.jar\:/Library/Java/JavaVirtualMachines/jdk1<span class="number">.8</span><span class="number">.0</span>_181.jdk/Contents/Home<span class="meta-keyword">/jre/</span>lib<span class="meta-keyword">/ext/</span>dnsns.jar\:/Library/Java/JavaVirtualMachines/jdk1<span class="number">.8</span><span class="number">.0</span>_181.jdk/Contents/Home<span class="meta-keyword">/jre/</span>lib<span class="meta-keyword">/ext/</span>jaccess.jar\:/Library/Java/JavaVirtualMachines/jdk1<span class="number">.8</span><span class="number">.0</span>_181.jdk/Contents/Home<span class="meta-keyword">/jre/</span>lib<span class="meta-keyword">/ext/</span>jfxrt.jar\:/Library/Java/JavaVirtualMachines/jdk1<span class="number">.8</span><span class="number">.0</span>_181.jdk/Contents/Home<span class="meta-keyword">/jre/</span>lib<span class="meta-keyword">/ext/</span>localedata.jar\:/Library/Java/JavaVirtualMachines/jdk1<span class="number">.8</span><span class="number">.0</span>_181.jdk/Contents/Home<span class="meta-keyword">/jre/</span>lib<span class="meta-keyword">/ext/</span>nashorn.jar\:/Library/Java/JavaVirtualMachines/jdk1<span class="number">.8</span><span class="number">.0</span>_181.jdk/Contents/Home<span class="meta-keyword">/jre/</span>lib<span class="meta-keyword">/ext/</span>sunec.jar\:/Library/Java/JavaVirtualMachines/jdk1<span class="number">.8</span><span class="number">.0</span>_181.jdk/Contents/Home<span class="meta-keyword">/jre/</span>lib<span class="meta-keyword">/ext/</span>sunjce_provider.jar\:/Library/Java/JavaVirtualMachines/jdk1<span class="number">.8</span><span class="number">.0</span>_181.jdk/Contents/Home<span class="meta-keyword">/jre/</span>lib<span class="meta-keyword">/ext/</span>sunpkcs11.jar\:/Library/Java/JavaVirtualMachines/jdk1<span class="number">.8</span><span class="number">.0</span>_181.jdk/Contents/Home<span class="meta-keyword">/jre/</span>lib<span class="meta-keyword">/ext/</span>zipfs.jar\:/Library/Java/JavaVirtualMachines/jdk1<span class="number">.8</span><span class="number">.0</span>_181.jdk/Contents/Home<span class="meta-keyword">/jre/</span>lib/javaws.jar\:/Library/Java/JavaVirtualMachines/jdk1<span class="number">.8</span><span class="number">.0</span>_181.jdk/Contents/Home<span class="meta-keyword">/jre/</span>lib/jce.jar\:/Library/Java/JavaVirtualMachines/jdk1<span class="number">.8</span><span class="number">.0</span>_181.jdk/Contents/Home<span class="meta-keyword">/jre/</span>lib/jfr.jar\:/Library/Java/JavaVirtualMachines/jdk1<span class="number">.8</span><span class="number">.0</span>_181.jdk/Contents/Home<span class="meta-keyword">/jre/</span>lib/jfxswt.jar\:/Library/Java/JavaVirtualMachines/jdk1<span class="number">.8</span><span class="number">.0</span>_181.jdk/Contents/Home<span class="meta-keyword">/jre/</span>lib/jsse.jar\:/Library/Java/JavaVirtualMachines/jdk1<span class="number">.8</span><span class="number">.0</span>_181.jdk/Contents/Home<span class="meta-keyword">/jre/</span>lib/management-agent.jar\:/Library/Java/JavaVirtualMachines/jdk1<span class="number">.8</span><span class="number">.0</span>_181.jdk/Contents/Home<span class="meta-keyword">/jre/</span>lib/plugin.jar\:/Library/Java/JavaVirtualMachines/jdk1<span class="number">.8</span><span class="number">.0</span>_181.jdk/Contents/Home<span class="meta-keyword">/jre/</span>lib/resources.jar\:/Library/Java/JavaVirtualMachines/jdk1<span class="number">.8</span><span class="number">.0</span>_181.jdk/Contents/Home<span class="meta-keyword">/jre/</span>lib/rt.jar\:/Library/Java/JavaVirtualMachines/jdk1<span class="number">.8</span><span class="number">.0</span>_181.jdk/Contents/Home<span class="meta-keyword">/lib/</span>ant-javafx.jar\:/Library/Java/JavaVirtualMachines/jdk1<span class="number">.8</span><span class="number">.0</span>_181.jdk/Contents/Home<span class="meta-keyword">/lib/</span>dt.jar\:/Library/Java/JavaVirtualMachines/jdk1<span class="number">.8</span><span class="number">.0</span>_181.jdk/Contents/Home<span class="meta-keyword">/lib/</span>javafx-mx.jar\:/Library/Java/JavaVirtualMachines/jdk1<span class="number">.8</span><span class="number">.0</span>_181.jdk/Contents/Home<span class="meta-keyword">/lib/</span>jconsole.jar\:/Library/Java/JavaVirtualMachines/jdk1<span class="number">.8</span><span class="number">.0</span>_181.jdk/Contents/Home<span class="meta-keyword">/lib/</span>packager.jar\:/Library/Java/JavaVirtualMachines/jdk1<span class="number">.8</span><span class="number">.0</span>_181.jdk/Contents/Home<span class="meta-keyword">/lib/</span>sa-jdi.jar\:/Library/Java/JavaVirtualMachines/jdk1<span class="number">.8</span><span class="number">.0</span>_181.jdk/Contents/Home<span class="meta-keyword">/lib/</span>tools.jar\:/Users<span class="meta-keyword">/smile/</span>workSpace<span class="meta-keyword">/resource/</span>git<span class="meta-keyword">/temp/</span>smile-company<span class="meta-keyword">/target/</span>classes\:/Users<span class="meta-keyword">/smile/</span>workSpace<span class="meta-keyword">/maven/</span>localRepository<span class="meta-keyword">/org/</span>springframework<span class="meta-keyword">/boot/</span>spring-boot-starter/<span class="number">2.2</span><span class="number">.1</span>.RELEASE/spring-boot-starter<span class="number">-2.2</span><span class="number">.1</span>.RELEASE.jar\:/Users<span class="meta-keyword">/smile/</span>workSpace<span class="meta-keyword">/maven/</span>localRepository<span class="meta-keyword">/org/</span>springframework<span class="meta-keyword">/boot/</span>spring-boot/<span class="number">2.2</span><span class="number">.1</span>.RELEASE/spring-boot<span class="number">-2.2</span><span class="number">.1</span>.RELEASE.jar\:/Users<span class="meta-keyword">/smile/</span>workSpace<span class="meta-keyword">/maven/</span>localRepository<span class="meta-keyword">/org/</span>springframework<span class="meta-keyword">/spring-context/</span><span class="number">5.2</span><span class="number">.1</span>.RELEASE/spring-context<span class="number">-5.2</span><span class="number">.1</span>.RELEASE.jar\:/Users<span class="meta-keyword">/smile/</span>workSpace<span class="meta-keyword">/maven/</span>localRepository<span class="meta-keyword">/org/</span>springframework<span class="meta-keyword">/spring-aop/</span><span class="number">5.2</span><span class="number">.1</span>.RELEASE/spring-aop<span class="number">-5.2</span><span class="number">.1</span>.RELEASE.jar\:/Users<span class="meta-keyword">/smile/</span>workSpace<span class="meta-keyword">/maven/</span>localRepository<span class="meta-keyword">/org/</span>springframework<span class="meta-keyword">/spring-expression/</span><span class="number">5.2</span><span class="number">.1</span>.RELEASE/spring-expression<span class="number">-5.2</span><span class="number">.1</span>.RELEASE.jar\:/Users<span class="meta-keyword">/smile/</span>workSpace<span class="meta-keyword">/maven/</span>localRepository<span class="meta-keyword">/org/</span>springframework<span class="meta-keyword">/boot/</span>spring-boot-autoconfigure/<span class="number">2.2</span><span class="number">.1</span>.RELEASE/spring-boot-autoconfigure<span class="number">-2.2</span><span class="number">.1</span>.RELEASE.jar\:/Users<span class="meta-keyword">/smile/</span>workSpace<span class="meta-keyword">/maven/</span>localRepository<span class="meta-keyword">/jakarta/</span>annotation/jakarta.annotation-api/<span class="number">1.3</span><span class="number">.5</span>/jakarta.annotation-api<span class="number">-1.3</span><span class="number">.5</span>.jar\:/Users<span class="meta-keyword">/smile/</span>workSpace<span class="meta-keyword">/maven/</span>localRepository<span class="meta-keyword">/org/</span>springframework<span class="meta-keyword">/spring-core/</span><span class="number">5.2</span><span class="number">.1</span>.RELEASE/spring-core<span class="number">-5.2</span><span class="number">.1</span>.RELEASE.jar\:/Users<span class="meta-keyword">/smile/</span>workSpace<span class="meta-keyword">/maven/</span>localRepository<span class="meta-keyword">/org/</span>springframework<span class="meta-keyword">/spring-jcl/</span><span class="number">5.2</span><span class="number">.1</span>.RELEASE/spring-jcl<span class="number">-5.2</span><span class="number">.1</span>.RELEASE.jar\:/Users<span class="meta-keyword">/smile/</span>workSpace<span class="meta-keyword">/maven/</span>localRepository<span class="meta-keyword">/org/</span>yaml<span class="meta-keyword">/snakeyaml/</span><span class="number">1.25</span>/snakeyaml<span class="number">-1.25</span>.jar\:/Users<span class="meta-keyword">/smile/</span>workSpace<span class="meta-keyword">/maven/</span>localRepository<span class="meta-keyword">/org/</span>springframework<span class="meta-keyword">/boot/</span>spring-boot-starter-log4j2/<span class="number">2.2</span><span class="number">.1</span>.RELEASE/spring-boot-starter-log4j2<span class="number">-2.2</span><span class="number">.1</span>.RELEASE.jar\:/Users<span class="meta-keyword">/smile/</span>workSpace<span class="meta-keyword">/maven/</span>localRepository<span class="meta-keyword">/org/</span>apache<span class="meta-keyword">/logging/</span>log4j<span class="meta-keyword">/log4j-slf4j-impl/</span><span class="number">2.12</span><span class="number">.1</span>/log4j-slf4j-impl<span class="number">-2.12</span><span class="number">.1</span>.jar\:/Users<span class="meta-keyword">/smile/</span>workSpace<span class="meta-keyword">/maven/</span>localRepository<span class="meta-keyword">/org/</span>slf4j<span class="meta-keyword">/slf4j-api/</span><span class="number">1.7</span><span class="number">.29</span>/slf4j-api<span class="number">-1.7</span><span class="number">.29</span>.jar\:/Users<span class="meta-keyword">/smile/</span>workSpace<span class="meta-keyword">/maven/</span>localRepository<span class="meta-keyword">/org/</span>apache<span class="meta-keyword">/logging/</span>log4j<span class="meta-keyword">/log4j-api/</span><span class="number">2.12</span><span class="number">.1</span>/log4j-api<span class="number">-2.12</span><span class="number">.1</span>.jar\:/Users<span class="meta-keyword">/smile/</span>workSpace<span class="meta-keyword">/maven/</span>localRepository<span class="meta-keyword">/org/</span>apache<span class="meta-keyword">/logging/</span>log4j<span class="meta-keyword">/log4j-core/</span><span class="number">2.12</span><span class="number">.1</span>/log4j-core<span class="number">-2.12</span><span class="number">.1</span>.jar\:/Users<span class="meta-keyword">/smile/</span>workSpace<span class="meta-keyword">/maven/</span>localRepository<span class="meta-keyword">/org/</span>apache<span class="meta-keyword">/logging/</span>log4j<span class="meta-keyword">/log4j-jul/</span><span class="number">2.12</span><span class="number">.1</span>/log4j-jul<span class="number">-2.12</span><span class="number">.1</span>.jar\:/Users<span class="meta-keyword">/smile/</span>workSpace<span class="meta-keyword">/maven/</span>localRepository<span class="meta-keyword">/org/</span>slf4j<span class="meta-keyword">/jul-to-slf4j/</span><span class="number">1.7</span><span class="number">.29</span>/jul-to-slf4j<span class="number">-1.7</span><span class="number">.29</span>.jar\:/Users<span class="meta-keyword">/smile/</span>workSpace<span class="meta-keyword">/maven/</span>localRepository<span class="meta-keyword">/org/</span>springframework<span class="meta-keyword">/boot/</span>spring-boot-starter-webflux/<span class="number">2.2</span><span class="number">.1</span>.RELEASE/spring-boot-starter-webflux<span class="number">-2.2</span><span class="number">.1</span>.RELEASE.jar\:/Users<span class="meta-keyword">/smile/</span>workSpace<span class="meta-keyword">/maven/</span>localRepository<span class="meta-keyword">/org/</span>springframework<span class="meta-keyword">/boot/</span>spring-boot-starter-json/<span class="number">2.2</span><span class="number">.1</span>.RELEASE/spring-boot-starter-json<span class="number">-2.2</span><span class="number">.1</span>.RELEASE.jar\:/Users<span class="meta-keyword">/smile/</span>workSpace<span class="meta-keyword">/maven/</span>localRepository<span class="meta-keyword">/com/</span>fasterxml<span class="meta-keyword">/jackson/</span>core<span class="meta-keyword">/jackson-databind/</span><span class="number">2.10</span><span class="number">.0</span>/jackson-databind<span class="number">-2.10</span><span class="number">.0</span>.jar\:/Users<span class="meta-keyword">/smile/</span>workSpace<span class="meta-keyword">/maven/</span>localRepository<span class="meta-keyword">/com/</span>fasterxml<span class="meta-keyword">/jackson/</span>core<span class="meta-keyword">/jackson-annotations/</span><span class="number">2.10</span><span class="number">.0</span>/jackson-annotations<span class="number">-2.10</span><span class="number">.0</span>.jar\:/Users<span class="meta-keyword">/smile/</span>workSpace<span class="meta-keyword">/maven/</span>localRepository<span class="meta-keyword">/com/</span>fasterxml<span class="meta-keyword">/jackson/</span>core<span class="meta-keyword">/jackson-core/</span><span class="number">2.10</span><span class="number">.0</span>/jackson-core<span class="number">-2.10</span><span class="number">.0</span>.jar\:/Users<span class="meta-keyword">/smile/</span>workSpace<span class="meta-keyword">/maven/</span>localRepository<span class="meta-keyword">/com/</span>fasterxml<span class="meta-keyword">/jackson/</span>datatype<span class="meta-keyword">/jackson-datatype-jdk8/</span><span class="number">2.10</span><span class="number">.0</span>/jackson-datatype-jdk8<span class="number">-2.10</span><span class="number">.0</span>.jar\:/Users<span class="meta-keyword">/smile/</span>workSpace<span class="meta-keyword">/maven/</span>localRepository<span class="meta-keyword">/com/</span>fasterxml<span class="meta-keyword">/jackson/</span>datatype<span class="meta-keyword">/jackson-datatype-jsr310/</span><span class="number">2.10</span><span class="number">.0</span>/jackson-datatype-jsr310<span class="number">-2.10</span><span class="number">.0</span>.jar\:/Users<span class="meta-keyword">/smile/</span>workSpace<span class="meta-keyword">/maven/</span>localRepository<span class="meta-keyword">/com/</span>fasterxml<span class="meta-keyword">/jackson/</span>module<span class="meta-keyword">/jackson-module-parameter-names/</span><span class="number">2.10</span><span class="number">.0</span>/jackson-module-parameter-names<span class="number">-2.10</span><span class="number">.0</span>.jar\:/Users<span class="meta-keyword">/smile/</span>workSpace<span class="meta-keyword">/maven/</span>localRepository<span class="meta-keyword">/org/</span>springframework<span class="meta-keyword">/boot/</span>spring-boot-starter-reactor-netty/<span class="number">2.2</span><span class="number">.1</span>.RELEASE/spring-boot-starter-reactor-netty<span class="number">-2.2</span><span class="number">.1</span>.RELEASE.jar\:/Users<span class="meta-keyword">/smile/</span>workSpace<span class="meta-keyword">/maven/</span>localRepository<span class="meta-keyword">/io/</span>projectreactor<span class="meta-keyword">/netty/</span>reactor-netty/<span class="number">0.9</span><span class="number">.1</span>.RELEASE/reactor-netty<span class="number">-0.9</span><span class="number">.1</span>.RELEASE.jar\:/Users<span class="meta-keyword">/smile/</span>workSpace<span class="meta-keyword">/maven/</span>localRepository<span class="meta-keyword">/io/</span>netty<span class="meta-keyword">/netty-codec-http/</span><span class="number">4.1</span><span class="number">.43</span>.Final/netty-codec-http<span class="number">-4.1</span><span class="number">.43</span>.Final.jar\:/Users<span class="meta-keyword">/smile/</span>workSpace<span class="meta-keyword">/maven/</span>localRepository<span class="meta-keyword">/io/</span>netty<span class="meta-keyword">/netty-common/</span><span class="number">4.1</span><span class="number">.43</span>.Final/netty-common<span class="number">-4.1</span><span class="number">.43</span>.Final.jar\:/Users<span class="meta-keyword">/smile/</span>workSpace<span class="meta-keyword">/maven/</span>localRepository<span class="meta-keyword">/io/</span>netty<span class="meta-keyword">/netty-buffer/</span><span class="number">4.1</span><span class="number">.43</span>.Final/netty-buffer<span class="number">-4.1</span><span class="number">.43</span>.Final.jar\:/Users<span class="meta-keyword">/smile/</span>workSpace<span class="meta-keyword">/maven/</span>localRepository<span class="meta-keyword">/io/</span>netty<span class="meta-keyword">/netty-transport/</span><span class="number">4.1</span><span class="number">.43</span>.Final/netty-transport<span class="number">-4.1</span><span class="number">.43</span>.Final.jar\:/Users<span class="meta-keyword">/smile/</span>workSpace<span class="meta-keyword">/maven/</span>localRepository<span class="meta-keyword">/io/</span>netty<span class="meta-keyword">/netty-resolver/</span><span class="number">4.1</span><span class="number">.43</span>.Final/netty-resolver<span class="number">-4.1</span><span class="number">.43</span>.Final.jar\:/Users<span class="meta-keyword">/smile/</span>workSpace<span class="meta-keyword">/maven/</span>localRepository<span class="meta-keyword">/io/</span>netty<span class="meta-keyword">/netty-codec/</span><span class="number">4.1</span><span class="number">.43</span>.Final/netty-codec<span class="number">-4.1</span><span class="number">.43</span>.Final.jar\:/Users<span class="meta-keyword">/smile/</span>workSpace<span class="meta-keyword">/maven/</span>localRepository<span class="meta-keyword">/io/</span>netty<span class="meta-keyword">/netty-codec-http2/</span><span class="number">4.1</span><span class="number">.43</span>.Final/netty-codec-http2<span class="number">-4.1</span><span class="number">.43</span>.Final.jar\:/Users<span class="meta-keyword">/smile/</span>workSpace<span class="meta-keyword">/maven/</span>localRepository<span class="meta-keyword">/io/</span>netty<span class="meta-keyword">/netty-handler/</span><span class="number">4.1</span><span class="number">.43</span>.Final/netty-handler<span class="number">-4.1</span><span class="number">.43</span>.Final.jar\:/Users<span class="meta-keyword">/smile/</span>workSpace<span class="meta-keyword">/maven/</span>localRepository<span class="meta-keyword">/io/</span>netty<span class="meta-keyword">/netty-handler-proxy/</span><span class="number">4.1</span><span class="number">.43</span>.Final/netty-handler-proxy<span class="number">-4.1</span><span class="number">.43</span>.Final.jar\:/Users<span class="meta-keyword">/smile/</span>workSpace<span class="meta-keyword">/maven/</span>localRepository<span class="meta-keyword">/io/</span>netty<span class="meta-keyword">/netty-codec-socks/</span><span class="number">4.1</span><span class="number">.43</span>.Final/netty-codec-socks<span class="number">-4.1</span><span class="number">.43</span>.Final.jar\:/Users<span class="meta-keyword">/smile/</span>workSpace<span class="meta-keyword">/maven/</span>localRepository<span class="meta-keyword">/io/</span>netty<span class="meta-keyword">/netty-transport-native-epoll/</span><span class="number">4.1</span><span class="number">.43</span>.Final/netty-transport-native-epoll<span class="number">-4.1</span><span class="number">.43</span>.Final-linux-x86_64.jar\:/Users<span class="meta-keyword">/smile/</span>workSpace<span class="meta-keyword">/maven/</span>localRepository<span class="meta-keyword">/io/</span>netty<span class="meta-keyword">/netty-transport-native-unix-common/</span><span class="number">4.1</span><span class="number">.43</span>.Final/netty-transport-native-unix-common<span class="number">-4.1</span><span class="number">.43</span>.Final.jar\:/Users<span class="meta-keyword">/smile/</span>workSpace<span class="meta-keyword">/maven/</span>localRepository<span class="meta-keyword">/org/</span>glassfish/jakarta.el/<span class="number">3.0</span><span class="number">.3</span>/jakarta.el<span class="number">-3.0</span><span class="number">.3</span>.jar\:/Users<span class="meta-keyword">/smile/</span>workSpace<span class="meta-keyword">/maven/</span>localRepository<span class="meta-keyword">/org/</span>springframework<span class="meta-keyword">/boot/</span>spring-boot-starter-validation/<span class="number">2.2</span><span class="number">.1</span>.RELEASE/spring-boot-starter-validation<span class="number">-2.2</span><span class="number">.1</span>.RELEASE.jar\:/Users<span class="meta-keyword">/smile/</span>workSpace<span class="meta-keyword">/maven/</span>localRepository<span class="meta-keyword">/jakarta/</span>validation/jakarta.validation-api/<span class="number">2.0</span><span class="number">.1</span>/jakarta.validation-api<span class="number">-2.0</span><span class="number">.1</span>.jar\:/Users<span class="meta-keyword">/smile/</span>workSpace<span class="meta-keyword">/maven/</span>localRepository<span class="meta-keyword">/org/</span>hibernate<span class="meta-keyword">/validator/</span>hibernate-validator/<span class="number">6.0</span><span class="number">.18</span>.Final/hibernate-validator<span class="number">-6.0</span><span class="number">.18</span>.Final.jar\:/Users<span class="meta-keyword">/smile/</span>workSpace<span class="meta-keyword">/maven/</span>localRepository<span class="meta-keyword">/org/</span>jboss<span class="meta-keyword">/logging/</span>jboss-logging/<span class="number">3.4</span><span class="number">.1</span>.Final/jboss-logging<span class="number">-3.4</span><span class="number">.1</span>.Final.jar\:/Users<span class="meta-keyword">/smile/</span>workSpace<span class="meta-keyword">/maven/</span>localRepository<span class="meta-keyword">/com/</span>fasterxml<span class="meta-keyword">/classmate/</span><span class="number">1.5</span><span class="number">.1</span>/classmate<span class="number">-1.5</span><span class="number">.1</span>.jar\:/Users<span class="meta-keyword">/smile/</span>workSpace<span class="meta-keyword">/maven/</span>localRepository<span class="meta-keyword">/org/</span>springframework<span class="meta-keyword">/spring-web/</span><span class="number">5.2</span><span class="number">.1</span>.RELEASE/spring-web<span class="number">-5.2</span><span class="number">.1</span>.RELEASE.jar\:/Users<span class="meta-keyword">/smile/</span>workSpace<span class="meta-keyword">/maven/</span>localRepository<span class="meta-keyword">/org/</span>springframework<span class="meta-keyword">/spring-beans/</span><span class="number">5.2</span><span class="number">.1</span>.RELEASE/spring-beans<span class="number">-5.2</span><span class="number">.1</span>.RELEASE.jar\:/Users<span class="meta-keyword">/smile/</span>workSpace<span class="meta-keyword">/maven/</span>localRepository<span class="meta-keyword">/org/</span>springframework<span class="meta-keyword">/spring-webflux/</span><span class="number">5.2</span><span class="number">.1</span>.RELEASE/spring-webflux<span class="number">-5.2</span><span class="number">.1</span>.RELEASE.jar\:/Users<span class="meta-keyword">/smile/</span>workSpace<span class="meta-keyword">/maven/</span>localRepository<span class="meta-keyword">/org/</span>synchronoss<span class="meta-keyword">/cloud/</span>nio-multipart-parser/<span class="number">1.1</span><span class="number">.0</span>/nio-multipart-parser<span class="number">-1.1</span><span class="number">.0</span>.jar\:/Users<span class="meta-keyword">/smile/</span>workSpace<span class="meta-keyword">/maven/</span>localRepository<span class="meta-keyword">/org/</span>synchronoss<span class="meta-keyword">/cloud/</span>nio-stream-storage/<span class="number">1.1</span><span class="number">.3</span>/nio-stream-storage<span class="number">-1.1</span><span class="number">.3</span>.jar\:/Users<span class="meta-keyword">/smile/</span>workSpace<span class="meta-keyword">/maven/</span>localRepository<span class="meta-keyword">/org/</span>projectlombok<span class="meta-keyword">/lombok/</span><span class="number">1.18</span><span class="number">.10</span>/lombok<span class="number">-1.18</span><span class="number">.10</span>.jar\:/Users<span class="meta-keyword">/smile/</span>workSpace<span class="meta-keyword">/maven/</span>localRepository<span class="meta-keyword">/org/</span>apache<span class="meta-keyword">/commons/</span>commons-lang3/<span class="number">3.9</span>/commons-lang3<span class="number">-3.9</span>.jar\:/Users<span class="meta-keyword">/smile/</span>workSpace<span class="meta-keyword">/maven/</span>localRepository<span class="meta-keyword">/io/</span>netty<span class="meta-keyword">/netty-all/</span><span class="number">4.1</span><span class="number">.44</span>.Final/netty-all<span class="number">-4.1</span><span class="number">.44</span>.Final.jar\:/Users<span class="meta-keyword">/smile/</span>workSpace<span class="meta-keyword">/maven/</span>localRepository<span class="meta-keyword">/io/</span>projectreactor<span class="meta-keyword">/reactor-core/</span><span class="number">3.3</span><span class="number">.0</span>.RELEASE/reactor-core<span class="number">-3.3</span><span class="number">.0</span>.RELEASE.jar\:/Users<span class="meta-keyword">/smile/</span>workSpace<span class="meta-keyword">/maven/</span>localRepository<span class="meta-keyword">/org/</span>reactivestreams<span class="meta-keyword">/reactive-streams/</span><span class="number">1.0</span><span class="number">.3</span>/reactive-streams<span class="number">-1.0</span><span class="number">.3</span>.jar\:/Applications/IntelliJ IDEA.app/Contents<span class="meta-keyword">/lib/</span>idea_rt.jar</span><br><span class="line">user.name=smile</span><br><span class="line">com.sun.management.jmxremote=</span><br><span class="line">java.vm.specification.version=<span class="number">1.8</span></span><br><span class="line">sun.java.command=com.smile.SmileCompanyApplication</span><br><span class="line">java.home=/Library/Java/JavaVirtualMachines/jdk1<span class="number">.8</span><span class="number">.0</span>_181.jdk/Contents/Home/jre</span><br><span class="line">sun.arch.data.model=<span class="number">64</span></span><br><span class="line">user.language=ja</span><br><span class="line">java.specification.vendor=Oracle Corporation</span><br><span class="line">org.apache.logging.log4j.assignedSequences=<span class="number">8593</span></span><br><span class="line">awt.toolkit=sun.lwawt.macosx.LWCToolkit</span><br><span class="line">java.vm.info=mixed mode</span><br><span class="line">java.version=<span class="number">1.8</span><span class="number">.0</span>_181</span><br><span class="line">java.ext.dirs=/Users<span class="meta-keyword">/smile/</span>Library/Java/Extensions\:/Library/Java/JavaVirtualMachines/jdk1<span class="number">.8</span><span class="number">.0</span>_181.jdk/Contents/Home<span class="meta-keyword">/jre/</span>lib/ext\:/Library/Java/Extensions\:/Network/Library/Java/Extensions\:/System/Library/Java/Extensions\:<span class="meta-keyword">/usr/</span>lib/java</span><br><span class="line">sun.boot.class.path=/Library/Java/JavaVirtualMachines/jdk1<span class="number">.8</span><span class="number">.0</span>_181.jdk/Contents/Home<span class="meta-keyword">/jre/</span>lib/resources.jar\:/Library/Java/JavaVirtualMachines/jdk1<span class="number">.8</span><span class="number">.0</span>_181.jdk/Contents/Home<span class="meta-keyword">/jre/</span>lib/rt.jar\:/Library/Java/JavaVirtualMachines/jdk1<span class="number">.8</span><span class="number">.0</span>_181.jdk/Contents/Home<span class="meta-keyword">/jre/</span>lib/sunrsasign.jar\:/Library/Java/JavaVirtualMachines/jdk1<span class="number">.8</span><span class="number">.0</span>_181.jdk/Contents/Home<span class="meta-keyword">/jre/</span>lib/jsse.jar\:/Library/Java/JavaVirtualMachines/jdk1<span class="number">.8</span><span class="number">.0</span>_181.jdk/Contents/Home<span class="meta-keyword">/jre/</span>lib/jce.jar\:/Library/Java/JavaVirtualMachines/jdk1<span class="number">.8</span><span class="number">.0</span>_181.jdk/Contents/Home<span class="meta-keyword">/jre/</span>lib/charsets.jar\:/Library/Java/JavaVirtualMachines/jdk1<span class="number">.8</span><span class="number">.0</span>_181.jdk/Contents/Home<span class="meta-keyword">/jre/</span>lib/jfr.jar\:/Library/Java/JavaVirtualMachines/jdk1<span class="number">.8</span><span class="number">.0</span>_181.jdk/Contents/Home<span class="meta-keyword">/jre/</span>classes</span><br><span class="line">java.awt.headless=true</span><br><span class="line">java.vendor=Oracle Corporation</span><br><span class="line">spring.application.admin.enabled=true</span><br><span class="line">file.separator=/</span><br><span class="line">java.vendor.url.bug=http\:<span class="comment">//bugreport.sun.com/bugreport/</span></span><br><span class="line">sun.io.unicode.encoding=UnicodeBig</span><br><span class="line">sun.cpu.endian=little</span><br><span class="line">sun.cpu.isalist=</span><br></pre></td></tr></table></figure>
+<h4 id="常用方式-1"><a href="#常用方式-1" class="headerlink" title="常用方式"></a>常用方式</h4><figure class="highlight xml"><table><tr><td class="code"><pre><span class="line">jinfo <span class="tag">&lt;<span class="name">pid</span>&gt;</span></span><br><span class="line">jinfo -flags <span class="tag">&lt;<span class="name">pid</span>&gt;</span></span><br><span class="line">jinfo -sysprops <span class="tag">&lt;<span class="name">pid</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<h3 id="jstat"><a href="#jstat" class="headerlink" title="jstat"></a>jstat</h3><ul>
+<li>显示对应Java进程性能统计信息</li>
+</ul>
+<blockquote>
+<p>jstat -h</p>
+</blockquote>
+<figure class="highlight pf"><table><tr><td class="code"><pre><span class="line">➜  ~ jstat -h</span><br><span class="line">Usage: jstat --help|-options</span><br><span class="line">       jstat -<span class="variable">&lt;option&gt;</span> [-t] [-h<span class="variable">&lt;lines&gt;</span>] <span class="variable">&lt;vmid&gt;</span> [<span class="variable">&lt;interval&gt;</span> [<span class="variable">&lt;count&gt;</span>]]</span><br><span class="line"></span><br><span class="line">Definitions:</span><br><span class="line">  <span class="variable">&lt;option&gt;</span>      An option reported by the -options option</span><br><span class="line">  <span class="variable">&lt;vmid&gt;</span>        Virtual Machine Identifier. A vmid takes the following form:</span><br><span class="line">                     <span class="variable">&lt;lvmid&gt;</span>[@<span class="variable">&lt;hostname&gt;</span>[:<span class="variable">&lt;port&gt;</span>]]</span><br><span class="line">                Where <span class="variable">&lt;lvmid&gt;</span> is the local vm identifier <span class="keyword">for</span> the target</span><br><span class="line">                Java virtual machine, typically a process id; <span class="variable">&lt;hostname&gt;</span> is</span><br><span class="line">                the name of the host running the target Java virtual machine;</span><br><span class="line">                and <span class="variable">&lt;port&gt;</span> is the <span class="keyword">port</span> number <span class="keyword">for</span> the rmiregistry <span class="keyword">on</span> the</span><br><span class="line">                target host. See the jvmstat documentation <span class="keyword">for</span> a more complete</span><br><span class="line">                description of the Virtual Machine Identifier.</span><br><span class="line">  <span class="variable">&lt;lines&gt;</span>       Number of samples between header lines.</span><br><span class="line">  <span class="variable">&lt;interval&gt;</span>    Sampling interval. The following forms are allowed:</span><br><span class="line">                    <span class="variable">&lt;n&gt;</span>[<span class="string">"ms"</span>|<span class="string">"s"</span>]</span><br><span class="line">                Where <span class="variable">&lt;n&gt;</span> is an integer and the suffix specifies the units as </span><br><span class="line">                milliseconds(<span class="string">"ms"</span>) or seconds(<span class="string">"s"</span>). The <span class="keyword">default</span> units are <span class="string">"ms"</span>.</span><br><span class="line">  <span class="variable">&lt;count&gt;</span>       Number of samples <span class="keyword">to</span> take before terminating.</span><br><span class="line">  -J<span class="variable">&lt;flag&gt;</span>      Pass <span class="variable">&lt;flag&gt;</span> directly <span class="keyword">to</span> the runtime system.</span><br><span class="line">  -? -h --help  Prints this help message.</span><br><span class="line">  -help         Prints this help message.</span><br></pre></td></tr></table></figure>
+<h4 id="options"><a href="#options" class="headerlink" title="-options"></a>-options</h4><ul>
+<li>显示所有可查看性能统计信息的选项</li>
+</ul>
+<blockquote>
+<p>jstat -options</p>
+</blockquote>
+<figure class="highlight haml"><table><tr><td class="code"><pre><span class="line">➜  ~ jstat -options</span><br><span class="line">-<span class="ruby"><span class="class"><span class="keyword">class</span></span></span></span><br><span class="line"><span class="ruby">-compiler</span></span><br><span class="line"><span class="ruby">-gc</span></span><br><span class="line"><span class="ruby">-gccapacity</span></span><br><span class="line"><span class="ruby">-gccause</span></span><br><span class="line"><span class="ruby">-gcmetacapacity</span></span><br><span class="line"><span class="ruby">-gcnew</span></span><br><span class="line"><span class="ruby">-gcnewcapacity</span></span><br><span class="line"><span class="ruby">-gcold</span></span><br><span class="line"><span class="ruby">-gcoldcapacity</span></span><br><span class="line"><span class="ruby">-gcutil</span></span><br><span class="line"><span class="ruby">-printcompilation</span></span><br></pre></td></tr></table></figure>
+<h5 id="class"><a href="#class" class="headerlink" title="-class"></a>-class</h5><ul>
+<li>显示对应Java进程加载类的相关统计信息<ul>
+<li>Loaded: 加载类数量</li>
+<li>Bytes: 加载字节占内存容量</li>
+<li>Unloaded: 未加载类数量</li>
+<li>Bytes: 未加载字节占内存容量</li>
+<li>Time: 加载和卸载类所占用时间</li>
+</ul>
+</li>
+</ul>
+<blockquote>
+<p>jstat -class pid</p>
+</blockquote>
+<figure class="highlight lsl"><table><tr><td class="code"><pre><span class="line">➜  ~ jstat -class <span class="number">1290</span></span><br><span class="line">Loaded  Bytes     Unloaded Bytes      Time   </span><br><span class="line">  <span class="number">6713</span> <span class="number">12073.0</span>        <span class="number">0</span>     <span class="number">0.0</span>       <span class="number">8.32</span></span><br></pre></td></tr></table></figure>
+<h5 id="compiler"><a href="#compiler" class="headerlink" title="-compiler"></a>-compiler</h5><ul>
+<li>显示对应Java进程编辑相关统计信息<ul>
+<li>Compiled: 执行编译的任务数</li>
+<li>Failed: 编译失败的任务数</li>
+<li>Invalid: 编译无效的任务数</li>
+<li>Time: 执行编译所占用时间</li>
+<li>FailedType: 上次编译失败的编译类型</li>
+<li>FailedMethod: 上次编译失败的类名和方法</li>
+</ul>
+</li>
+</ul>
+<blockquote>
+<p>jstat -compiler pid</p>
+</blockquote>
+<figure class="highlight angelscript"><table><tr><td class="code"><pre><span class="line">➜  ~ jstat -compiler <span class="number">1290</span></span><br><span class="line">Compiled Failed Invalid   Time   FailedType FailedMethod</span><br><span class="line">    <span class="number">2504</span>   <span class="number">0</span>       <span class="number">0</span>      <span class="number">0.50</span>       <span class="number">0</span></span><br></pre></td></tr></table></figure>
+<h5 id="gc"><a href="#gc" class="headerlink" title="-gc"></a>-gc</h5><ul>
+<li>GC过程的统计信息(KB)<ul>
+<li>S0C: 年轻代第一个Survivor(幸存者)区内存容量</li>
+<li>S1C: 年轻代第二个Survivor(幸存者)区内存容量</li>
+<li>S0U: 年轻代第一个Survivor(幸存者)区已使用内存容量</li>
+<li>S1U: 年轻代第二个Survivor(幸存者)区已使用内存容量</li>
+<li>EC: 年轻代Eden区内存容量</li>
+<li>EU: 年轻代Eden区已使用内存容量</li>
+<li>OC: 老年代内存容量</li>
+<li>OU: 老年代已使用内存容量</li>
+<li>MC: 元空间内存容量</li>
+<li>MU: 元空间已使用内存容量</li>
+<li>CCSC: 压缩的类空间内存容量</li>
+<li>CCSU: 压缩的类空间已使用内存容量</li>
+<li>YGC: 年轻代GC次数</li>
+<li>YGCT: 年轻代GC共占用时间</li>
+<li>FGC: 老年代GC次数</li>
+<li>FGCT: 老年代GC共占用时间</li>
+<li>CGC: GC过程中Stop The World(STW)次数</li>
+<li>CGCT: GC过程中Stop The World(STW)共占用时间</li>
+<li>GCT: GC共占用时间</li>
+</ul>
+</li>
+</ul>
+<blockquote>
+<p>jstat -gc pid</p>
+</blockquote>
+<figure class="highlight angelscript"><table><tr><td class="code"><pre><span class="line">➜  ~ jstat -gc <span class="number">1290</span></span><br><span class="line"> S0C    S1C    S0U     S1U      EC       EU        OC         OU       MC       MU     CCSC   CCSU      YGC   YGCT   FGC     FGCT   CGC    CGCT   GCT   </span><br><span class="line"> <span class="number">0.0</span>   <span class="number">12288.0</span>  <span class="number">0.0</span>   <span class="number">12288.0</span> <span class="number">317440.0</span> <span class="number">157696.0</span>  <span class="number">194560.0</span>     <span class="number">0.0</span>     <span class="number">21376.0</span> <span class="number">20648.7</span> <span class="number">2944.0</span> <span class="number">2732.8</span>      <span class="number">3</span>    <span class="number">0.019</span>   <span class="number">0</span>      <span class="number">0.000</span>   -      -    <span class="number">0.019</span></span><br></pre></td></tr></table></figure>
+<h5 id="gccapacity"><a href="#gccapacity" class="headerlink" title="-gccapacity"></a>-gccapacity</h5><ul>
+<li>GC过程的统计信息(KB)<ul>
+<li>NGCMN: 新生代最小内存容量</li>
+<li>NGCMX: 新生代最大内存容量</li>
+<li>NGC: 当前新生代内存容量</li>
+<li>S0C: 当前新生代第一个Survivor(幸存者)区内存容量</li>
+<li>S1C: 当前新生代第二个Survivor(幸存者)区内存容量</li>
+<li>EC: 当前新生代Eden区内存容量</li>
+<li>OGCMN: 老年代最小内存容量</li>
+<li>OGCMX: 老年代最大内存容量</li>
+<li>OGC: 当前老年代新生成的内存容量</li>
+<li>OC: 当前老年代内存容量</li>
+<li>MCMN: 元空间最小内存容量</li>
+<li>MCMX: 元空间最大内存容量</li>
+<li>MC: 当前元空间内存容量</li>
+<li>CCSMN: 压缩的类空间最小内存容量</li>
+<li>CCSMX: 压缩的类空间最大内存容量</li>
+<li>CCSC: 当前压缩类空间内存容量</li>
+<li>YGC: 年轻代GC次数</li>
+<li>FGC: 老年代GC次数</li>
+<li>CGC: GC过程中Stop The World(STW)次数</li>
+</ul>
+</li>
+</ul>
+<blockquote>
+<p>jstat -gccapacity pid</p>
+</blockquote>
+<figure class="highlight angelscript"><table><tr><td class="code"><pre><span class="line">➜  ~ jstat -gccapacity <span class="number">1290</span></span><br><span class="line"> NGCMN  NGCMX     NGC     S0C  S1C      EC      OGCMN  OGCMX       OGC         OC       MCMN   MCMX       MC     CCSMN    CCSMX      CCSC    YGC   FGC   CGC </span><br><span class="line">  <span class="number">0.0</span> <span class="number">8388608.0</span> <span class="number">329728.0</span>  <span class="number">0.0</span> <span class="number">12288.0</span> <span class="number">317440.0</span>   <span class="number">0.0</span>  <span class="number">8388608.0</span>   <span class="number">194560.0</span>   <span class="number">194560.0</span>    <span class="number">0.0</span> <span class="number">1067008.0</span>  <span class="number">21376.0</span>   <span class="number">0.0</span>    <span class="number">1048576.0</span>   <span class="number">2944.0</span>   <span class="number">3</span>     <span class="number">0</span>     -</span><br></pre></td></tr></table></figure>
+<h5 id="gccause"><a href="#gccause" class="headerlink" title="-gccause"></a>-gccause</h5><ul>
+<li>最近一次GC的统计信息<ul>
+<li>S0: 当前新生代第一个Survivor(幸存者)区内存利用率</li>
+<li>S1: 当前新生代第二个Survivor(幸存者)区内存利用率</li>
+<li>E: 当前新生代Eden区内存利用率</li>
+<li>O: 当前老年代内存利用率</li>
+<li>M: 当前元空间内存利用率</li>
+<li>CCS: 压缩的类空间内存利用率</li>
+<li>YGC: 年轻代GC次数</li>
+<li>YGCT: 年轻代GC共占用时间</li>
+<li>FGC: 老年代GC次数</li>
+<li>FGCT: 老年代GC共占用时间</li>
+<li>CGC: GC过程中Stop The World(STW)次数</li>
+<li>CGCT: GC过程中Stop The World(STW)共占用时间</li>
+<li>GCT: GC共占用时间</li>
+<li>LGCC: 上次GC原因</li>
+<li>GCC: 当前GC原因</li>
+</ul>
+</li>
+</ul>
+<blockquote>
+<p>jstat -gccause pid</p>
+</blockquote>
+<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="string">➜</span>  <span class="string">~</span> <span class="string">jstat</span> <span class="string">-gccause</span> <span class="number">1290</span></span><br><span class="line">  <span class="string">S0</span>     <span class="string">S1</span>      <span class="string">E</span>      <span class="string">O</span>      <span class="string">M</span>     <span class="string">CCS</span>    <span class="string">YGC</span>     <span class="string">YGCT</span>    <span class="string">FGC</span>    <span class="string">FGCT</span>    <span class="string">CGC</span>    <span class="string">CGCT</span>     <span class="string">GCT</span>        <span class="string">LGCC</span>              <span class="string">GCC</span>                 </span><br><span class="line">  <span class="number">0.00</span> <span class="number">100.00</span>  <span class="number">49.68</span>   <span class="number">0.00</span>  <span class="number">96.60</span>  <span class="number">92.83</span>      <span class="number">3</span>    <span class="number">0.019</span>    <span class="number">0</span>    <span class="number">0.000</span>     <span class="bullet">-</span>        <span class="bullet">-</span>    <span class="number">0.019</span> <span class="string">Metadata</span> <span class="string">GC</span> <span class="string">Threshold</span>  <span class="literal">No</span> <span class="string">GC</span></span><br></pre></td></tr></table></figure>
+<h5 id="gcmetacapacity"><a href="#gcmetacapacity" class="headerlink" title="-gcmetacapacity"></a>-gcmetacapacity</h5><ul>
+<li>元空间容量统计<ul>
+<li>MCMN: 元空间最小内存容量</li>
+<li>MCMX: 元空间最大内存容量</li>
+<li>MC: 元空间内存容量</li>
+<li>CCSMN: 压缩的类空间最小内存容量</li>
+<li>CCSMX: 压缩的类空间最大内存容量</li>
+<li>CCSC:压缩的类空间内存容量</li>
+<li>YGC: 年轻代GC次数</li>
+<li>FGC: 老年代GC次数</li>
+<li>FGCT: 老年代GC共占用时间</li>
+<li>CGC: GC过程中Stop The World(STW)次数</li>
+<li>CGCT: GC过程中Stop The World(STW)共占用时间</li>
+<li>GCT: GC共占用时间 </li>
+</ul>
+</li>
+</ul>
+<blockquote>
+<p>jstat -gcmetacapacity pid</p>
+</blockquote>
+<figure class="highlight angelscript"><table><tr><td class="code"><pre><span class="line">➜  ~ jstat -gcmetacapacity <span class="number">1290</span></span><br><span class="line">   MCMN       MCMX         MC     CCSMN  CCSMX       CCSC     YGC   FGC    FGCT    CGC    CGCT     GCT   </span><br><span class="line">       <span class="number">0.0</span>  <span class="number">1067008.0</span>    <span class="number">21376.0</span>   <span class="number">0.0</span>  <span class="number">1048576.0</span>   <span class="number">2944.0</span>     <span class="number">3</span>     <span class="number">0</span>    <span class="number">0.000</span>     -        -    <span class="number">0.019</span></span><br></pre></td></tr></table></figure>
+<h5 id="gcnew"><a href="#gcnew" class="headerlink" title="-gcnew"></a>-gcnew</h5><ul>
+<li>年轻代统计<ul>
+<li>S0C: 年轻代第一个Survivor(幸存者)区内存容量</li>
+<li>S1C: 年轻代第二个Survivor(幸存者)区内存容量</li>
+<li>S0U: 年轻代第一个Survivor(幸存者)区已使用内存容量</li>
+<li>S1U: 年轻代第二个Survivor(幸存者)区已使用内存容量</li>
+<li>TT: 对象在新生代经过多少次YGC方可进入老年代</li>
+<li>MTT: 对象在新生代最多经过多少次YGC方可进入老年代</li>
+<li>DSS: 需要新生代Survivor区内存容量</li>
+<li>EC: 年轻代Eden区内存容量 </li>
+<li>EU: 年轻代Eden区已使用内存容量</li>
+<li>YGC: 年轻代GC次数</li>
+<li>YGCT: 年轻代GC共占用时间</li>
+</ul>
+</li>
+</ul>
+<blockquote>
+<p>jstat -gcnew pid</p>
+</blockquote>
+<figure class="highlight angelscript"><table><tr><td class="code"><pre><span class="line">➜  ~ jstat -gcnew <span class="number">1290</span></span><br><span class="line"> S0C  S1C     S0U  S1U    TT MTT  DSS      EC       EU     YGC   YGCT  </span><br><span class="line"> <span class="number">0.0</span> <span class="number">12288.0</span>  <span class="number">0.0</span> <span class="number">12288.0</span> <span class="number">15</span>  <span class="number">15</span> <span class="number">20480.0</span> <span class="number">317440.0</span> <span class="number">157696.0</span>  <span class="number">3</span>    <span class="number">0.019</span></span><br></pre></td></tr></table></figure>
+<h5 id="gcnewcapacity"><a href="#gcnewcapacity" class="headerlink" title="-gcnewcapacity"></a>-gcnewcapacity</h5><ul>
+<li>新生代空间容量统计信息<ul>
+<li>NGCMN: 新生代最小内存容量</li>
+<li>NGCMX: 新生代最大内存容量</li>
+<li>NGC: 当前新生代内存容量</li>
+<li>S0CMX: 年轻代第一个Survivor(幸存者)区最大内存容量</li>
+<li>S0C 当前年前代第一个Survivor(幸存者)区内存容量</li>
+<li>S1CMX: 年轻代第二个Survivor(幸存者)区最大内存容量</li>
+<li>S1C: 当前年前代第二个Survivor(幸存者)区内存容量</li>
+<li>ECMX: 年轻代Eden区最大内存容量</li>
+<li>EC: 当前年轻代Eden区内存容量</li>
+<li>YGC: 年轻代GC次数</li>
+<li>FGC: 老年代GC次数</li>
+<li>CGC: GC共占用时间</li>
+</ul>
+</li>
+</ul>
+<blockquote>
+<p>jstat -gcnewcapacity pid</p>
+</blockquote>
+<figure class="highlight angelscript"><table><tr><td class="code"><pre><span class="line">➜  ~ jstat -gcnewcapacity <span class="number">1290</span></span><br><span class="line">  NGCMN  NGCMX       NGC      S0CMX     S0C  S1CMX       S1C      ECMX        EC      YGC   FGC   CGC </span><br><span class="line">  <span class="number">0.0</span>  <span class="number">8388608.0</span>   <span class="number">329728.0</span>    <span class="number">0.0</span>      <span class="number">0.0</span> <span class="number">8388608.0</span>  <span class="number">12288.0</span>  <span class="number">8388608.0</span>   <span class="number">317440.0</span>   <span class="number">3</span>     <span class="number">0</span>     -</span><br></pre></td></tr></table></figure>
+<h5 id="gcold"><a href="#gcold" class="headerlink" title="-gcold"></a>-gcold</h5><ul>
+<li>老年代和元空间GC统计<ul>
+<li>MC: 元空间内存容量</li>
+<li>MU: 元空间已使用内存容量</li>
+<li>CCSC: 压缩的类空间内存容量</li>
+<li>CCSU: 压缩的类空间已使用内存容量</li>
+<li>OC: 老年代内存容量</li>
+<li>OU: 老年代已使用内存容量</li>
+<li>YGC: 年轻代GC次数</li>
+<li>FGC: 老年代GC次数</li>
+<li>FGCT: 老年代GC共占用时间</li>
+<li>CGC: GC过程中Stop The World(STW)次数</li>
+<li>CGCT: GC过程中Stop The World(STW)共占用时间</li>
+<li>CGC: GC共占用时间</li>
+</ul>
+</li>
+</ul>
+<blockquote>
+<p>jstat -gcold pid</p>
+</blockquote>
+<figure class="highlight angelscript"><table><tr><td class="code"><pre><span class="line">➜  ~ jstat -gcold <span class="number">1290</span></span><br><span class="line">   MC       MU      CCSC     CCSU       OC          OU      YGC   FGC   FGCT    CGC    CGCT     GCT   </span><br><span class="line"> <span class="number">21376.0</span>  <span class="number">20648.7</span>   <span class="number">2944.0</span>   <span class="number">2732.8</span>    <span class="number">194560.0</span>     <span class="number">0.0</span>      <span class="number">3</span>     <span class="number">0</span>    <span class="number">0.000</span>     -        -   <span class="number">0.019</span></span><br></pre></td></tr></table></figure>
+<h5 id="gcoldcapacity"><a href="#gcoldcapacity" class="headerlink" title="-gcoldcapacity"></a>-gcoldcapacity</h5><ul>
+<li>老年代容量统计信息<ul>
+<li>OGCMN: 老年代最小内存容量</li>
+<li>OGCMX: 老年代最大内存容量</li>
+<li>OGC: 当前老年代新生成的内存容量</li>
+<li>OC: 当前老年代内存容量</li>
+<li>YGC: 年轻代GC次数</li>
+<li>FGC: 老年代GC次数</li>
+<li>FGCT: 老年代GC共占用时间</li>
+<li>CGC: GC过程中Stop The World(STW)次数</li>
+<li>CGCT: GC过程中Stop The World(STW)共占用时间</li>
+<li>CGC: GC共占用时间</li>
+</ul>
+</li>
+</ul>
+<blockquote>
+<p>jstat -gcoldcapacity pid</p>
+</blockquote>
+<figure class="highlight angelscript"><table><tr><td class="code"><pre><span class="line">➜  ~ jstat -gcoldcapacity <span class="number">1290</span></span><br><span class="line">   OGCMN    OGCMX        OGC         OC       YGC   FGC    FGCT    CGC    CGCT    GCT   </span><br><span class="line">    <span class="number">0.0</span>   <span class="number">8388608.0</span>    <span class="number">194560.0</span>    <span class="number">194560.0</span>    <span class="number">3</span>     <span class="number">0</span>    <span class="number">0.000</span>     -       -    <span class="number">0.019</span></span><br></pre></td></tr></table></figure>
+<h5 id="gcutil"><a href="#gcutil" class="headerlink" title="-gcutil"></a>-gcutil</h5><ul>
+<li>GC统计信息摘要<ul>
+<li>S0: 当前新生代第一个Survivor(幸存者)区内存利用率</li>
+<li>S1: 当前新生代第二个Survivor(幸存者)区内存利用率</li>
+<li>E: 当前新生代Eden区内存利用率</li>
+<li>O: 当前老年代内存利用率</li>
+<li>M: 当前元空间内存利用率</li>
+<li>CCS: 压缩的类空间内存利用率</li>
+<li>YGC: 年轻代GC次数</li>
+<li>YGCT: 年轻代GC共占用时间</li>
+<li>FGC: 老年代GC次数</li>
+<li>FGCT: 老年代GC共占用时间</li>
+<li>CGC: GC过程中Stop The World(STW)次数</li>
+<li>CGCT: GC过程中Stop The World(STW)共占用时间</li>
+<li>GCT: GC共占用时间</li>
+</ul>
+</li>
+</ul>
+<blockquote>
+<p>jstat -gcutil pid</p>
+</blockquote>
+<figure class="highlight angelscript"><table><tr><td class="code"><pre><span class="line">➜  ~ jstat -gcutil <span class="number">1290</span></span><br><span class="line">  S0     S1     E      O      M     CCS    YGC     YGCT    FGC    FGCT    CGC    CGCT    GCT   </span><br><span class="line">  <span class="number">0.00</span> <span class="number">100.00</span>  <span class="number">49.68</span>   <span class="number">0.00</span>  <span class="number">96.60</span>  <span class="number">92.83</span>      <span class="number">3</span>    <span class="number">0.019</span>     <span class="number">0</span>    <span class="number">0.000</span>   -       -    <span class="number">0.019</span></span><br></pre></td></tr></table></figure>
+<h5 id="printcompilation"><a href="#printcompilation" class="headerlink" title="-printcompilation"></a>-printcompilation</h5><ul>
+<li>编译方法统计信息<ul>
+<li>Compiled: 最近编译的方法执行的编译任务数</li>
+<li>Size: 最近编译的方法的字节数</li>
+<li>Type: 最新编译方法的变异类型</li>
+<li>Method: 最近编译的方法</li>
+</ul>
+</li>
+</ul>
+<blockquote>
+<p>jstat -printcompilation pid</p>
+</blockquote>
+<figure class="highlight oxygene"><table><tr><td class="code"><pre><span class="line">➜  ~ jstat -printcompilation <span class="number">1290</span></span><br><span class="line">Compiled  Size  <span class="keyword">Type</span>  <span class="function"><span class="keyword">Method</span></span></span><br><span class="line"><span class="function">    2505    8    1 <span class="title">java</span>/<span class="title">lang</span>/<span class="title">Thread</span> <span class="title">interrupted</span></span></span><br></pre></td></tr></table></figure>
+<h4 id="常用方式-2"><a href="#常用方式-2" class="headerlink" title="常用方式"></a>常用方式</h4><figure class="highlight angelscript"><table><tr><td class="code"><pre><span class="line">jstat -gc -t h3 <span class="number">1290</span> <span class="number">1000</span> <span class="number">7</span> <span class="comment">// 查看pid: 1810的gc情况(每输出三次后就输出一次标题, 间隔一秒, 输出7次, 打印时间戳)</span></span><br></pre></td></tr></table></figure>
+<h3 id="jmap"><a href="#jmap" class="headerlink" title="jmap"></a>jmap</h3><ul>
+<li>显示对应Java进程共享对象内存映射和堆内存详细信息</li>
+</ul>
+<blockquote>
+<p>jmap -h</p>
+</blockquote>
+<figure class="highlight vim"><table><tr><td class="code"><pre><span class="line">➜  ~ jmap -h</span><br><span class="line">Usage:</span><br><span class="line">    jmap -clstats <span class="symbol">&lt;pid&gt;</span></span><br><span class="line">        <span class="keyword">to</span> connect <span class="keyword">to</span> running process <span class="built_in">and</span> <span class="keyword">print</span> class loader statistics</span><br><span class="line">    jmap -finalizerinfo <span class="symbol">&lt;pid&gt;</span></span><br><span class="line">        <span class="keyword">to</span> connect <span class="keyword">to</span> running process <span class="built_in">and</span> <span class="keyword">print</span> information <span class="keyword">on</span> objects awaiting finalization</span><br><span class="line">    jmap -histo[:[<span class="symbol">&lt;histo-options&gt;</span>]] <span class="symbol">&lt;pid&gt;</span></span><br><span class="line">        <span class="keyword">to</span> connect <span class="keyword">to</span> running process <span class="built_in">and</span> <span class="keyword">print</span> histogram of java object heap</span><br><span class="line">    jmap -dump:<span class="symbol">&lt;dump-options&gt;</span> <span class="symbol">&lt;pid&gt;</span></span><br><span class="line">        <span class="keyword">to</span> connect <span class="keyword">to</span> running process <span class="built_in">and</span> dump java heap</span><br><span class="line">    jmap -? -h --<span class="keyword">help</span></span><br><span class="line">        <span class="keyword">to</span> <span class="keyword">print</span> this <span class="keyword">help</span> message</span><br><span class="line"></span><br><span class="line">    dump-option<span class="variable">s:</span></span><br><span class="line">      live         dump <span class="keyword">only</span> live objects</span><br><span class="line">      <span class="keyword">all</span>          dump <span class="keyword">all</span> objects in the heap (default <span class="keyword">if</span> one of <span class="string">"live"</span> <span class="built_in">or</span> <span class="string">"all"</span> <span class="keyword">is</span> not specified</span><br><span class="line">      format=<span class="keyword">b</span>     binary format</span><br><span class="line">      <span class="keyword">file</span>=<span class="symbol">&lt;file&gt;</span>  dump heap <span class="keyword">to</span> <span class="symbol">&lt;file&gt;</span></span><br><span class="line"></span><br><span class="line">    Example: jmap -dump:live,format=<span class="keyword">b</span>,<span class="keyword">file</span>=heap.bin <span class="symbol">&lt;pid&gt;</span></span><br><span class="line"></span><br><span class="line">    histo-option<span class="variable">s:</span></span><br><span class="line">      live         <span class="built_in">count</span> <span class="keyword">only</span> live objects</span><br><span class="line">      <span class="keyword">all</span>          <span class="built_in">count</span> <span class="keyword">all</span> objects in the heap (default <span class="keyword">if</span> one of <span class="string">"live"</span> <span class="built_in">or</span> <span class="string">"all"</span> <span class="keyword">is</span> not specified)</span><br><span class="line">      <span class="keyword">file</span>=<span class="symbol">&lt;file&gt;</span>  dump data <span class="keyword">to</span> <span class="symbol">&lt;file&gt;</span></span><br><span class="line"></span><br><span class="line">    Example: jmap -histo:live,<span class="keyword">file</span>=/tmp/histo.data <span class="symbol">&lt;pid&gt;</span></span><br></pre></td></tr></table></figure>
+<h4 id="clstats"><a href="#clstats" class="headerlink" title="-clstats"></a>-clstats</h4><ul>
+<li>类加载器统计信息(要在启动JVM加上”-XX:+UnlockDiagnosticVMOptions”, 否则提示”GC.class_stats command requires -XX:+UnlockDiagnosticVMOptions”)</li>
+</ul>
+<blockquote>
+<p>jmap -clstats pid</p>
+</blockquote>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line"></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<h4 id="finalizerinfo"><a href="#finalizerinfo" class="headerlink" title="-finalizerinfo"></a>-finalizerinfo</h4><ul>
+<li>正在等待完成Object#finalize的对象信息</li>
+</ul>
+<blockquote>
+<p>jmap -finalizerinfo pid</p>
+</blockquote>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line"></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<h4 id="histo"><a href="#histo" class="headerlink" title="-histo"></a>-histo</h4><ul>
+<li>对象加载信息<ul>
+<li>instances: 实例化数量</li>
+<li>bytes: 占用内存大小</li>
+<li>class name: 类名</li>
+</ul>
+</li>
+</ul>
+<blockquote>
+<p>jmap -histo pid // 所有对象(活+死) = jmap -histo:all pid<br>jmap -histo:live pid // 仅活着的对象</p>
+</blockquote>
+<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="string">➜</span>  <span class="string">~</span> <span class="string">jmap</span> <span class="string">-histo</span> <span class="number">1290</span></span><br><span class="line"></span><br><span class="line"> <span class="string">num</span>     <span class="comment">#instances         #bytes  class name</span></span><br><span class="line"><span class="string">----------------------------------------------</span></span><br><span class="line">   <span class="attr">1:</span>        <span class="number">262756</span>       <span class="number">75412928</span>  <span class="string">[B</span></span><br><span class="line">   <span class="attr">2:</span>        <span class="number">353892</span>       <span class="number">47856944</span>  <span class="string">[C</span></span><br><span class="line">   <span class="attr">3:</span>         <span class="number">26663</span>       <span class="number">24495960</span>  <span class="string">[I</span></span><br><span class="line">   <span class="attr">4:</span>        <span class="number">152534</span>        <span class="number">3660816</span>  <span class="string">java.lang.String</span></span><br><span class="line">   <span class="attr">5:</span>         <span class="number">33405</span>        <span class="number">2358368</span>  <span class="string">[Ljava.lang.Object;</span></span><br><span class="line">   <span class="attr">6:</span>         <span class="number">79417</span>        <span class="number">1628576</span>  <span class="string">[Ljava.lang.Class;</span></span><br><span class="line">   <span class="attr">7:</span>         <span class="number">11905</span>        <span class="number">1047640</span>  <span class="string">java.lang.reflect.Method</span></span><br><span class="line">   <span class="attr">8:</span>         <span class="number">19772</span>         <span class="number">949056</span>  <span class="string">java.util.HashMap</span></span><br><span class="line">   <span class="attr">9:</span>         <span class="number">11167</span>         <span class="number">861720</span>  <span class="string">[S</span></span><br><span class="line">  <span class="attr">10:</span>         <span class="number">33499</span>         <span class="number">803976</span>  <span class="string">java.lang.StringBuilder</span></span><br><span class="line">  <span class="attr">11:</span>          <span class="number">7183</span>         <span class="number">795192</span>  <span class="string">java.lang.Class</span></span><br><span class="line">  <span class="attr">12:</span>          <span class="number">7228</span>         <span class="number">652808</span>  <span class="string">[Ljava.util.HashMap$Node;</span></span><br><span class="line">  <span class="attr">13:</span>         <span class="number">19622</span>         <span class="number">627904</span>  <span class="string">java.util.HashMap$Node</span></span><br><span class="line">  <span class="attr">14:</span>         <span class="number">10910</span>         <span class="number">610960</span>  <span class="string">jdk.internal.org.objectweb.asm.Item</span></span><br><span class="line">  <span class="attr">15:</span>         <span class="number">14520</span>         <span class="number">464640</span>  <span class="string">java.util.concurrent.ConcurrentHashMap$Node</span></span><br><span class="line"><span class="string">...</span></span><br><span class="line"><span class="attr">3624:</span>             <span class="number">1</span>             <span class="number">16</span>  <span class="string">sun.util.resources.LocaleData</span></span><br><span class="line"><span class="attr">3625:</span>             <span class="number">1</span>             <span class="number">16</span>  <span class="string">sun.util.resources.LocaleData$LocaleDataResourceBundleControl</span></span><br><span class="line"><span class="string">Total</span>       <span class="number">1418529</span>      <span class="number">175098616</span></span><br></pre></td></tr></table></figure>
+<h4 id="heap"><a href="#heap" class="headerlink" title="-heap"></a>-heap</h4><ul>
+<li>堆配置,GC摘要信息</li>
+</ul>
+<blockquote>
+<p>jmap -heap pid</p>
+</blockquote>
+<figure class="highlight angelscript"><table><tr><td class="code"><pre><span class="line">➜  ~ jhsdb jmap --heap --pid <span class="number">1290</span></span><br><span class="line">Attaching to process ID <span class="number">1290</span>, please wait...</span><br><span class="line">Debugger attached successfully.</span><br><span class="line">Server compiler detected.</span><br><span class="line">JVM version <span class="keyword">is</span> <span class="number">13.0</span><span class="number">.1</span>+<span class="number">9</span></span><br><span class="line"></span><br><span class="line">using thread-local object allocation.</span><br><span class="line">Garbage-First (G1) GC with <span class="number">10</span> thread(s)</span><br><span class="line"></span><br><span class="line">Heap Configuration:</span><br><span class="line">   MinHeapFreeRatio         = <span class="number">40</span></span><br><span class="line">   MaxHeapFreeRatio         = <span class="number">70</span></span><br><span class="line">   MaxHeapSize              = <span class="number">8589934592</span> (<span class="number">8192.0</span>MB)</span><br><span class="line">   NewSize                  = <span class="number">1363144</span> (<span class="number">1.2999954223632812</span>MB)</span><br><span class="line">   MaxNewSize               = <span class="number">5152702464</span> (<span class="number">4914.0</span>MB)</span><br><span class="line">   OldSize                  = <span class="number">5452592</span> (<span class="number">5.1999969482421875</span>MB)</span><br><span class="line">   NewRatio                 = <span class="number">2</span></span><br><span class="line">   SurvivorRatio            = <span class="number">8</span></span><br><span class="line">   MetaspaceSize            = <span class="number">21807104</span> (<span class="number">20.796875</span>MB)</span><br><span class="line">   CompressedClassSpaceSize = <span class="number">1073741824</span> (<span class="number">1024.0</span>MB)</span><br><span class="line">   MaxMetaspaceSize         = <span class="number">17592186044415</span> MB</span><br><span class="line">   G1HeapRegionSize         = <span class="number">2097152</span> (<span class="number">2.0</span>MB)</span><br><span class="line"></span><br><span class="line">Heap Usage:</span><br><span class="line">G1 Heap:</span><br><span class="line">   regions  = <span class="number">4096</span></span><br><span class="line">   capacity = <span class="number">8589934592</span> (<span class="number">8192.0</span>MB)</span><br><span class="line">   used     = <span class="number">26590224</span> (<span class="number">25.358413696289062</span>MB)</span><br><span class="line">   free     = <span class="number">8563344368</span> (<span class="number">8166.641586303711</span>MB)</span><br><span class="line">   <span class="number">0.3095509484410286</span>% used</span><br><span class="line">G1 Young Generation:</span><br><span class="line">Eden Space:</span><br><span class="line">   regions  = <span class="number">6</span></span><br><span class="line">   capacity = <span class="number">31457280</span> (<span class="number">30.0</span>MB)</span><br><span class="line">   used     = <span class="number">12582912</span> (<span class="number">12.0</span>MB)</span><br><span class="line">   free     = <span class="number">18874368</span> (<span class="number">18.0</span>MB)</span><br><span class="line">   <span class="number">40.0</span>% used</span><br><span class="line">Survivor Space:</span><br><span class="line">   regions  = <span class="number">1</span></span><br><span class="line">   capacity = <span class="number">4194304</span> (<span class="number">4.0</span>MB)</span><br><span class="line">   used     = <span class="number">4002832</span> (<span class="number">3.8173980712890625</span>MB)</span><br><span class="line">   free     = <span class="number">191472</span> (<span class="number">0.1826019287109375</span>MB)</span><br><span class="line">   <span class="number">95.43495178222656</span>% used</span><br><span class="line">G1 Old Generation:</span><br><span class="line">   regions  = <span class="number">7</span></span><br><span class="line">   capacity = <span class="number">27262976</span> (<span class="number">26.0</span>MB)</span><br><span class="line">   used     = <span class="number">10004480</span> (<span class="number">9.541015625</span>MB)</span><br><span class="line">   free     = <span class="number">17258496</span> (<span class="number">16.458984375</span>MB)</span><br><span class="line">   <span class="number">36.69621394230769</span>% used</span><br></pre></td></tr></table></figure>
+<h4 id="dump"><a href="#dump" class="headerlink" title="-dump"></a>-dump</h4><ul>
+<li>导出对快照信息</li>
+</ul>
+<blockquote>
+<p>jmap -dump:all,format=b,file=/Users/xxx/yyy.hprof pid // 导出统计堆中所有对象格式化快照<br>jmap -dump:live,format=b,file/Users/xxx/yyy.hprof pid // 导出统计堆中存活对象格式化快照</p>
+</blockquote>
+<figure class="highlight stata"><table><tr><td class="code"><pre><span class="line">➜  ~ jmap -dump:live,<span class="keyword">format</span>=b,<span class="keyword">file</span>=/Users/smile/gc-<span class="keyword">gen</span>-live-<span class="keyword">format</span>.hprof  1290</span><br><span class="line">Heap dump <span class="keyword">file</span> created</span><br></pre></td></tr></table></figure>
+<h4 id="常用方式-3"><a href="#常用方式-3" class="headerlink" title="常用方式"></a>常用方式</h4><figure class="highlight tcl"><table><tr><td class="code"><pre><span class="line">jmap -histo:live &lt;<span class="keyword">pid</span>&gt;</span><br><span class="line">jmap -heap &lt;<span class="keyword">pid</span>&gt;</span><br><span class="line">jmap -dump:live,<span class="keyword">format</span>=b,<span class="keyword">file</span>/Users/xxx/yyy.hprof &lt;<span class="keyword">pid</span>&gt;</span><br></pre></td></tr></table></figure>
+<h3 id="jstack"><a href="#jstack" class="headerlink" title="jstack"></a>jstack</h3><ul>
+<li>显示对应Java进程堆栈信息</li>
+</ul>
+<blockquote>
+<p>jstack -h</p>
+</blockquote>
+<figure class="highlight vim"><table><tr><td class="code"><pre><span class="line">➜  ~ jstack -h</span><br><span class="line">Usage:</span><br><span class="line">    jstack [-<span class="keyword">l</span>][-<span class="keyword">e</span>] <span class="symbol">&lt;pid&gt;</span></span><br><span class="line">        (<span class="keyword">to</span> connect <span class="keyword">to</span> running process)</span><br><span class="line"></span><br><span class="line">Option<span class="variable">s:</span></span><br><span class="line">    -<span class="keyword">l</span>  long listing. Prints additional information about locks</span><br><span class="line">    -<span class="keyword">e</span>  extended listing. Prints additional information about threads</span><br><span class="line">    -? -h --<span class="keyword">help</span> -<span class="keyword">help</span> <span class="keyword">to</span> <span class="keyword">print</span> this <span class="keyword">help</span> message</span><br></pre></td></tr></table></figure>
+<h4 id="l-1"><a href="#l-1" class="headerlink" title="-l"></a>-l</h4><ul>
+<li>长列表信息(包含锁的附加信息, 建议少使用, 停顿时间会较长)</li>
+</ul>
+<blockquote>
+<p>jstack -l pid</p>
+</blockquote>
+<figure class="highlight routeros"><table><tr><td class="code"><pre><span class="line">➜  ~ jstack -l 1290</span><br><span class="line"></span><br><span class="line">2020-02-23 11:59:40</span><br><span class="line">Full thread dump Java HotSpot(TM) 64-Bit<span class="built_in"> Server </span>VM (25.181-b13 mixed mode):</span><br><span class="line"></span><br><span class="line"><span class="string">"DestroyJavaVM"</span> #8175 <span class="attribute">prio</span>=5 <span class="attribute">os_prio</span>=31 <span class="attribute">tid</span>=0x00007f84b1801000 <span class="attribute">nid</span>=0xe03 waiting on condition [0x0000000000000000]</span><br><span class="line">   java.lang.Thread.State: RUNNABLE</span><br><span class="line"></span><br><span class="line">   Locked ownable synchronizers:</span><br><span class="line">    - None</span><br><span class="line"></span><br><span class="line"><span class="string">"Thread-8151"</span> #8173 <span class="attribute">prio</span>=5 <span class="attribute">os_prio</span>=31 <span class="attribute">tid</span>=0x00007f84b1db0800 <span class="attribute">nid</span>=0x3f6403 waiting on condition [0x0000700215a93000]</span><br><span class="line">   java.lang.Thread.State: WAITING (parking)</span><br><span class="line">    at sun.misc.Unsafe.park(Native Method)</span><br><span class="line">    at java.util.concurrent.locks.LockSupport.park(LockSupport.java:304)</span><br><span class="line">    at com.smile.SmileCompanyApplication.lambda<span class="variable">$main</span><span class="variable">$0</span>(SmileCompanyApplication.java:22)</span><br><span class="line">    at com.smile.SmileCompanyApplication$<span class="variable">$Lambda</span><span class="variable">$446</span>/62309924.<span class="builtin-name">run</span>(Unknown Source)</span><br><span class="line">    at java.lang.Thread.<span class="builtin-name">run</span>(Thread.java:748)</span><br><span class="line"></span><br><span class="line">   Locked ownable synchronizers:</span><br><span class="line">    - None</span><br><span class="line"></span><br><span class="line"><span class="string">"RMI Scheduler(0)"</span> #18 daemon <span class="attribute">prio</span>=5 <span class="attribute">os_prio</span>=31 <span class="attribute">tid</span>=0x00007f84b219a000 <span class="attribute">nid</span>=0x6c03 waiting on condition [0x0000700012a20000]</span><br><span class="line">   java.lang.Thread.State: TIMED_WAITING (parking)</span><br><span class="line">    at sun.misc.Unsafe.park(Native Method)</span><br><span class="line">    - parking <span class="keyword">to</span> wait <span class="keyword">for</span>  &lt;0x00000005ceb3c5c8&gt; (a java.util.concurrent.locks.AbstractQueuedSynchronizer<span class="variable">$ConditionObject</span>)</span><br><span class="line">    at java.util.concurrent.locks.LockSupport.parkNanos(LockSupport.java:215)</span><br><span class="line">    at java.util.concurrent.locks.AbstractQueuedSynchronizer<span class="variable">$ConditionObject</span>.awaitNanos(AbstractQueuedSynchronizer.java:2078)</span><br><span class="line">    at java.util.concurrent.ScheduledThreadPoolExecutor<span class="variable">$DelayedWorkQueue</span>.take(ScheduledThreadPoolExecutor.java:1093)</span><br><span class="line">    at java.util.concurrent.ScheduledThreadPoolExecutor<span class="variable">$DelayedWorkQueue</span>.take(ScheduledThreadPoolExecutor.java:809)</span><br><span class="line">    at java.util.concurrent.ThreadPoolExecutor.getTask(ThreadPoolExecutor.java:1074)</span><br><span class="line">    at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1134)</span><br><span class="line">    at java.util.concurrent.ThreadPoolExecutor<span class="variable">$Worker</span>.<span class="builtin-name">run</span>(ThreadPoolExecutor.java:624)</span><br><span class="line">    at java.lang.Thread.<span class="builtin-name">run</span>(Thread.java:748)</span><br><span class="line"></span><br><span class="line">   Locked ownable synchronizers:</span><br><span class="line">    - None </span><br><span class="line"></span><br><span class="line"><span class="string">"G1 Main Concurrent Mark GC Thread"</span> <span class="attribute">os_prio</span>=31 <span class="attribute">tid</span>=0x00007f84b380f800 <span class="attribute">nid</span>=0x4603 runnable </span><br><span class="line"></span><br><span class="line"><span class="string">"Gang worker#0 (G1 Parallel Marking Threads)"</span> <span class="attribute">os_prio</span>=31 <span class="attribute">tid</span>=0x00007f84b3810800 <span class="attribute">nid</span>=0x4103 runnable </span><br><span class="line"></span><br><span class="line"><span class="string">"Gang worker#1 (G1 Parallel Marking Threads)"</span> <span class="attribute">os_prio</span>=31 <span class="attribute">tid</span>=0x00007f84b3811000 <span class="attribute">nid</span>=0x4403 runnable </span><br><span class="line"></span><br><span class="line"><span class="string">"Gang worker#2 (G1 Parallel Marking Threads)"</span> <span class="attribute">os_prio</span>=31 <span class="attribute">tid</span>=0x00007f84b3811800 <span class="attribute">nid</span>=0x4203 runnable </span><br><span class="line"></span><br><span class="line"><span class="string">"VM Periodic Task Thread"</span> <span class="attribute">os_prio</span>=31 <span class="attribute">tid</span>=0x00007f84b2864800 <span class="attribute">nid</span>=0x9803 waiting on condition </span><br><span class="line"></span><br><span class="line">JNI global references: 1036</span><br></pre></td></tr></table></figure>
+<h4 id="F"><a href="#F" class="headerlink" title="-F"></a>-F</h4><ul>
+<li>当线程挂起时(-l 都不起作用时), 强制打印堆栈信息</li>
+</ul>
+<blockquote>
+<p>jstack -F pid</p>
+</blockquote>
+<figure class="highlight routeros"><table><tr><td class="code"><pre><span class="line">➜  ~ jstack -F 1290</span><br><span class="line"></span><br><span class="line">Attaching <span class="keyword">to</span> process ID 1290, please wait<span class="built_in">..</span>.</span><br><span class="line">Debugger attached successfully.</span><br><span class="line">Server compiler detected.</span><br><span class="line">JVM version is 25.211-b12</span><br><span class="line">Deadlock Detection:</span><br><span class="line"></span><br><span class="line"><span class="literal">No</span> deadlocks found.</span><br><span class="line"></span><br><span class="line">Thread 13255: (state = BLOCKED)</span><br><span class="line"> - sun.misc.Unsafe.park(boolean, long) @<span class="attribute">bci</span>=0 (Compiled frame; information may be imprecise)</span><br><span class="line"> - java.util.concurrent.locks.LockSupport.park(java.lang.Object) @<span class="attribute">bci</span>=14, <span class="attribute">line</span>=175 (Compiled frame)</span><br><span class="line"> - java.util.concurrent.SynchronousQueue<span class="variable">$TransferStack</span>.awaitFulfill(java.util.concurrent.SynchronousQueue<span class="variable">$TransferStack</span><span class="variable">$SNode</span>, boolean, long) @<span class="attribute">bci</span>=144, <span class="attribute">line</span>=458 (Compiled frame)</span><br><span class="line"> - java.util.concurrent.SynchronousQueue<span class="variable">$TransferStack</span>.transfer(java.lang.Object, boolean, long) @<span class="attribute">bci</span>=102, <span class="attribute">line</span>=362 (Compiled frame)</span><br><span class="line"> - java.util.concurrent.SynchronousQueue.take() @<span class="attribute">bci</span>=7, <span class="attribute">line</span>=924 (Interpreted frame)</span><br><span class="line"> - java.util.concurrent.ThreadPoolExecutor.getTask() @<span class="attribute">bci</span>=149, <span class="attribute">line</span>=1074 (Compiled frame)</span><br><span class="line"> - java.util.concurrent.ThreadPoolExecutor.runWorker(java.util.concurrent.ThreadPoolExecutor<span class="variable">$Worker</span>) @<span class="attribute">bci</span>=26, <span class="attribute">line</span>=1134 (Compiled frame)</span><br><span class="line"> - java.util.concurrent.ThreadPoolExecutor<span class="variable">$Worker</span>.<span class="builtin-name">run</span>() @<span class="attribute">bci</span>=5, <span class="attribute">line</span>=624 (Interpreted frame)</span><br><span class="line"> - java.lang.Thread.<span class="builtin-name">run</span>() @<span class="attribute">bci</span>=11, <span class="attribute">line</span>=748 (Interpreted frame)</span><br><span class="line"></span><br><span class="line">Thread 13055: (state = BLOCKED)</span><br><span class="line"> - java.lang.Object.wait(long) @<span class="attribute">bci</span>=0 (Interpreted frame)</span><br><span class="line"> - org.apache.felix.framework.util.ThreadGate.await(long) @<span class="attribute">bci</span>=17, <span class="attribute">line</span>=79 (Interpreted frame)</span><br><span class="line"> - org.apache.felix.framework.Felix.waitForStop(long) @<span class="attribute">bci</span>=31, <span class="attribute">line</span>=1073 (Interpreted frame)</span><br><span class="line"> - org.apache.karaf.main.Main.awaitShutdown() @<span class="attribute">bci</span>=13, <span class="attribute">line</span>=586 (Interpreted frame)</span><br><span class="line"> - org.sonatype.nexus.karaf.NexusMain.main(java.lang.String[]) @<span class="attribute">bci</span>=69, <span class="attribute">line</span>=60 (Interpreted frame)</span><br><span class="line"> - sun.reflect.NativeMethodAccessorImpl.invoke0(java.lang.reflect.Method, java.lang.Object, java.lang.Object[]) @<span class="attribute">bci</span>=0 (Interpreted frame)</span><br><span class="line"> - sun.reflect.NativeMethodAccessorImpl.invoke(java.lang.Object, java.lang.Object[]) @<span class="attribute">bci</span>=100, <span class="attribute">line</span>=62 (Interpreted frame)</span><br><span class="line"> - sun.reflect.DelegatingMethodAccessorImpl.invoke(java.lang.Object, java.lang.Object[]) @<span class="attribute">bci</span>=6, <span class="attribute">line</span>=43 (Interpreted frame)</span><br><span class="line"> - java.lang.reflect.Method.invoke(java.lang.Object, java.lang.Object[]) @<span class="attribute">bci</span>=56, <span class="attribute">line</span>=498 (Interpreted frame)</span><br><span class="line"> - com.exe4j.runtime.LauncherEngine.launch(java.lang.String, java.lang.String[], java.lang.String, java.lang.String, boolean, boolean, java.lang.ClassLoader) @<span class="attribute">bci</span>=186, <span class="attribute">line</span>=62 (Interpreted frame)</span><br><span class="line"> - com.install4j.runtime.launcher.UnixLauncher.main(java.lang.String[]) @<span class="attribute">bci</span>=208, <span class="attribute">line</span>=60 (Interpreted frame)</span><br></pre></td></tr></table></figure>
+<h4 id="m"><a href="#m" class="headerlink" title="-m"></a>-m</h4><ul>
+<li>Java调用C/C++的堆栈信息</li>
+</ul>
+<blockquote>
+<p>jstack -m pid</p>
+</blockquote>
+<figure class="highlight angelscript"><table><tr><td class="code"><pre><span class="line">➜  ~ jstack -m <span class="number">1290</span></span><br><span class="line"></span><br><span class="line">Attaching to process ID <span class="number">13054</span>, please wait...</span><br><span class="line">Debugger attached successfully.</span><br><span class="line">Server compiler detected.</span><br><span class="line">JVM version <span class="keyword">is</span> <span class="number">25.211</span>-b12</span><br><span class="line">Deadlock Detection:</span><br><span class="line"></span><br><span class="line">No deadlocks found.</span><br><span class="line"></span><br><span class="line">----------------- <span class="number">13055</span> -----------------</span><br><span class="line"><span class="number">0x00007f75373e9965</span>	__pthread_cond_wait + <span class="number">0xc5</span></span><br><span class="line"><span class="number">0x00007f75365062d5</span>	_ZN13ObjectMonitor4waitElbP6Thread + <span class="number">0x525</span></span><br><span class="line"><span class="number">0x00007f75362ff9b8</span>	JVM_MonitorWait + <span class="number">0x98</span></span><br><span class="line"><span class="number">0x00007f75210183a7</span>	* java.lang.Object.wait(long) bci:<span class="number">0</span> (Interpreted frame)</span><br><span class="line"><span class="number">0x00007f7521007ffd</span>	* org.apache.felix.framework.util.ThreadGate.await(long) bci:<span class="number">17</span> line:<span class="number">79</span> (Interpreted frame)</span><br><span class="line"><span class="number">0x00007f75210077d0</span>	* org.apache.felix.framework.Felix.waitForStop(long) bci:<span class="number">31</span> line:<span class="number">1073</span> (Interpreted frame)</span><br><span class="line"><span class="number">0x00007f7521007e54</span>	* org.apache.karaf.main.Main.awaitShutdown() bci:<span class="number">13</span> line:<span class="number">586</span> (Interpreted frame)</span><br><span class="line"><span class="number">0x00007f7521007ffd</span>	* org.sonatype.nexus.karaf.NexusMain.main(java.lang.String[]) bci:<span class="number">69</span> line:<span class="number">60</span> (Interpreted frame)</span><br><span class="line"><span class="number">0x00007f75210004e7</span>	&lt;StubRoutines&gt;</span><br><span class="line"><span class="number">0x00007f753629442b</span>	_ZN9JavaCalls11call_helperEP9JavaValueP12methodHandleP17JavaCallArgumentsP6Thread + <span class="number">0xddb</span></span><br><span class="line"><span class="number">0x00007f75365a5e55</span>	_ZN10Reflection6invokeE19instanceKlassHandle12methodHandle6Handleb14objArrayHandle9BasicTypeS3_bP6Thread + <span class="number">0xb65</span></span><br><span class="line"><span class="number">0x00007f75365a7796</span>	_ZN10Reflection13invoke_methodEP7oopDesc6Handle14objArrayHandleP6Thread + <span class="number">0x126</span></span><br><span class="line"><span class="number">0x00007f7536309472</span>	JVM_InvokeMethod + <span class="number">0x102</span></span><br><span class="line"><span class="number">0x00007f75210183a7</span>	* sun.<span class="built_in">ref</span>lect.NativeMethodAccessorImpl.invoke0(java.lang.<span class="built_in">ref</span>lect.Method, java.lang.Object, java.lang.Object[]) bci:<span class="number">0</span> (Interpreted frame)</span><br><span class="line"><span class="number">0x00007f7521007d80</span>	* sun.<span class="built_in">ref</span>lect.NativeMethodAccessorImpl.invoke(java.lang.Object, java.lang.Object[]) bci:<span class="number">100</span> line:<span class="number">62</span> (Interpreted frame)</span><br><span class="line"><span class="number">0x00007f7521007d80</span>	* sun.<span class="built_in">ref</span>lect.DelegatingMethodAccessorImpl.invoke(java.lang.Object, java.lang.Object[]) bci:<span class="number">6</span> line:<span class="number">43</span> (Interpreted frame)</span><br><span class="line"><span class="number">0x00007f7521007e54</span>	* java.lang.<span class="built_in">ref</span>lect.Method.invoke(java.lang.Object, java.lang.Object[]) bci:<span class="number">56</span> line:<span class="number">498</span> (Interpreted frame)</span><br><span class="line"><span class="number">0x00007f7521007d80</span>	* com.exe4j.runtime.LauncherEngine.launch(java.lang.String, java.lang.String[], java.lang.String, java.lang.String, <span class="built_in">bool</span>ean, <span class="built_in">bool</span>ean, java.lang.ClassLoader) bci:<span class="number">186</span> line:<span class="number">62</span> (Interpreted frame)</span><br><span class="line"><span class="number">0x00007f7521007ffd</span>	* com.install4j.runtime.launcher.UnixLauncher.main(java.lang.String[]) bci:<span class="number">208</span> line:<span class="number">60</span> (Interpreted frame)</span><br><span class="line"><span class="number">0x00007f75210004e7</span>	&lt;StubRoutines&gt;</span><br><span class="line"><span class="number">0x00007f753629442b</span>	_ZN9JavaCalls11call_helperEP9JavaValueP12methodHandleP17JavaCallArgumentsP6Thread + <span class="number">0xddb</span></span><br><span class="line"><span class="number">0x00007f75362df3e1</span>	_ZL17jni_invoke_staticP7JNIEnv_P9JavaValueP8_jobject11JNICallTypeP10_jmethodIDP18JNI_ArgumentPusherP6Thread.isra<span class="number">.96</span>.constprop<span class="number">.117</span> + <span class="number">0x1e1</span></span><br><span class="line"><span class="number">0x00007f75362e16ab</span>	jni_CallStaticVoidMethod + <span class="number">0x15b</span></span><br><span class="line"><span class="number">0x00007f75371ce89c</span>	JavaMain + <span class="number">0xa3c</span></span><br><span class="line">----------------- <span class="number">13056</span> -----------------</span><br><span class="line"><span class="number">0x00007f75373e9d12</span>	__pthread_cond_timedwait + <span class="number">0x132</span></span><br><span class="line"><span class="number">0x00007f75364d7614</span>	_ZN7Monitor5IWaitEP6Threadl + <span class="number">0x1d4</span></span><br><span class="line"><span class="number">0x00007f75364d8a8a</span>	_ZN7Monitor4waitEblb + <span class="number">0x22a</span></span><br><span class="line"><span class="number">0x00007f75366e4922</span>	_ZN8VMThread4loopEv + <span class="number">0x1e2</span></span><br><span class="line"><span class="number">0x00007f75366e4eb8</span>	_ZN8VMThread3runEv + <span class="number">0x78</span></span><br><span class="line"><span class="number">0x00007f7536519952</span>	_ZL10java_startP6Thread + <span class="number">0x102</span></span><br><span class="line">----------------- <span class="number">13255</span> -----------------</span><br><span class="line"><span class="number">0x00007f75373e9965</span>	__pthread_cond_wait + <span class="number">0xc5</span></span><br><span class="line"><span class="number">0x00007f75366b047b</span>	Unsafe_Park + <span class="number">0x9b</span></span><br><span class="line"><span class="number">0x00007f7521ed356a</span>	&lt;Unknown compiled code&gt;</span><br><span class="line"><span class="number">0x00007f7522d1351b</span>	* java.util.concurrent.locks.LockSupport.park(java.lang.Object) bci:<span class="number">14</span> line:<span class="number">175</span> (Compiled frame)</span><br><span class="line">* java.util.concurrent.SynchronousQueue$TransferStack.awaitFulfill(java.util.concurrent.SynchronousQueue$TransferStack$SNode, <span class="built_in">bool</span>ean, long) bci:<span class="number">144</span> line:<span class="number">458</span> (Compiled frame)</span><br><span class="line">* java.util.concurrent.SynchronousQueue$TransferStack.transfer(java.lang.Object, <span class="built_in">bool</span>ean, long) bci:<span class="number">102</span> line:<span class="number">362</span> (Compiled frame)</span><br><span class="line">* java.util.concurrent.SynchronousQueue.take() bci:<span class="number">7</span> line:<span class="number">924</span> (Interpreted frame)</span><br><span class="line">----------------- <span class="number">13325</span> -----------------</span><br><span class="line"><span class="number">0x00007f75373e9965</span>	__pthread_cond_wait + <span class="number">0xc5</span></span><br><span class="line"><span class="number">0x00007f75366b047b</span>	Unsafe_Park + <span class="number">0x9b</span></span><br><span class="line"><span class="number">0x00007f7521ed356a</span>	&lt;Unknown compiled code&gt;</span><br><span class="line"><span class="number">0x00007f7522d1351b</span>	* java.util.concurrent.locks.LockSupport.park(java.lang.Object) bci:<span class="number">14</span> line:<span class="number">175</span> (Compiled frame)</span><br><span class="line">* java.util.concurrent.SynchronousQueue$TransferStack.awaitFulfill(java.util.concurrent.SynchronousQueue$TransferStack$SNode, <span class="built_in">bool</span>ean, long) bci:<span class="number">144</span> line:<span class="number">458</span> (Compiled frame)</span><br><span class="line">* java.util.concurrent.SynchronousQueue$TransferStack.transfer(java.lang.Object, <span class="built_in">bool</span>ean, long) bci:<span class="number">102</span> line:<span class="number">362</span> (Compiled frame)</span><br><span class="line">* java.util.concurrent.SynchronousQueue.take() bci:<span class="number">7</span> line:<span class="number">924</span> (Interpreted frame)</span><br><span class="line">----------------- <span class="number">13054</span> -----------------</span><br><span class="line"><span class="number">0x00007f75373e6f47</span>	pthread_join + <span class="number">0xa7</span></span><br></pre></td></tr></table></figure>
+<h4 id="常用方式-4"><a href="#常用方式-4" class="headerlink" title="常用方式"></a>常用方式</h4><figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line">jstack &lt;pid&gt; &gt; /Users/xxx/<span class="built_in">stack</span>.<span class="built_in">log</span></span><br></pre></td></tr></table></figure>
+<h3 id="引用"><a href="#引用" class="headerlink" title="引用"></a>引用</h3><ul>
+<li><a href="https://docs.oracle.com/javase/8/docs/technotes/tools/unix/toc.html">Java8-官方文档</a></li>
+</ul>
+
+            
+        </div>
+        
+    </div>
+    
+    
+    <div class="copyright">
+        <p><span>本文标题:</span><a href="/2020/jvm-tools-instruct/">Java性能调优-指令(Java8)</a></p>
+        <p><span>文章作者:</span><a href="/" title="回到主页">水云游</a></p>
+        <p><span>发布时间:</span>2020-02-15, 00:00:00</p>
+        <p><span>最后更新:</span>2021-05-28, 01:24:28</p>
+        <p>
+            <span>原始链接:</span><a class="post-url" href="/2020/jvm-tools-instruct/" title="Java性能调优-指令(Java8)">https://blog.smilelxy.cn/2020/jvm-tools-instruct/</a>
+            <span class="copy-path" data-clipboard-text="原文: https://blog.smilelxy.cn/2020/jvm-tools-instruct/　　作者: 水云游" title="点击复制文章链接"><i class="fa fa-clipboard"></i></span>
+            <script> var clipboard = new Clipboard('.copy-path'); </script>
+        </p>
+        <p>
+            <span>许可协议:</span><i class="fa fa-creative-commons"></i> <a rel="license" href="http://creativecommons.org/licenses/by-nc-sa/4.0/" title="CC BY-NC-SA 4.0 International" target = "_blank">"署名-非商用-相同方式共享"</a> 转载请保留原文链接及作者。
+        </p>
+    </div>
+
+
+
+    <nav id="article-nav">
+        
+            <div id="article-nav-newer" class="article-nav-title">
+                <a href="/2020/egg-toon/">
+                    生活-美食-鸡蛋爆香椿
+                </a>
+            </div>
+        
+        
+            <div id="article-nav-older" class="article-nav-title">
+                <a href="/2019/jvm-carbage-collect/">
+                    Jvm垃圾回收
+                </a>
+            </div>
+        
+    </nav>
+
+    
+    <script>
+
+        function getPgjs() {
+            var agent = navigator.userAgent.toLowerCase();
+            var res = agent.match(/android/);
+            if (res == "android")
+                return res;
+            res = agent.match(/iphone/);
+            if (res == "iphone")
+                return "ios";
+            res = agent.match(/ipad/);
+            if (res == "ipad")
+                return "ios";
+            res = agent.match(/windows/);
+            if (res == "windows")
+                return "wp";
+            return "pc";
+        }
+
+        function loadImage(id) {
+            var page = window.location.pathname
+            if (page.indexOf("about") !== -1) {
+                return;
+            }
+//            var result = getPgjs();
+//            if(result=="wp"){
+//                $(".fengmian").hide();
+//                console.log(result);
+//                return;
+//            }
+            var backgroundnum = 40;
+            var randomIndex = Math.ceil(Math.random() * backgroundnum);
+            var result = randomIndex + "?version=" + (new Date() / 1000);
+            var backgroundimg = "http://image.smilelxy.cn/blog/abridge/bg-number.jpg".replace(/number/gi, randomIndex);
+            var key = "#" + id;
+            $(key).attr("src", backgroundimg);
+            $(".fengmian").show();
+        }
+
+        (function () {
+            var page = window.location.pathname
+            if (page.indexOf("about") !== -1) {
+                console.log(page)
+                $(".fenagmian").hide();
+//                $("#comments").remove();
+            }
+        })()
+    </script>
+</article>
+<!-- 代码1：放在页面需要展示的位置  -->
+<!-- 如果您配置过sourceid，建议在div标签中配置sourceid、cid(分类id)，没有请忽略  -->
+<!--<div id="cyReward" role="cylabs" data-use="reward" style="margin-left: 45%" ></div>-->
+<!--<div id="cyEmoji" role="cylabs" data-use="emoji"></div>-->
+
+
+<!--<script>-->
+<!--(function(){-->
+<!--var path = window.location.pathname;-->
+<!--if (path ==="/" || path=== undefined || path === null || path.indexOf("page") !== -1){-->
+<!--$("#cyReward").remove();-->
+<!--$("#cyEmoji").remove();-->
+<!--}-->
+<!--})()-->
+
+
+<!--</script>-->
+
+<!-- 代码2：用来读取评论框配置，此代码需放置在代码1之后。 -->
+<!-- 如果当前页面有评论框，代码2请勿放置在评论框代码之前。 -->
+<!-- 如果页面同时使用多个实验室项目，以下代码只需要引入一次，只配置上面的div标签即可 -->
+<!--<script type="text/javascript" charset="utf-8" src="https://changyan.sohu.com/js/changyan.labs.https.js?appid=cysUkgluO"></script>-->
+
+<div id="toc" class="toc-article">
+    <strong class="toc-title">文章目录</strong>
+    <ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#前言"><span class="toc-number">1.</span> <span class="toc-text">前言</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#jps"><span class="toc-number">2.</span> <span class="toc-text">jps</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#q"><span class="toc-number">2.1.</span> <span class="toc-text">-q</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#l"><span class="toc-number">2.2.</span> <span class="toc-text">-l</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#v"><span class="toc-number">2.3.</span> <span class="toc-text">-v</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#常用方式"><span class="toc-number">2.4.</span> <span class="toc-text">常用方式</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#jinfo"><span class="toc-number">3.</span> <span class="toc-text">jinfo</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#flags"><span class="toc-number">3.1.</span> <span class="toc-text">-flags</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#flag"><span class="toc-number">3.2.</span> <span class="toc-text">-flag </span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#flag-1"><span class="toc-number">3.3.</span> <span class="toc-text">-flag [+|-] </span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#sysprops"><span class="toc-number">3.4.</span> <span class="toc-text">-sysprops</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#常用方式-1"><span class="toc-number">3.5.</span> <span class="toc-text">常用方式</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#jstat"><span class="toc-number">4.</span> <span class="toc-text">jstat</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#options"><span class="toc-number">4.1.</span> <span class="toc-text">-options</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#class"><span class="toc-number">4.1.1.</span> <span class="toc-text">-class</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#compiler"><span class="toc-number">4.1.2.</span> <span class="toc-text">-compiler</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#gc"><span class="toc-number">4.1.3.</span> <span class="toc-text">-gc</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#gccapacity"><span class="toc-number">4.1.4.</span> <span class="toc-text">-gccapacity</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#gccause"><span class="toc-number">4.1.5.</span> <span class="toc-text">-gccause</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#gcmetacapacity"><span class="toc-number">4.1.6.</span> <span class="toc-text">-gcmetacapacity</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#gcnew"><span class="toc-number">4.1.7.</span> <span class="toc-text">-gcnew</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#gcnewcapacity"><span class="toc-number">4.1.8.</span> <span class="toc-text">-gcnewcapacity</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#gcold"><span class="toc-number">4.1.9.</span> <span class="toc-text">-gcold</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#gcoldcapacity"><span class="toc-number">4.1.10.</span> <span class="toc-text">-gcoldcapacity</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#gcutil"><span class="toc-number">4.1.11.</span> <span class="toc-text">-gcutil</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#printcompilation"><span class="toc-number">4.1.12.</span> <span class="toc-text">-printcompilation</span></a></li></ol></li><li class="toc-item toc-level-4"><a class="toc-link" href="#常用方式-2"><span class="toc-number">4.2.</span> <span class="toc-text">常用方式</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#jmap"><span class="toc-number">5.</span> <span class="toc-text">jmap</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#clstats"><span class="toc-number">5.1.</span> <span class="toc-text">-clstats</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#finalizerinfo"><span class="toc-number">5.2.</span> <span class="toc-text">-finalizerinfo</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#histo"><span class="toc-number">5.3.</span> <span class="toc-text">-histo</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#heap"><span class="toc-number">5.4.</span> <span class="toc-text">-heap</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#dump"><span class="toc-number">5.5.</span> <span class="toc-text">-dump</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#常用方式-3"><span class="toc-number">5.6.</span> <span class="toc-text">常用方式</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#jstack"><span class="toc-number">6.</span> <span class="toc-text">jstack</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#l-1"><span class="toc-number">6.1.</span> <span class="toc-text">-l</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#F"><span class="toc-number">6.2.</span> <span class="toc-text">-F</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#m"><span class="toc-number">6.3.</span> <span class="toc-text">-m</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#常用方式-4"><span class="toc-number">6.4.</span> <span class="toc-text">常用方式</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#引用"><span class="toc-number">7.</span> <span class="toc-text">引用</span></a></li></ol>
+</div>
+<style>
+    .left-col .switch-btn,
+    .left-col .switch-area {
+        display: none;
+    }
+</style>
+
+<input type="button" id="tocButton" value="隐藏目录"  title="点击按钮隐藏或者显示文章目录">
+
+<script>
+    yiliaConfig.toc = ["隐藏目录", "显示目录", !!"false"];
+</script>
+
+
+
+
+<link rel="stylesheet" href="https://unpkg.com/gitalk/dist/gitalk.css">
+<script src="https://unpkg.com/gitalk/dist/gitalk.min.js"></script>
+<hr/>
+<br/>
+<br/>
+<br/>
+<div id="gitalk-container" style="margin: 1% 3%"></div>
+<h3 style="text-align: center">如果想及时收到回复,可在 <a href="https://github.com/settings/notifications" target="_blank">订阅中心</a>的 <code>Participating</code>中勾选Email</h3>
+<script type="text/javascript">
+    var gitalk = new Gitalk({
+        clientID: '1305dbf64dd1101187a6',
+        clientSecret: '67f4a6ebee76801d436ab55d771e105c37255690',
+        id: window.location.pathname,
+        repo: 'blog',
+        owner: 'smile-lxy',
+        admin: 'smile-lxy',
+        distractionFreeMode: false
+    })
+    gitalk.render('gitalk-container')
+</script>
+
+
+
+
+
+
+    <div class="scroll" id="post-nav-button">
+        
+            <a href="/2020/egg-toon/" title="上一篇: 生活-美食-鸡蛋爆香椿">
+                <i class="fa fa-angle-left"></i>
+            </a>
+        
+
+        <a title="文章列表"><i class="fa fa-bars"></i><i class="fa fa-times"></i></a>
+
+        
+            <a href="/2019/jvm-carbage-collect/" title="下一篇: Jvm垃圾回收">
+                <i class="fa fa-angle-right"></i>
+            </a>
+        
+    </div>
+
+    <ul class="post-list"><li class="post-list-item"><a class="post-list-link" href="/2021/fukushi-kannjyoukeiyoushi/">学习-日语-感情形容词</a></li><li class="post-list-item"><a class="post-list-link" href="/2021/fukushi-zokuseikeiyoushi/">学习-日语-属性形容词</a></li><li class="post-list-item"><a class="post-list-link" href="/2021/fukushi-wagoshi-meishi/">学习-日语-和语词和名词</a></li><li class="post-list-item"><a class="post-list-link" href="/2021/fukushi-katarikuchi-koou/">学习-日语-副词(语气和呼应)</a></li><li class="post-list-item"><a class="post-list-link" href="/2021/nihonngo-bunnpou-chigai/">学习-日语-语法的区别总结</a></li><li class="post-list-item"><a class="post-list-link" href="/2021/nihonngo-bunpou/">学习-日语-语法总结(N3-2)</a></li><li class="post-list-item"><a class="post-list-link" href="/2021/nihonngo-tanngo/">学习-日语-单词要点</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/nihonngo-%20poinnto/">学习-日语-要点</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/nihonngo-henkei/">学习-日语-日语动词变形总结</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/nihonngo-bunpou/">学习-日语-语法总结</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/framework-study-seata-top/">Seata总结</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/egg-toon/">生活-美食-鸡蛋爆香椿</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/jvm-tools-instruct/">Java性能调优-指令(Java8)</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/jvm-carbage-collect/">Jvm垃圾回收</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/jvm-running-data-area/">Jvm运行时数据区</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/jvm-class-loader-mechanism/">JVM类加载机制</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/framework-distributed-transaction/">分布式事务总结</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/exp-db-data-pagination/">分库分表后-数据分页</a></li></ul>
+
+<style>
+    #post-nav-button a{
+        background-color: skyblue;
+    }
+</style>
+
+
+
+<script>
+    
+</script>
+
+</div>
+      <footer id="footer">
+    <div class="outer">
+        <div id="footer-info">
+            <div class="footer-left">
+                <i class="fa fa-copyright"></i>
+                
+                    2020-
+                
+                2021 水云游
+                
+            </div>
+            <div class="footer-right">
+                <a href="https://blog.smilelxy.cn/" target="_blank" title="欢迎来到水云游的博客">Blog </a> Created by <a
+                        href="https://github.com/smile-lxy" target="_blank" rel="external nofollow"
+                        title="希望这里的文章对你有所帮助  v3.0">shuiyy</a>
+                <a href="/record.html"><i class="fa fa-heart animated infinite pulse"></i></a>
+            </div>
+        </div>
+        
+            <div class="visit">
+                
+                    <span id="busuanzi_container_site_pv" style='display:none'>
+                        <span id="site-visit">总访问数:
+                            <span id="busuanzi_value_site_pv"></span>
+                        </span>
+                    </span>
+                
+                <span style="color: grey;">(<a href="https://www.upyun.com/" rel="external nofollow" target="_blank">背景随机加载-资源存储于又拍云</a>) | 本站己运行<span
+                            id="day_count">222</span>天<span id="time_now">1</span></span>
+            </div>
+        
+    </div>
+    <script src="/js/activate-power-mode.js" ></script>
+</footer>
+<script>
+    // 添加输入效果
+    POWERMODE.colorful = true; // make power mode colorful
+    POWERMODE.shake = false; // turn off shake
+    document.body.addEventListener('input', POWERMODE);
+
+    (function () {
+        function current() {
+            var d = new Date(), str = '';
+            str += d.getHours() + '小时';
+            str += d.getMinutes() + '分';
+            str += d.getSeconds() + '秒';
+            return str;
+        }
+
+        setInterval(function () {
+            $("#time_now").html(current)
+        }, 1000);
+
+        var dateFrom = new Date(2020, 2, 1);
+        var dateTo = new Date();
+        var diff = dateTo.valueOf() - dateFrom.valueOf();
+        var diff_day = parseInt(diff / (1000 * 60 * 60 * 24));
+        $("#day_count").html(diff_day);
+    })();
+</script>
+<a href="https://github.com/smile-lxy/blog"><img style="position: fixed; top: 0;left: 0;" width="140" height="140" src="https://github.blog/wp-content/uploads/2008/12/forkme_left_gray_6d6d6d.png?resize=149%2C149" class="attachment-full size-full" alt="Fork me on GitHub" data-recalc-dims="1"></a>
+
+    </div>
+    
+    
+<script src="/js/GithubRepoWidget.js"></script>
+
+
+<script data-main="/js/main.js" src="//cdn.bootcss.com/require.js/2.2.0/require.min.js"></script>
+
+    <script>
+        $(document).ready(function() {
+            var iPad = window.navigator.userAgent.indexOf('iPad');
+            if (iPad > -1 || $(".left-col").css("display") === "none") {
+                var bgColorList = ["#9db3f4", "#414141", "#e5a859", "#f5dfc6", "#c084a0", "#847e72", "#cd8390", "#996731"];
+                var bgColor = Math.ceil(Math.random() * (bgColorList.length - 1));
+                $("body").css({"background-color": bgColorList[bgColor], "background-size": "cover"});
+            }
+            else {
+                var backgroundnum = 36;
+                // var randomIndex = Math.ceil(Math.random() * backgroundnum);
+                var randomIndex = 1;
+                var result = randomIndex+".jpg?version="+(new Date()/1000);
+                var backgroundimg = "url(http://image.smilelxy.cn/blog/background/bg-number)".replace(/number/gi,result);
+//                console.info("加载图片"+backgroundimg);
+                $("body").css({"background": backgroundimg, "background-attachment": "fixed", "background-size": "cover","background-color":"rgba(255,255,255,0.5)","background-blend-mode":"lighten"});
+            }
+        })
+    </script>
+
+
+    <script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+    tex2jax: {
+        inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+        processEscapes: true,
+        skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+    }
+});
+
+MathJax.Hub.Queue(function() {
+    var all = MathJax.Hub.getAllJax(), i;
+    for(i=0; i < all.length; i += 1) {
+        all[i].SourceElement().parentNode.className += ' has-jax';                 
+    }       
+});
+</script>
+
+<script src="//cdn.bootcss.com/mathjax/2.6.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script>
+
+
+<div class="scroll" id="scroll">
+    <a href="#" title="返回顶部"><i class="fa fa-arrow-up"></i></a>
+    <a href="#comments" onclick="load$hide();" title="查看评论"><i class="fa fa-comments-o"></i></a>
+    <a href="#footer" title="转到底部"><i class="fa fa-arrow-down"></i></a>
+</div>
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+  </div>
+</body>
+</html>

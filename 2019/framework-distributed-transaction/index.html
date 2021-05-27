@@ -1,0 +1,885 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+
+    <!--[if lt IE 9]>
+        <style>body {display: none; background: none !important} </style>
+        <meta http-equiv="Refresh" Content="0; url=//outdatedbrowser.com/" />
+    <![endif]-->
+
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge, chrome=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="format-detection" content="telephone=no" />
+<meta name="author" content="水云游" />
+<meta name="baidu-site-verification" content="qp2dTXVqvj" />
+
+
+
+<meta name="keywords" content="水云游, 蓝心语, 技术, java, 日语, 动漫">
+
+
+<meta name="description" content="好记性不如烂笔头.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="分布式事务总结">
+<meta property="og:url" content="https://blog.smilelxy.cn/2019/framework-distributed-transaction/index.html">
+<meta property="og:site_name" content="水云游的博客">
+<meta property="og:description" content="好记性不如烂笔头.">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2019-05-24T16:00:00.000Z">
+<meta property="article:modified_time" content="2021-05-27T16:24:28.667Z">
+<meta property="article:author" content="水云游">
+<meta property="article:tag" content="framework">
+<meta name="twitter:card" content="summary">
+<link rel="apple-touch-icon" href= "/apple-touch-icon.png">
+
+
+    <link rel="alternative" href="/atom.xml" title="水云游的博客" type="application/atom+xml">
+
+
+
+    <link rel="shortcut icon" href="http://image.smilelxy.cn/logo/logo.png">
+
+
+
+    <link href="//cdn.bootcss.com/animate.css/3.5.1/animate.min.css" rel="stylesheet">
+
+
+
+    <link href="//cdn.bootcss.com/fancybox/2.1.5/jquery.fancybox.min.css" rel="stylesheet">
+
+
+
+    <script src="//cdn.bootcss.com/pace/1.0.2/pace.min.js"></script>
+    <link href="//cdn.bootcss.com/pace/1.0.2/themes/green/pace-theme-minimal.css" rel="stylesheet">
+
+
+
+<link rel="stylesheet" href="/css/style.css">
+
+
+
+
+<link href="//cdn.bootcss.com/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet">
+
+
+<title>分布式事务总结 | 水云游的博客</title>
+
+<script src="//cdn.bootcss.com/jquery/2.2.4/jquery.js"></script>
+<script src="//cdn.bootcss.com/clipboard.js/1.5.10/clipboard.min.js"></script>
+
+<script>
+    var yiliaConfig = {
+        fancybox: true,
+        animate: true,
+        isHome: false,
+        isPost: true,
+        isArchive: false,
+        isTag: false,
+        isCategory: false,
+        open_in_new: false,
+        fancybox_js: "//cdn.bootcss.com/fancybox/2.1.5/jquery.fancybox.min.js",
+        scrollreveal: "//cdn.bootcss.com/scrollReveal.js/3.1.4/scrollreveal.min.js",
+        search: true
+    }
+</script>
+
+
+    <script>
+        yiliaConfig.jquery_ui = [true, "//cdn.bootcss.com/jqueryui/1.10.4/jquery-ui.min.js", "//cdn.bootcss.com/jqueryui/1.10.4/css/jquery-ui.min.css"];
+    </script>
+
+
+
+    <script> yiliaConfig.rootUrl = "\/";</script>
+
+
+<meta name="generator" content="Hexo 4.2.1"></head>
+
+<body oncontextmenu="return false" onselectstart="return false">
+  <div id="container">
+    <div class="left-col">
+    <div class="overlay"></div>
+<div class="intrude-less">
+    <header id="header" class="inner">
+        <a href="https://blog.smilelxy.cn" target="_self" class="profilepic">
+            <img src="http://image.smilelxy.cn/logo/avatar.jpeg" alt="logo" class="animated zoomIn">
+        </a>
+        <hgroup>
+          <h1 class="header-author"><a href="/">水云游</a></h1>
+        </hgroup>
+
+        
+        <p class="header-subtitle">舍弃欲望, 活在当下</p>
+        
+
+        
+            <form id="search-form">
+            <input type="text" id="local-search-input" name="q" results="0" placeholder="search..." class="search form-control" autocomplete="off" autocorrect="off" searchonload="true" />
+            <i class="fa fa-times" onclick="resetSearch()"></i>
+            </form>
+            <div id="local-search-result"></div>
+            <p class='no-result'>No results found <i class='fa fa-spinner fa-pulse'></i></p>
+        
+
+
+        
+            <div id="switch-btn" class="switch-btn">
+                <div class="icon">
+                    <div class="icon-ctn">
+                        <div class="icon-wrap icon-house" data-idx="0">
+                            <div class="birdhouse"></div>
+                            <div class="birdhouse_holes"></div>
+                        </div>
+                        <div class="icon-wrap icon-ribbon hide" data-idx="1">
+                            <div class="ribbon"></div>
+                        </div>
+                        
+                        
+                        <div class="icon-wrap icon-me hide" data-idx="3">
+                            <div class="user"></div>
+                            <div class="shoulder"></div>
+                        </div>
+                        
+                    </div>
+                    
+                </div>
+                <div class="tips-box hide">
+                    <div class="tips-arrow"></div>
+                    <ul class="tips-inner">
+                        <li>菜单</li>
+                        <li>标签</li>
+                        
+                        
+                        <li>关于我</li>
+                        
+                    </ul>
+                </div>
+            </div>
+        
+
+        <div id="switch-area" class="switch-area">
+            <div class="switch-wrap">
+                <section class="switch-part switch-part1">
+                    <nav class="header-menu">
+                        <ul>
+                        
+                            <li><a href="//smilelxy.cn">回到主站</a></li>
+                        
+                            <li><a href="/categories/%E6%8A%80%E6%9C%AF/">技术系列</a></li>
+                        
+                            <li><a href="/categories/%E6%97%A5%E6%9C%AC/">日本相关</a></li>
+                        
+                            <li><a href="/categories/%E7%94%9F%E6%B4%BB/">生活系列</a></li>
+                        
+                            <li><a href="/archives/">所有文章</a></li>
+                        
+                            <li><a href="/about.html">关于我</a></li>
+                        
+                        </ul>
+                    </nav>
+                    <nav class="header-nav">
+                        <ul class="social">
+                            
+                                <a class="fa Email" target="_blank" rel="external nofollow" href="mailto:yiqiufengye@gmail.com" title="Email"></a>
+                            
+                                <a class="fa QQ" target="_blank" rel="external nofollow" href="http://wpa.qq.com/msgrd?v=3&uin=3133545802&site=qq&menu=yes" title="QQ"></a>
+                            
+                                <a class="fa 简书" target="_blank" rel="external nofollow" href="https://www.jianshu.com/u/d650053de64e" title="简书"></a>
+                            
+                                <a class="fa CSDN" target="_blank" rel="external nofollow" href="https://me.csdn.net/FengYe_YuLu" title="CSDN"></a>
+                            
+                        </ul>
+                        <!-- 网易云音乐插件 -->
+                        
+                            <div style="position:absolute; bottom:120px left:auto; width:85%; height: 110px;">
+                                <iframe frameborder="no" border="0" marginwidth="0" marginheight="0" width=330 height=450 src="//music.163.com/outchain/player?type=0&id=2109140602&auto=1&height=430"></iframe>
+                            </div>
+                        
+                    </nav>
+                </section>
+                
+                
+                <section class="switch-part switch-part2">
+                    <div class="widget tagcloud" id="js-tagcloud">
+                        <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/DB/" rel="tag">DB</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Java/" rel="tag">Java</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Jvm/" rel="tag">Jvm</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/framework/" rel="tag">framework</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/seata/" rel="tag">seata</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E5%AD%A6%E4%B9%A0/" rel="tag">学习</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E7%94%9F%E6%B4%BB/" rel="tag">生活</a></li></ul>
+                    </div>
+                </section>
+                
+                
+                
+
+                
+                
+                <section class="switch-part switch-part3">
+                
+                    <div id="js-aboutme">技术宅、 杭州、 夜猫子、 爱动漫、 爱日语 2017年毕业、 java开发、 生命不息折腾不止、</div>
+                </section>
+                
+            </div>
+        </div>
+    </header>                
+</div>
+    </div>
+    <div class="mid-col">
+      <nav id="mobile-nav">
+      <div class="overlay">
+          <div class="slider-trigger"></div>
+          <h1 class="header-author js-mobile-header hide"><a href="/" title="回到主页">水云游</a></h1>
+      </div>
+    <div class="intrude-less">
+        <header id="header" class="inner">
+            <a href="/" class="profilepic">
+                <img src="http://image.smilelxy.cn/logo/avatar.jpeg" alt="logo" class="animated zoomIn">
+            </a>
+            <hgroup>
+              <h1 class="header-author"><a href="/" title="回到主页">水云游</a></h1>
+            </hgroup>
+            
+            <p class="header-subtitle">舍弃欲望, 活在当下</p>
+            
+            <nav class="header-menu">
+                <ul>
+                
+                    <li><a href="//smilelxy.cn">回到主站</a></li>
+                
+                    <li><a href="/categories/%E6%8A%80%E6%9C%AF/">技术系列</a></li>
+                
+                    <li><a href="/categories/%E6%97%A5%E6%9C%AC/">日本相关</a></li>
+                
+                    <li><a href="/categories/%E7%94%9F%E6%B4%BB/">生活系列</a></li>
+                
+                    <li><a href="/archives/">所有文章</a></li>
+                
+                    <li><a href="/about.html">关于我</a></li>
+                
+                <div class="clearfix"></div>
+                </ul>
+            </nav>
+            <nav class="header-nav">
+                        <ul class="social">
+                            
+                                <a class="fa Email" target="_blank" rel="external nofollow" href="mailto:yiqiufengye@gmail.com" title="Email"></a>
+                            
+                                <a class="fa QQ" target="_blank" rel="external nofollow" href="http://wpa.qq.com/msgrd?v=3&uin=3133545802&site=qq&menu=yes" title="QQ"></a>
+                            
+                                <a class="fa 简书" target="_blank" rel="external nofollow" href="https://www.jianshu.com/u/d650053de64e" title="简书"></a>
+                            
+                                <a class="fa CSDN" target="_blank" rel="external nofollow" href="https://me.csdn.net/FengYe_YuLu" title="CSDN"></a>
+                            
+                        </ul>
+            </nav>
+        </header>                
+    </div>
+    <link class="menu-list" tags="标签" friends="友情链接" about="关于我"/>
+</nav>
+      <div class="body-wrap"><style>
+    .fengmian {
+        float: left;
+        width: 400px;
+        height: 250px;
+    }
+
+    .article img {
+        margin: -1px 20px 5px -1px;
+        border-top-left-radius: 3px;
+        -webkit-border-radius-topleft: 3%;
+        -webkit-transition: all 0.5s;
+        -moz-transition: all 0.5s;
+        -o-transition: all 0.5s;
+    }
+
+    /*.article img:hover{*/
+    /*transform: scale(1, 1.05);*/
+    /*-webkit-transition:all 0.5s;*/
+    /*-moz-transition:all 0.5s;*/
+    /*-o-transition:all 0.5s;*/
+    /*}*/
+</style>
+
+
+<article id="post-framework-distributed-transaction" class="article article-type-post" itemscope itemprop="blogPost">
+    
+    <div class="article-meta">
+        <a href="/2019/framework-distributed-transaction/" class="article-date">
+      <time datetime="2019-05-24T16:00:00.000Z" itemprop="datePublished">2019-05-25</time>
+</a>
+    </div>
+    
+    <div class="article-inner">
+        
+        <input type="hidden" class="isFancy"/>
+        
+        <div class="fengmian">
+            <img class="fengmian-image" id="framework-distributed-transaction" src="http://image.smilelxy.cn/blog/abridge/bg-1.jpg" alt="舍弃欲望, 活在当下" onload="loadImage(this.id)"/>
+        </div>
+        
+        <header class="article-header">
+            
+  
+    <h1 class="article-title" itemprop="name">
+      分布式事务总结
+    </h1>
+  
+
+        </header>
+        
+        <div class="article-info article-info-post">
+            
+    <div class="article-category tagcloud">
+    <a class="article-category-link" href="/categories/%E6%8A%80%E6%9C%AF/">技术</a><a class="article-category-link" href="/categories/%E6%8A%80%E6%9C%AF/%E6%80%BB%E7%BB%93/">总结</a>
+    </div>
+
+
+            
+    <div class="article-tag tagcloud">
+        <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/framework/" rel="tag">framework</a></li></ul> </div>
+
+
+
+            <!-- 访问量  -->
+            <!--<span id="busuanzi_container_page_pv" style='display:none'>-->
+            <!--<span id="page-visit"><i class="fa fa-eye" style="float: left;margin-top:5px" aria-hidden="true" title="文章访问量"></i>-->
+            <!--<span id="busuanzi_value_page_pv"></span>-->
+            <!--</span>-->
+            <!--</span>-->
+
+            <div class="clearfix"></div>
+        </div>
+        
+        
+        <div class="article-entry" itemprop="articleBody">
+            
+            
+            <ul>
+<li>好记性不如烂笔头.<a id="more"></a>
+</li>
+</ul>
+<h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><ul>
+<li>在当下微服务盛行时代, 随着单体应用根据业务拆分为多个应用, 虽提高了可用性等优势, 但成本, 事务等问题也凸显了出来</li>
+</ul>
+<h3 id="正文"><a href="#正文" class="headerlink" title="正文"></a>正文</h3><ul>
+<li>本地事务<ul>
+<li>把一个数据库内部的事务处理, 如对多个表的操作, 作为本地事务看待;</li>
+</ul>
+</li>
+<li>分布式事务(全局事务)<ul>
+<li>多个数据库可能需要共同完成一个工作;</li>
+</ul>
+</li>
+</ul>
+<h4 id="两阶段提交-2PC"><a href="#两阶段提交-2PC" class="headerlink" title="两阶段提交(2PC)"></a>两阶段提交(2PC)</h4><ul>
+<li>保证分布式事务的原子性;</li>
+<li>两阶段分别指:<code>准备</code>, <code>提交</code>;</li>
+<li>参与者将操作成败通知协调者, 再由协调者根据所有参与者的反馈情报决定各参与者是否要提交操作还是中止操作</li>
+</ul>
+<h5 id="准备"><a href="#准备" class="headerlink" title="准备"></a>准备</h5><ul>
+<li>事务协调者(事务管理器)给每个参与者(资源管理器)发送<strong>准备</strong>(Prepare)消息, 参与者返回失败或执行本地事务(写本地的Redo(物理<a href="https://blog.csdn.net/qq_38125183/article/details/80652557">日志</a>)和Undo(逻辑日志), 但不提交(万事俱备,只欠东风的状态));<ul>
+<li><strong>协调者</strong>向各<strong>参与者</strong>发起<code>询问</code>是否可以执行提交操作, 同步等待各<strong>参与者</strong>响应;</li>
+<li>各<strong>参与者</strong>执行到<code>询问</code>为止的所有事务操作, 并将Undo信息和Redo信息写入日志(!: 若成功,这一步各<strong>参与者</strong>其实已执行了事务操作).</li>
+<li>各<strong>参与者</strong>响应<strong>协调者</strong>的<code>询问</code>指令, 如果各<strong>参与者</strong>的事务操作已执行成功, 则返回‘同意’, 如果有<strong>参与者</strong>的事务操作执行失败, 则返回‘中止’;</li>
+</ul>
+</li>
+</ul>
+<h5 id="提交"><a href="#提交" class="headerlink" title="提交"></a>提交</h5><ul>
+<li><p><strong>协调者</strong>根据<strong>参与者</strong>的反应情况来决定是否继续事务的<code>Commit</code>请求或者<code>Abort</code>请求. 各<strong>参与者</strong>根据<strong>协调者</strong>的<code>指令</code>执行‘Commit’或‘Abort‘操作, 释放所有事务处理过程中使用的’锁资源’(!: 必须在最后阶段释放锁资源).</p>
+<ul>
+<li><p>同意</p>
+<ul>
+<li><strong>协调者</strong>从各<strong>参与者</strong>收到的响应均是‘同意’;<ol>
+<li><strong>发送提交请求</strong>: <strong>协调者</strong>向各<strong>参与者</strong>发送<code>Commit</code>请求;</li>
+<li><strong>事务提交</strong>: <strong>参与者</strong>收到<code>Commit</code>指令后, 正式完成操作, 释放在整个事务期间占用的资源;</li>
+<li><strong>反馈结果</strong>: <strong>参与者</strong>完成<code>Commit</code>后, 向<strong>协调者</strong>发送‘ACK’响应;</li>
+<li><strong>完成事务</strong>: <strong>协调者</strong>收到各<strong>参与者</strong>反馈的‘ACK’消息后, 完成事务;</li>
+</ol>
+</li>
+</ul>
+</li>
+<li><p>中止</p>
+<ul>
+<li><strong>协调者</strong>从某<strong>参与者</strong>收到的响应是‘中止’或者<strong>协调者</strong>在<code>询问</code>后, 超时之前无法得到所有<strong>参与者</strong>的响应;<ol>
+<li><strong>发送中断请求</strong>: <strong>协调者</strong>向各<strong>参与者</strong>发送<code>Abort</code>请求</li>
+<li><strong>事务回滚</strong>: <strong>参与者</strong>收到<code>Abort</code>指令后, 利用之前写入的Undo信息执行<code>回滚</code>, 释放在整个事务期间占用的资源;</li>
+<li><strong>反馈结果</strong>: <strong>参与者</strong>完成<code>回滚</code>后, 向<strong>协调者</strong>发送‘ACK’响应;</li>
+<li><strong>中断事务</strong>: <strong>协调者</strong>收到各<strong>参与者</strong>反馈的‘ACK’消息后, 执行事务的中断;</li>
+</ol>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>不论结果如何, <code>提交</code>阶段都会结束当前事务.</li>
+</ul>
+<h5 id="缺点"><a href="#缺点" class="headerlink" title="缺点"></a>缺点</h5><ul>
+<li><strong>同步阻塞</strong>, 执行过程中, 各<strong>参与者</strong>都是事务阻塞型的. 当<strong>参与者</strong>占用公共资源时, 其他节点访问公共资源就不得不处于‘阻塞’状态;</li>
+<li><strong>单点故障</strong>, <strong>协调者</strong>的重要性, 如果<strong>协调者</strong>发生故障, <strong>参与者</strong>将一直阻塞下去, 尤其在<code>提交</code>阶段, <strong>协调者</strong>发生故障, 各<strong>参与者</strong>还都处于‘锁定事务资源’状态中, 无法继续完成事务操作.(<strong>协调者</strong>挂掉,可重新选举一个<strong>协调者</strong>, 但无法解决因<strong>协调者</strong>故障导致的<strong>参与者</strong>处于‘阻塞’状态的问题);</li>
+<li><strong>数据不一致</strong>, 在<code>提交</code>阶段, <strong>协调者</strong>向各<strong>参与者</strong>发送<code>正式提交</code>(Commit)请求后, 发生‘局部网络异常’或<strong>协调者</strong>发生‘故障’, 将导致一部分<strong>参与者</strong>接受了<code>正式提交</code>(Commit)请求, 这些<strong>参与者</strong>将正常执行, 但其余<strong>参与者</strong>因未收到<code>正式提交</code>(Commit)请求而无法执行‘事务提交’, 结果便是分布式系统出现‘数据不一致’现象;</li>
+<li>协议成本高, 存在全局锁问题;</li>
+</ul>
+<h5 id="无法解决的问题"><a href="#无法解决的问题" class="headerlink" title="无法解决的问题"></a>无法解决的问题</h5><ul>
+<li><strong>协调者</strong>在发出<code>正式提交</code>(Commit)请求后宕机, 而收到‘请求’的<strong>参与者</strong>也同时宕机, 那么即使协调者通过选举产生新的<strong>协调者</strong>, 这个事务的状态也将是不确定的, 没人知道是否已提交;</li>
+</ul>
+<h5 id="结果"><a href="#结果" class="headerlink" title="结果"></a>结果</h5><ul>
+<li>两阶段提交存在着同步阻塞,单点故障,脑裂等缺陷;</li>
+</ul>
+<h4 id="三阶段提交-3PC"><a href="#三阶段提交-3PC" class="headerlink" title="三阶段提交(3PC)"></a>三阶段提交(3PC)</h4><ul>
+<li>两阶段提交的改进版本;</li>
+</ul>
+<h5 id="区别"><a href="#区别" class="headerlink" title="区别"></a>区别</h5><ul>
+<li>引入超时机制(<strong>协调者</strong>和<strong>参与者</strong>都引入超时机制);</li>
+<li>在第一阶段和第二阶段中插入一个准备阶段, 保证在最后<code>提交</code>阶段之前各<strong>参与者</strong>状态一致;</li>
+</ul>
+<h5 id="CanCommit"><a href="#CanCommit" class="headerlink" title="CanCommit"></a>CanCommit</h5><ul>
+<li><strong>协调者</strong>向各<strong>参与者</strong>发送<code>ConCommit</code>请求;<ul>
+<li><strong>事务询问</strong>: <strong>协调者</strong>向各<strong>参与者</strong>发送<code>ConCommit</code>请求, 询问是否可以执行<code>提交</code>(Commit)操作, 然后等待各<strong>参与者</strong>响应;</li>
+<li><strong>响应反馈</strong>: <strong>参与者</strong>收到<code>ConCommit</code>请求后, 正常情况下, 如果其自身认为可以顺利执行事务, 则返回‘同意’, 并进去预备状态; 反之返回‘中止’;</li>
+</ul>
+</li>
+</ul>
+<h5 id="PreCommit"><a href="#PreCommit" class="headerlink" title="PreCommit"></a>PreCommit</h5><ul>
+<li><strong>协调者</strong>根据<strong>参与者</strong>的反应情况来决定是否可以继续事务的<code>PrenCommit</code>请求<ul>
+<li>同意<ul>
+<li><strong>协调者</strong>从各<strong>参与者</strong>收到的响应均是‘同意’;<ol>
+<li><strong>发起预提交</strong>: <strong>协调者</strong>向<strong>参与者</strong>发送<code>PrenCommit</code>请求, 并进入Prepared阶段;</li>
+<li><strong>事务预提交</strong>: 各<strong>参与者</strong>收到<code>PrenCommit</code>指令后, 执行事务操作, 并将Undo和Redo信息记录到日志中;</li>
+<li><strong>响应反馈</strong>: 各<strong>参与者</strong>成功执行了事务操作, 返回ACK响应, 等待最终指令;</li>
+</ol>
+</li>
+</ul>
+</li>
+<li>中止<ul>
+<li><strong>协调者</strong>从某<strong>参与者</strong>收到的响应是‘中止’或者<strong>协调者</strong>在<code>PrenCommit</code>请求后, 超时之前无法得到所有<strong>参与者</strong>的响应;<ol>
+<li><strong>发送中断请求</strong>: <strong>协调者</strong>向<strong>参与者</strong>发送<code>Abort</code>请求;</li>
+<li><strong>中断事务</strong>: 各<strong>参与者</strong>收到<code>Abort</code>指令后(或超时后,仍未收到<strong>协调者</strong>的请求), 执行事务中断;</li>
+</ol>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h5 id="DoCommit"><a href="#DoCommit" class="headerlink" title="DoCommit"></a>DoCommit</h5><ul>
+<li>真正的事务提交, 分两种情况;<ul>
+<li>执行提交<ol>
+<li><strong>发送提交请求</strong>: <strong>协调者</strong>收到各<strong>参与者</strong>的ACK响应后, <strong>协调者</strong>将从‘预提交’进入到‘提交’状态, 向各<strong>参与者</strong>发送<code>Commit</code>请求;</li>
+<li><strong>事务提交</strong>: <strong>参与者</strong>收到<code>Commit</code>指令后, 正式完成操作, 释放在整个事务期间占用的资源;</li>
+<li><strong>反馈结果</strong>: <strong>参与者</strong>完成<code>Commit</code>后, 向<strong>协调者</strong>发送‘ACK’响应;</li>
+<li><strong>完成事务</strong>: <strong>协调者</strong>收到各<strong>参与者</strong>反馈的‘ACK’消息后, 完成事务;</li>
+</ol>
+</li>
+<li>中断事务<ol>
+<li><strong>发送中断请求</strong>: <strong>协调者</strong>向各<strong>参与者</strong>发送<code>Abort</code>请求;</li>
+<li><strong>事务回滚</strong>: <strong>参与者</strong>收到<code>Abort</code>指令后, 利用之前写入的Undo信息执行<code>回滚</code>, 释放在整个事务期间占用的资源;</li>
+<li><strong>反馈结果</strong>: <strong>参与者</strong>完成<code>回滚</code>后, 向<strong>协调者</strong>发送‘ACK’响应;</li>
+<li><strong>中断事务</strong>: <strong>协调者</strong>收到各<strong>参与者</strong>反馈的‘ACK’消息后, 执行事务的中断;</li>
+</ol>
+</li>
+</ul>
+</li>
+</ul>
+<h5 id="注意"><a href="#注意" class="headerlink" title="注意"></a>注意</h5><ul>
+<li><code>DoCommit</code>阶段, 若<strong>参与者</strong>无法及时收到来自<strong>协调者</strong>的<code>Commit</code>或<code>Abort</code>请求是, 超时后会自动进行<code>Commit</code>操作.</li>
+</ul>
+<hr>
+<h5 id="2PC与3PC区别"><a href="#2PC与3PC区别" class="headerlink" title="2PC与3PC区别"></a>2PC与3PC区别</h5><ul>
+<li>3PC主要解决2PC的单点故障, 同步阻塞问题. 因<strong>参与者</strong>无法及时收到<strong>协调者</strong>的请求后会默认<code>Commit</code>, 而不会一直持有事务资源并处于‘阻塞状态’, 但这种机制有时也会导致<strong>数据一致性</strong>问题(因网络等其他情况,<strong>协调者</strong>发送<code>Abort</code>请求没有及时被<strong>参与者</strong>接受到, 那么<strong>参与者</strong>在等待超时后执行了<code>Commit</code>指令, 这样就和其他<strong>参与者</strong>之间存在<strong>数据不一致性</strong>问题);</li>
+</ul>
+<h4 id="BASE"><a href="#BASE" class="headerlink" title="BASE"></a>BASE</h4><ul>
+<li>各<strong>参与者</strong>不一定同时在线, 允许系统状态更新延迟, 这个延迟对客户来说不一定能察觉, 实现最终一致性.</li>
+</ul>
+<h4 id="TCC"><a href="#TCC" class="headerlink" title="TCC"></a>TCC</h4><ul>
+<li>基于两阶段提交的分布式事务实现方案</li>
+</ul>
+<h5 id="Try"><a href="#Try" class="headerlink" title="Try"></a>Try</h5><ul>
+<li>尝试执行业务</li>
+<li>完成所有业务检查, 预留必要的业务资源</li>
+</ul>
+<h5 id="Confirm"><a href="#Confirm" class="headerlink" title="Confirm"></a>Confirm</h5><ul>
+<li>确认执行业务</li>
+<li>真正执行业务, 不做业务检查</li>
+</ul>
+<h5 id="Cancel"><a href="#Cancel" class="headerlink" title="Cancel"></a>Cancel</h5><ul>
+<li>取消执行业务</li>
+<li>释放Try阶段预留的业务资源</li>
+</ul>
+<h5 id="2PC与TCC区别"><a href="#2PC与TCC区别" class="headerlink" title="2PC与TCC区别"></a>2PC与TCC区别</h5><ul>
+<li>TCC位于业务服务层, 没有单独的准备阶段, Try操作可以灵活的选择业务资源锁的粒度;</li>
+<li>TCC通过最终一致性来解决系统性能问题; </li>
+</ul>
+<h5 id="优点"><a href="#优点" class="headerlink" title="优点"></a>优点</h5><ul>
+<li>隔离型高</li>
+</ul>
+<h5 id="缺点-1"><a href="#缺点-1" class="headerlink" title="缺点"></a>缺点</h5><ul>
+<li>增大编码量</li>
+</ul>
+<h5 id="适用场景"><a href="#适用场景" class="headerlink" title="适用场景"></a>适用场景</h5><ul>
+<li>基础服务</li>
+<li>中台服务</li>
+</ul>
+<h4 id="Saga"><a href="#Saga" class="headerlink" title="Saga"></a>Saga</h4><ul>
+<li>长活事务, 由多个‘本地事务(sub-transaction Ti)’组成, 每个‘本地事务’均有相应<code>执行模块</code>,<code>补偿模块</code>(Ci), 任意一个‘本地事务’出错, 可通过调用对象补偿方法恢复, 达到事务的最终一致性;</li>
+</ul>
+<h5 id="实现方式"><a href="#实现方式" class="headerlink" title="实现方式"></a>实现方式</h5><ol>
+<li><p><strong>集中式</strong></p>
+<ul>
+<li>通过一个Saga对象来追踪所有Saga子任务的调用情况, 根据调用情况来决定是否需要调用对应的’补偿模块’(协调器和调用方在一个进程中).</li>
+<li>集中式实现方式直观, 容易控制. 业务耦合度高;</li>
+</ul>
+</li>
+<li><p><strong>分布式</strong></p>
+<ul>
+<li>采用’事件驱动’方式让各<strong>参与者</strong>进行相互交互, 相关业务只需订阅相关领域事件即可.</li>
+<li>分布式降低系统复杂程度, 提高系统拓展性. 如果<strong>参与者</strong>过多, 会对编码, 调试带来问题; 业务逻辑是基于事件, 有可能会有循环依赖的问题;</li>
+</ul>
+</li>
+</ol>
+<h5 id="补偿策略"><a href="#补偿策略" class="headerlink" title="补偿策略"></a>补偿策略</h5><ol>
+<li><strong>向后恢复</strong>(backward recovery): 补偿所有已完成的事务. 如果一’本地事务(j)’失败, 撤销之前所有已成功的’本地事务’(之前Saga所有执行结果撤销). (例:T1, T2, …, Tj, Cj, …, C2, C1 (0 &lt; j &lt; n))</li>
+<li><strong>向前恢复</strong>(forward recovery): 重试失败的事务. 使用于必须要成功的场景. (T1, T2, …, <strong>Tj(fail)</strong>, <strong>Tj(retry)</strong>, Tj+1, …, Tn)</li>
+</ol>
+<h5 id="ACID"><a href="#ACID" class="headerlink" title="ACID"></a>ACID</h5><ul>
+<li>原子性: 通过’Saga协调器’实现;</li>
+<li>一致性: 通过’本地事务’ + ‘Saga log’ 保证;</li>
+<li>隔离性: 不保证;</li>
+<li>持久性: 通过’Saga log’ 保证;</li>
+<li>总结: Saga只支持ACD, 不支持I(隔离性)的保证;</li>
+</ul>
+<h5 id="要求"><a href="#要求" class="headerlink" title="要求"></a>要求</h5><ul>
+<li><strong>请求幂等</strong>: 因网络请求等各种原因, 服务间请求时会出现’超时重试’的情况, 需要通过’幂等’来避免多次请求所带来的问题;</li>
+<li><strong>事务数据</strong>: </li>
+</ul>
+<h5 id="注意-1"><a href="#注意-1" class="headerlink" title="注意"></a>注意</h5><ul>
+<li>因Saga事务没有’准备’阶段, 所以事务没有隔离, 操作过程中若出现多’本地事务’同时操作一资源, 有可能会出现数据语义不一致, 更新丢失, 脏读取, 模糊读取等各种问题. <ul>
+<li>可参考TCC, 在业务层加入Session, 锁机制来保证串行化操作资源;</li>
+<li>业务层操作冻结(隔离)资源方式, 保证各’本地事务’操作不至于影响其他’本地事务’;</li>
+<li>业务操作过程中通过及时读取当前状态的方式获取到最新的更新;</li>
+</ul>
+</li>
+</ul>
+<h5 id="适用场景-1"><a href="#适用场景-1" class="headerlink" title="适用场景"></a>适用场景</h5><ul>
+<li>其他组织业务</li>
+<li>遗留系统</li>
+</ul>
+<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><h4 id="微服务"><a href="#微服务" class="headerlink" title="微服务"></a>微服务</h4><ul>
+<li>服务内: <strong>内刚</strong>, 通过数据库事务保证强一致性;</li>
+<li>服务间: <strong>外柔</strong>, </li>
+</ul>
+<h3 id="引用"><a href="#引用" class="headerlink" title="引用"></a>引用</h3><ul>
+<li><a href="https://www.cnblogs.com/xingzc/p/5745587.html">两阶段提交协议、三阶提交协议</a></li>
+<li><a href="http://servicecomb.apache.org/cn/docs/distributed-transactions-saga-implementation/">Saga分布式事务解决方案与实践</a></li>
+<li><a href="https://microservices.io/patterns/data/saga.html">微服务架构-Saga</a></li>
+<li><a href="https://www.jianshu.com/p/75a1779ae870">理解TCC分布式事务</a></li>
+<li><a href="https://patentimages.storage.googleapis.com/01/b5/8a/aaa2dff11c9c38/CN106844014A.pdf">阿里云TCC专利</a></li>
+</ul>
+
+            
+        </div>
+        
+    </div>
+    
+    
+    <div class="copyright">
+        <p><span>本文标题:</span><a href="/2019/framework-distributed-transaction/">分布式事务总结</a></p>
+        <p><span>文章作者:</span><a href="/" title="回到主页">水云游</a></p>
+        <p><span>发布时间:</span>2019-05-25, 00:00:00</p>
+        <p><span>最后更新:</span>2021-05-28, 01:24:28</p>
+        <p>
+            <span>原始链接:</span><a class="post-url" href="/2019/framework-distributed-transaction/" title="分布式事务总结">https://blog.smilelxy.cn/2019/framework-distributed-transaction/</a>
+            <span class="copy-path" data-clipboard-text="原文: https://blog.smilelxy.cn/2019/framework-distributed-transaction/　　作者: 水云游" title="点击复制文章链接"><i class="fa fa-clipboard"></i></span>
+            <script> var clipboard = new Clipboard('.copy-path'); </script>
+        </p>
+        <p>
+            <span>许可协议:</span><i class="fa fa-creative-commons"></i> <a rel="license" href="http://creativecommons.org/licenses/by-nc-sa/4.0/" title="CC BY-NC-SA 4.0 International" target = "_blank">"署名-非商用-相同方式共享"</a> 转载请保留原文链接及作者。
+        </p>
+    </div>
+
+
+
+    <nav id="article-nav">
+        
+            <div id="article-nav-newer" class="article-nav-title">
+                <a href="/2019/jvm-class-loader-mechanism/">
+                    JVM类加载机制
+                </a>
+            </div>
+        
+        
+            <div id="article-nav-older" class="article-nav-title">
+                <a href="/2018/exp-db-data-pagination/">
+                    分库分表后-数据分页
+                </a>
+            </div>
+        
+    </nav>
+
+    
+    <script>
+
+        function getPgjs() {
+            var agent = navigator.userAgent.toLowerCase();
+            var res = agent.match(/android/);
+            if (res == "android")
+                return res;
+            res = agent.match(/iphone/);
+            if (res == "iphone")
+                return "ios";
+            res = agent.match(/ipad/);
+            if (res == "ipad")
+                return "ios";
+            res = agent.match(/windows/);
+            if (res == "windows")
+                return "wp";
+            return "pc";
+        }
+
+        function loadImage(id) {
+            var page = window.location.pathname
+            if (page.indexOf("about") !== -1) {
+                return;
+            }
+//            var result = getPgjs();
+//            if(result=="wp"){
+//                $(".fengmian").hide();
+//                console.log(result);
+//                return;
+//            }
+            var backgroundnum = 40;
+            var randomIndex = Math.ceil(Math.random() * backgroundnum);
+            var result = randomIndex + "?version=" + (new Date() / 1000);
+            var backgroundimg = "http://image.smilelxy.cn/blog/abridge/bg-number.jpg".replace(/number/gi, randomIndex);
+            var key = "#" + id;
+            $(key).attr("src", backgroundimg);
+            $(".fengmian").show();
+        }
+
+        (function () {
+            var page = window.location.pathname
+            if (page.indexOf("about") !== -1) {
+                console.log(page)
+                $(".fenagmian").hide();
+//                $("#comments").remove();
+            }
+        })()
+    </script>
+</article>
+<!-- 代码1：放在页面需要展示的位置  -->
+<!-- 如果您配置过sourceid，建议在div标签中配置sourceid、cid(分类id)，没有请忽略  -->
+<!--<div id="cyReward" role="cylabs" data-use="reward" style="margin-left: 45%" ></div>-->
+<!--<div id="cyEmoji" role="cylabs" data-use="emoji"></div>-->
+
+
+<!--<script>-->
+<!--(function(){-->
+<!--var path = window.location.pathname;-->
+<!--if (path ==="/" || path=== undefined || path === null || path.indexOf("page") !== -1){-->
+<!--$("#cyReward").remove();-->
+<!--$("#cyEmoji").remove();-->
+<!--}-->
+<!--})()-->
+
+
+<!--</script>-->
+
+<!-- 代码2：用来读取评论框配置，此代码需放置在代码1之后。 -->
+<!-- 如果当前页面有评论框，代码2请勿放置在评论框代码之前。 -->
+<!-- 如果页面同时使用多个实验室项目，以下代码只需要引入一次，只配置上面的div标签即可 -->
+<!--<script type="text/javascript" charset="utf-8" src="https://changyan.sohu.com/js/changyan.labs.https.js?appid=cysUkgluO"></script>-->
+
+<div id="toc" class="toc-article">
+    <strong class="toc-title">文章目录</strong>
+    <ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#前言"><span class="toc-number">1.</span> <span class="toc-text">前言</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#正文"><span class="toc-number">2.</span> <span class="toc-text">正文</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#两阶段提交-2PC"><span class="toc-number">2.1.</span> <span class="toc-text">两阶段提交(2PC)</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#准备"><span class="toc-number">2.1.1.</span> <span class="toc-text">准备</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#提交"><span class="toc-number">2.1.2.</span> <span class="toc-text">提交</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#缺点"><span class="toc-number">2.1.3.</span> <span class="toc-text">缺点</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#无法解决的问题"><span class="toc-number">2.1.4.</span> <span class="toc-text">无法解决的问题</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#结果"><span class="toc-number">2.1.5.</span> <span class="toc-text">结果</span></a></li></ol></li><li class="toc-item toc-level-4"><a class="toc-link" href="#三阶段提交-3PC"><span class="toc-number">2.2.</span> <span class="toc-text">三阶段提交(3PC)</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#区别"><span class="toc-number">2.2.1.</span> <span class="toc-text">区别</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#CanCommit"><span class="toc-number">2.2.2.</span> <span class="toc-text">CanCommit</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#PreCommit"><span class="toc-number">2.2.3.</span> <span class="toc-text">PreCommit</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#DoCommit"><span class="toc-number">2.2.4.</span> <span class="toc-text">DoCommit</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#注意"><span class="toc-number">2.2.5.</span> <span class="toc-text">注意</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#2PC与3PC区别"><span class="toc-number">2.2.6.</span> <span class="toc-text">2PC与3PC区别</span></a></li></ol></li><li class="toc-item toc-level-4"><a class="toc-link" href="#BASE"><span class="toc-number">2.3.</span> <span class="toc-text">BASE</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#TCC"><span class="toc-number">2.4.</span> <span class="toc-text">TCC</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#Try"><span class="toc-number">2.4.1.</span> <span class="toc-text">Try</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#Confirm"><span class="toc-number">2.4.2.</span> <span class="toc-text">Confirm</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#Cancel"><span class="toc-number">2.4.3.</span> <span class="toc-text">Cancel</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#2PC与TCC区别"><span class="toc-number">2.4.4.</span> <span class="toc-text">2PC与TCC区别</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#优点"><span class="toc-number">2.4.5.</span> <span class="toc-text">优点</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#缺点-1"><span class="toc-number">2.4.6.</span> <span class="toc-text">缺点</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#适用场景"><span class="toc-number">2.4.7.</span> <span class="toc-text">适用场景</span></a></li></ol></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Saga"><span class="toc-number">2.5.</span> <span class="toc-text">Saga</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#实现方式"><span class="toc-number">2.5.1.</span> <span class="toc-text">实现方式</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#补偿策略"><span class="toc-number">2.5.2.</span> <span class="toc-text">补偿策略</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#ACID"><span class="toc-number">2.5.3.</span> <span class="toc-text">ACID</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#要求"><span class="toc-number">2.5.4.</span> <span class="toc-text">要求</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#注意-1"><span class="toc-number">2.5.5.</span> <span class="toc-text">注意</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#适用场景-1"><span class="toc-number">2.5.6.</span> <span class="toc-text">适用场景</span></a></li></ol></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#总结"><span class="toc-number">3.</span> <span class="toc-text">总结</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#微服务"><span class="toc-number">3.1.</span> <span class="toc-text">微服务</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#引用"><span class="toc-number">4.</span> <span class="toc-text">引用</span></a></li></ol>
+</div>
+<style>
+    .left-col .switch-btn,
+    .left-col .switch-area {
+        display: none;
+    }
+</style>
+
+<input type="button" id="tocButton" value="隐藏目录"  title="点击按钮隐藏或者显示文章目录">
+
+<script>
+    yiliaConfig.toc = ["隐藏目录", "显示目录", !!"false"];
+</script>
+
+
+
+
+<link rel="stylesheet" href="https://unpkg.com/gitalk/dist/gitalk.css">
+<script src="https://unpkg.com/gitalk/dist/gitalk.min.js"></script>
+<hr/>
+<br/>
+<br/>
+<br/>
+<div id="gitalk-container" style="margin: 1% 3%"></div>
+<h3 style="text-align: center">如果想及时收到回复,可在 <a href="https://github.com/settings/notifications" target="_blank">订阅中心</a>的 <code>Participating</code>中勾选Email</h3>
+<script type="text/javascript">
+    var gitalk = new Gitalk({
+        clientID: '1305dbf64dd1101187a6',
+        clientSecret: '67f4a6ebee76801d436ab55d771e105c37255690',
+        id: window.location.pathname,
+        repo: 'blog',
+        owner: 'smile-lxy',
+        admin: 'smile-lxy',
+        distractionFreeMode: false
+    })
+    gitalk.render('gitalk-container')
+</script>
+
+
+
+
+
+
+    <div class="scroll" id="post-nav-button">
+        
+            <a href="/2019/jvm-class-loader-mechanism/" title="上一篇: JVM类加载机制">
+                <i class="fa fa-angle-left"></i>
+            </a>
+        
+
+        <a title="文章列表"><i class="fa fa-bars"></i><i class="fa fa-times"></i></a>
+
+        
+            <a href="/2018/exp-db-data-pagination/" title="下一篇: 分库分表后-数据分页">
+                <i class="fa fa-angle-right"></i>
+            </a>
+        
+    </div>
+
+    <ul class="post-list"><li class="post-list-item"><a class="post-list-link" href="/2021/fukushi-kannjyoukeiyoushi/">学习-日语-感情形容词</a></li><li class="post-list-item"><a class="post-list-link" href="/2021/fukushi-zokuseikeiyoushi/">学习-日语-属性形容词</a></li><li class="post-list-item"><a class="post-list-link" href="/2021/fukushi-wagoshi-meishi/">学习-日语-和语词和名词</a></li><li class="post-list-item"><a class="post-list-link" href="/2021/fukushi-katarikuchi-koou/">学习-日语-副词(语气和呼应)</a></li><li class="post-list-item"><a class="post-list-link" href="/2021/nihonngo-bunnpou-chigai/">学习-日语-语法的区别总结</a></li><li class="post-list-item"><a class="post-list-link" href="/2021/nihonngo-bunpou/">学习-日语-语法总结(N3-2)</a></li><li class="post-list-item"><a class="post-list-link" href="/2021/nihonngo-tanngo/">学习-日语-单词要点</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/nihonngo-%20poinnto/">学习-日语-要点</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/nihonngo-henkei/">学习-日语-日语动词变形总结</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/nihonngo-bunpou/">学习-日语-语法总结</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/framework-study-seata-top/">Seata总结</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/egg-toon/">生活-美食-鸡蛋爆香椿</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/jvm-tools-instruct/">Java性能调优-指令(Java8)</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/jvm-carbage-collect/">Jvm垃圾回收</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/jvm-running-data-area/">Jvm运行时数据区</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/jvm-class-loader-mechanism/">JVM类加载机制</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/framework-distributed-transaction/">分布式事务总结</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/exp-db-data-pagination/">分库分表后-数据分页</a></li></ul>
+
+<style>
+    #post-nav-button a{
+        background-color: skyblue;
+    }
+</style>
+
+
+
+<script>
+    
+</script>
+
+</div>
+      <footer id="footer">
+    <div class="outer">
+        <div id="footer-info">
+            <div class="footer-left">
+                <i class="fa fa-copyright"></i>
+                
+                    2020-
+                
+                2021 水云游
+                
+            </div>
+            <div class="footer-right">
+                <a href="https://blog.smilelxy.cn/" target="_blank" title="欢迎来到水云游的博客">Blog </a> Created by <a
+                        href="https://github.com/smile-lxy" target="_blank" rel="external nofollow"
+                        title="希望这里的文章对你有所帮助  v3.0">shuiyy</a>
+                <a href="/record.html"><i class="fa fa-heart animated infinite pulse"></i></a>
+            </div>
+        </div>
+        
+            <div class="visit">
+                
+                    <span id="busuanzi_container_site_pv" style='display:none'>
+                        <span id="site-visit">总访问数:
+                            <span id="busuanzi_value_site_pv"></span>
+                        </span>
+                    </span>
+                
+                <span style="color: grey;">(<a href="https://www.upyun.com/" rel="external nofollow" target="_blank">背景随机加载-资源存储于又拍云</a>) | 本站己运行<span
+                            id="day_count">222</span>天<span id="time_now">1</span></span>
+            </div>
+        
+    </div>
+    <script src="/js/activate-power-mode.js" ></script>
+</footer>
+<script>
+    // 添加输入效果
+    POWERMODE.colorful = true; // make power mode colorful
+    POWERMODE.shake = false; // turn off shake
+    document.body.addEventListener('input', POWERMODE);
+
+    (function () {
+        function current() {
+            var d = new Date(), str = '';
+            str += d.getHours() + '小时';
+            str += d.getMinutes() + '分';
+            str += d.getSeconds() + '秒';
+            return str;
+        }
+
+        setInterval(function () {
+            $("#time_now").html(current)
+        }, 1000);
+
+        var dateFrom = new Date(2020, 2, 1);
+        var dateTo = new Date();
+        var diff = dateTo.valueOf() - dateFrom.valueOf();
+        var diff_day = parseInt(diff / (1000 * 60 * 60 * 24));
+        $("#day_count").html(diff_day);
+    })();
+</script>
+<a href="https://github.com/smile-lxy/blog"><img style="position: fixed; top: 0;left: 0;" width="140" height="140" src="https://github.blog/wp-content/uploads/2008/12/forkme_left_gray_6d6d6d.png?resize=149%2C149" class="attachment-full size-full" alt="Fork me on GitHub" data-recalc-dims="1"></a>
+
+    </div>
+    
+    
+<script src="/js/GithubRepoWidget.js"></script>
+
+
+<script data-main="/js/main.js" src="//cdn.bootcss.com/require.js/2.2.0/require.min.js"></script>
+
+    <script>
+        $(document).ready(function() {
+            var iPad = window.navigator.userAgent.indexOf('iPad');
+            if (iPad > -1 || $(".left-col").css("display") === "none") {
+                var bgColorList = ["#9db3f4", "#414141", "#e5a859", "#f5dfc6", "#c084a0", "#847e72", "#cd8390", "#996731"];
+                var bgColor = Math.ceil(Math.random() * (bgColorList.length - 1));
+                $("body").css({"background-color": bgColorList[bgColor], "background-size": "cover"});
+            }
+            else {
+                var backgroundnum = 36;
+                // var randomIndex = Math.ceil(Math.random() * backgroundnum);
+                var randomIndex = 1;
+                var result = randomIndex+".jpg?version="+(new Date()/1000);
+                var backgroundimg = "url(http://image.smilelxy.cn/blog/background/bg-number)".replace(/number/gi,result);
+//                console.info("加载图片"+backgroundimg);
+                $("body").css({"background": backgroundimg, "background-attachment": "fixed", "background-size": "cover","background-color":"rgba(255,255,255,0.5)","background-blend-mode":"lighten"});
+            }
+        })
+    </script>
+
+
+    <script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+    tex2jax: {
+        inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+        processEscapes: true,
+        skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+    }
+});
+
+MathJax.Hub.Queue(function() {
+    var all = MathJax.Hub.getAllJax(), i;
+    for(i=0; i < all.length; i += 1) {
+        all[i].SourceElement().parentNode.className += ' has-jax';                 
+    }       
+});
+</script>
+
+<script src="//cdn.bootcss.com/mathjax/2.6.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script>
+
+
+<div class="scroll" id="scroll">
+    <a href="#" title="返回顶部"><i class="fa fa-arrow-up"></i></a>
+    <a href="#comments" onclick="load$hide();" title="查看评论"><i class="fa fa-comments-o"></i></a>
+    <a href="#footer" title="转到底部"><i class="fa fa-arrow-down"></i></a>
+</div>
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+  </div>
+</body>
+</html>

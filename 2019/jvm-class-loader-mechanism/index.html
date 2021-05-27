@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+
+    <!--[if lt IE 9]>
+        <style>body {display: none; background: none !important} </style>
+        <meta http-equiv="Refresh" Content="0; url=//outdatedbrowser.com/" />
+    <![endif]-->
+
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge, chrome=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="format-detection" content="telephone=no" />
+<meta name="author" content="水云游" />
+<meta name="baidu-site-verification" content="qp2dTXVqvj" />
+
+
+
+<meta name="keywords" content="水云游, 蓝心语, 技术, java, 日语, 动漫">
+
+
+<meta name="description" content="JVM在启动时, 会将所需Class文件加载到内存中去, 按需动态加载.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="JVM类加载机制">
+<meta property="og:url" content="https://blog.smilelxy.cn/2019/jvm-class-loader-mechanism/index.html">
+<meta property="og:site_name" content="水云游的博客">
+<meta property="og:description" content="JVM在启动时, 会将所需Class文件加载到内存中去, 按需动态加载.">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://image.smilelxy.cn/blog/images/jvm-class-load-extclass-to-top-dependent-graph.png">
+<meta property="og:image" content="http://image.smilelxy.cn/blog/images/jvm-class-load-appclass-to-top-dependent-graph.png">
+<meta property="og:image" content="http://image.smilelxy.cn/blog/images/jvm-class-load-spi-mysql.png">
+<meta property="article:published_time" content="2019-11-19T16:00:00.000Z">
+<meta property="article:modified_time" content="2021-05-27T16:24:28.667Z">
+<meta property="article:author" content="水云游">
+<meta property="article:tag" content="Java">
+<meta property="article:tag" content="Jvm">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://image.smilelxy.cn/blog/images/jvm-class-load-extclass-to-top-dependent-graph.png">
+<link rel="apple-touch-icon" href= "/apple-touch-icon.png">
+
+
+    <link rel="alternative" href="/atom.xml" title="水云游的博客" type="application/atom+xml">
+
+
+
+    <link rel="shortcut icon" href="http://image.smilelxy.cn/logo/logo.png">
+
+
+
+    <link href="//cdn.bootcss.com/animate.css/3.5.1/animate.min.css" rel="stylesheet">
+
+
+
+    <link href="//cdn.bootcss.com/fancybox/2.1.5/jquery.fancybox.min.css" rel="stylesheet">
+
+
+
+    <script src="//cdn.bootcss.com/pace/1.0.2/pace.min.js"></script>
+    <link href="//cdn.bootcss.com/pace/1.0.2/themes/green/pace-theme-minimal.css" rel="stylesheet">
+
+
+
+<link rel="stylesheet" href="/css/style.css">
+
+
+
+
+<link href="//cdn.bootcss.com/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet">
+
+
+<title>JVM类加载机制 | 水云游的博客</title>
+
+<script src="//cdn.bootcss.com/jquery/2.2.4/jquery.js"></script>
+<script src="//cdn.bootcss.com/clipboard.js/1.5.10/clipboard.min.js"></script>
+
+<script>
+    var yiliaConfig = {
+        fancybox: true,
+        animate: true,
+        isHome: false,
+        isPost: true,
+        isArchive: false,
+        isTag: false,
+        isCategory: false,
+        open_in_new: false,
+        fancybox_js: "//cdn.bootcss.com/fancybox/2.1.5/jquery.fancybox.min.js",
+        scrollreveal: "//cdn.bootcss.com/scrollReveal.js/3.1.4/scrollreveal.min.js",
+        search: true
+    }
+</script>
+
+
+    <script>
+        yiliaConfig.jquery_ui = [true, "//cdn.bootcss.com/jqueryui/1.10.4/jquery-ui.min.js", "//cdn.bootcss.com/jqueryui/1.10.4/css/jquery-ui.min.css"];
+    </script>
+
+
+
+    <script> yiliaConfig.rootUrl = "\/";</script>
+
+
+<meta name="generator" content="Hexo 4.2.1"></head>
+
+<body oncontextmenu="return false" onselectstart="return false">
+  <div id="container">
+    <div class="left-col">
+    <div class="overlay"></div>
+<div class="intrude-less">
+    <header id="header" class="inner">
+        <a href="https://blog.smilelxy.cn" target="_self" class="profilepic">
+            <img src="http://image.smilelxy.cn/logo/avatar.jpeg" alt="logo" class="animated zoomIn">
+        </a>
+        <hgroup>
+          <h1 class="header-author"><a href="/">水云游</a></h1>
+        </hgroup>
+
+        
+        <p class="header-subtitle">舍弃欲望, 活在当下</p>
+        
+
+        
+            <form id="search-form">
+            <input type="text" id="local-search-input" name="q" results="0" placeholder="search..." class="search form-control" autocomplete="off" autocorrect="off" searchonload="true" />
+            <i class="fa fa-times" onclick="resetSearch()"></i>
+            </form>
+            <div id="local-search-result"></div>
+            <p class='no-result'>No results found <i class='fa fa-spinner fa-pulse'></i></p>
+        
+
+
+        
+            <div id="switch-btn" class="switch-btn">
+                <div class="icon">
+                    <div class="icon-ctn">
+                        <div class="icon-wrap icon-house" data-idx="0">
+                            <div class="birdhouse"></div>
+                            <div class="birdhouse_holes"></div>
+                        </div>
+                        <div class="icon-wrap icon-ribbon hide" data-idx="1">
+                            <div class="ribbon"></div>
+                        </div>
+                        
+                        
+                        <div class="icon-wrap icon-me hide" data-idx="3">
+                            <div class="user"></div>
+                            <div class="shoulder"></div>
+                        </div>
+                        
+                    </div>
+                    
+                </div>
+                <div class="tips-box hide">
+                    <div class="tips-arrow"></div>
+                    <ul class="tips-inner">
+                        <li>菜单</li>
+                        <li>标签</li>
+                        
+                        
+                        <li>关于我</li>
+                        
+                    </ul>
+                </div>
+            </div>
+        
+
+        <div id="switch-area" class="switch-area">
+            <div class="switch-wrap">
+                <section class="switch-part switch-part1">
+                    <nav class="header-menu">
+                        <ul>
+                        
+                            <li><a href="//smilelxy.cn">回到主站</a></li>
+                        
+                            <li><a href="/categories/%E6%8A%80%E6%9C%AF/">技术系列</a></li>
+                        
+                            <li><a href="/categories/%E6%97%A5%E6%9C%AC/">日本相关</a></li>
+                        
+                            <li><a href="/categories/%E7%94%9F%E6%B4%BB/">生活系列</a></li>
+                        
+                            <li><a href="/archives/">所有文章</a></li>
+                        
+                            <li><a href="/about.html">关于我</a></li>
+                        
+                        </ul>
+                    </nav>
+                    <nav class="header-nav">
+                        <ul class="social">
+                            
+                                <a class="fa Email" target="_blank" rel="external nofollow" href="mailto:yiqiufengye@gmail.com" title="Email"></a>
+                            
+                                <a class="fa QQ" target="_blank" rel="external nofollow" href="http://wpa.qq.com/msgrd?v=3&uin=3133545802&site=qq&menu=yes" title="QQ"></a>
+                            
+                                <a class="fa 简书" target="_blank" rel="external nofollow" href="https://www.jianshu.com/u/d650053de64e" title="简书"></a>
+                            
+                                <a class="fa CSDN" target="_blank" rel="external nofollow" href="https://me.csdn.net/FengYe_YuLu" title="CSDN"></a>
+                            
+                        </ul>
+                        <!-- 网易云音乐插件 -->
+                        
+                            <div style="position:absolute; bottom:120px left:auto; width:85%; height: 110px;">
+                                <iframe frameborder="no" border="0" marginwidth="0" marginheight="0" width=330 height=450 src="//music.163.com/outchain/player?type=0&id=2109140602&auto=1&height=430"></iframe>
+                            </div>
+                        
+                    </nav>
+                </section>
+                
+                
+                <section class="switch-part switch-part2">
+                    <div class="widget tagcloud" id="js-tagcloud">
+                        <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/DB/" rel="tag">DB</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Java/" rel="tag">Java</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Jvm/" rel="tag">Jvm</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/framework/" rel="tag">framework</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/seata/" rel="tag">seata</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E5%AD%A6%E4%B9%A0/" rel="tag">学习</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E7%94%9F%E6%B4%BB/" rel="tag">生活</a></li></ul>
+                    </div>
+                </section>
+                
+                
+                
+
+                
+                
+                <section class="switch-part switch-part3">
+                
+                    <div id="js-aboutme">技术宅、 杭州、 夜猫子、 爱动漫、 爱日语 2017年毕业、 java开发、 生命不息折腾不止、</div>
+                </section>
+                
+            </div>
+        </div>
+    </header>                
+</div>
+    </div>
+    <div class="mid-col">
+      <nav id="mobile-nav">
+      <div class="overlay">
+          <div class="slider-trigger"></div>
+          <h1 class="header-author js-mobile-header hide"><a href="/" title="回到主页">水云游</a></h1>
+      </div>
+    <div class="intrude-less">
+        <header id="header" class="inner">
+            <a href="/" class="profilepic">
+                <img src="http://image.smilelxy.cn/logo/avatar.jpeg" alt="logo" class="animated zoomIn">
+            </a>
+            <hgroup>
+              <h1 class="header-author"><a href="/" title="回到主页">水云游</a></h1>
+            </hgroup>
+            
+            <p class="header-subtitle">舍弃欲望, 活在当下</p>
+            
+            <nav class="header-menu">
+                <ul>
+                
+                    <li><a href="//smilelxy.cn">回到主站</a></li>
+                
+                    <li><a href="/categories/%E6%8A%80%E6%9C%AF/">技术系列</a></li>
+                
+                    <li><a href="/categories/%E6%97%A5%E6%9C%AC/">日本相关</a></li>
+                
+                    <li><a href="/categories/%E7%94%9F%E6%B4%BB/">生活系列</a></li>
+                
+                    <li><a href="/archives/">所有文章</a></li>
+                
+                    <li><a href="/about.html">关于我</a></li>
+                
+                <div class="clearfix"></div>
+                </ul>
+            </nav>
+            <nav class="header-nav">
+                        <ul class="social">
+                            
+                                <a class="fa Email" target="_blank" rel="external nofollow" href="mailto:yiqiufengye@gmail.com" title="Email"></a>
+                            
+                                <a class="fa QQ" target="_blank" rel="external nofollow" href="http://wpa.qq.com/msgrd?v=3&uin=3133545802&site=qq&menu=yes" title="QQ"></a>
+                            
+                                <a class="fa 简书" target="_blank" rel="external nofollow" href="https://www.jianshu.com/u/d650053de64e" title="简书"></a>
+                            
+                                <a class="fa CSDN" target="_blank" rel="external nofollow" href="https://me.csdn.net/FengYe_YuLu" title="CSDN"></a>
+                            
+                        </ul>
+            </nav>
+        </header>                
+    </div>
+    <link class="menu-list" tags="标签" friends="友情链接" about="关于我"/>
+</nav>
+      <div class="body-wrap"><style>
+    .fengmian {
+        float: left;
+        width: 400px;
+        height: 250px;
+    }
+
+    .article img {
+        margin: -1px 20px 5px -1px;
+        border-top-left-radius: 3px;
+        -webkit-border-radius-topleft: 3%;
+        -webkit-transition: all 0.5s;
+        -moz-transition: all 0.5s;
+        -o-transition: all 0.5s;
+    }
+
+    /*.article img:hover{*/
+    /*transform: scale(1, 1.05);*/
+    /*-webkit-transition:all 0.5s;*/
+    /*-moz-transition:all 0.5s;*/
+    /*-o-transition:all 0.5s;*/
+    /*}*/
+</style>
+
+
+<article id="post-jvm-class-loader-mechanism" class="article article-type-post" itemscope itemprop="blogPost">
+    
+    <div class="article-meta">
+        <a href="/2019/jvm-class-loader-mechanism/" class="article-date">
+      <time datetime="2019-11-19T16:00:00.000Z" itemprop="datePublished">2019-11-20</time>
+</a>
+    </div>
+    
+    <div class="article-inner">
+        
+        <input type="hidden" class="isFancy"/>
+        
+        <div class="fengmian">
+            <img class="fengmian-image" id="jvm-class-loader-mechanism" src="http://image.smilelxy.cn/blog/abridge/bg-1.jpg" alt="舍弃欲望, 活在当下" onload="loadImage(this.id)"/>
+        </div>
+        
+        <header class="article-header">
+            
+  
+    <h1 class="article-title" itemprop="name">
+      JVM类加载机制
+    </h1>
+  
+
+        </header>
+        
+        <div class="article-info article-info-post">
+            
+    <div class="article-category tagcloud">
+    <a class="article-category-link" href="/categories/%E6%8A%80%E6%9C%AF/">技术</a><a class="article-category-link" href="/categories/%E6%8A%80%E6%9C%AF/Java/">Java</a><a class="article-category-link" href="/categories/%E6%8A%80%E6%9C%AF/Java/Jvm/">Jvm</a>
+    </div>
+
+
+            
+    <div class="article-tag tagcloud">
+        <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Java/" rel="tag">Java</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Jvm/" rel="tag">Jvm</a></li></ul> </div>
+
+
+
+            <!-- 访问量  -->
+            <!--<span id="busuanzi_container_page_pv" style='display:none'>-->
+            <!--<span id="page-visit"><i class="fa fa-eye" style="float: left;margin-top:5px" aria-hidden="true" title="文章访问量"></i>-->
+            <!--<span id="busuanzi_value_page_pv"></span>-->
+            <!--</span>-->
+            <!--</span>-->
+
+            <div class="clearfix"></div>
+        </div>
+        
+        
+        <div class="article-entry" itemprop="articleBody">
+            
+            
+            <ul>
+<li>JVM在启动时, 会将所需Class文件加载到内存中去, 按需动态加载.<a id="more"></a>
+</li>
+</ul>
+<h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><ul>
+<li>JVM在启动时, 会将所需Class文件加载到内存中去, 按需动态加载.</li>
+</ul>
+<h3 id="双亲委托机制"><a href="#双亲委托机制" class="headerlink" title="双亲委托机制"></a>双亲委托机制</h3><h4 id="Java代码"><a href="#Java代码" class="headerlink" title="Java代码"></a>Java代码</h4><figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Smile</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">static</span> &#123;</span><br><span class="line">        System.out.println(<span class="string">"smile static"</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">Smile</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        System.out.println(<span class="string">"smile init"</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Lxy</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">static</span> &#123;</span><br><span class="line">        System.out.println(<span class="string">"lxy static"</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">Lxy</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        System.out.println(<span class="string">"lxy init"</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ClassLoaderTest</span></span></span><br><span class="line">    public static void main(String[] args) &#123;</span><br><span class="line">        <span class="keyword">new</span> Smile();</span><br><span class="line">        System.out.println(<span class="string">"---------------"</span>);</span><br><span class="line">        <span class="keyword">new</span> Lxy();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h4 id="jvm中添加"><a href="#jvm中添加" class="headerlink" title="jvm中添加"></a>jvm中添加</h4><figure class="highlight haml"><table><tr><td class="code"><pre><span class="line">-<span class="ruby"><span class="symbol">verbose:</span><span class="class"><span class="keyword">class</span> 或者 -<span class="title">XX</span>:+<span class="title">TraceClassLoading</span></span></span></span><br></pre></td></tr></table></figure>
+<h4 id="轨迹展示"><a href="#轨迹展示" class="headerlink" title="轨迹展示"></a>轨迹展示</h4><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">[Opened &#x2F;Library&#x2F;Java&#x2F;JavaVirtualMachines&#x2F;jdk1.8.0_181.jdk&#x2F;Contents&#x2F;Home&#x2F;jre&#x2F;lib&#x2F;rt.jar]</span><br><span class="line">[Loaded java.lang.Object from &#x2F;Library&#x2F;Java&#x2F;JavaVirtualMachines&#x2F;jdk1.8.0_181.jdk&#x2F;Contents&#x2F;Home&#x2F;jre&#x2F;lib&#x2F;rt.jar]</span><br><span class="line">[Loaded java.io.Serializable from &#x2F;Library&#x2F;Java&#x2F;JavaVirtualMachines&#x2F;jdk1.8.0_181.jdk&#x2F;Contents&#x2F;Home&#x2F;jre&#x2F;lib&#x2F;rt.jar]</span><br><span class="line">[Loaded java.lang.Comparable from &#x2F;Library&#x2F;Java&#x2F;JavaVirtualMachines&#x2F;jdk1.8.0_181.jdk&#x2F;Contents&#x2F;Home&#x2F;jre&#x2F;lib&#x2F;rt.jar]</span><br><span class="line">...</span><br><span class="line"></span><br><span class="line">[Loaded java.lang.Cloneable from &#x2F;Library&#x2F;Java&#x2F;JavaVirtualMachines&#x2F;jdk1.8.0_181.jdk&#x2F;Contents&#x2F;Home&#x2F;jre&#x2F;lib&#x2F;rt.jar]</span><br><span class="line">[Loaded java.lang.ClassLoader from &#x2F;Library&#x2F;Java&#x2F;JavaVirtualMachines&#x2F;jdk1.8.0_181.jdk&#x2F;Contents&#x2F;Home&#x2F;jre&#x2F;lib&#x2F;rt.jar]</span><br><span class="line">...</span><br><span class="line">[Loaded java.net.URLClassLoader from &#x2F;Library&#x2F;Java&#x2F;JavaVirtualMachines&#x2F;jdk1.8.0_181.jdk&#x2F;Contents&#x2F;Home&#x2F;jre&#x2F;lib&#x2F;rt.jar]</span><br><span class="line">[Loaded java.net.URL from &#x2F;Library&#x2F;Java&#x2F;JavaVirtualMachines&#x2F;jdk1.8.0_181.jdk&#x2F;Contents&#x2F;Home&#x2F;jre&#x2F;lib&#x2F;rt.jar]</span><br><span class="line">[Loaded java.util.jar.Manifest from &#x2F;Library&#x2F;Java&#x2F;JavaVirtualMachines&#x2F;jdk1.8.0_181.jdk&#x2F;Contents&#x2F;Home&#x2F;jre&#x2F;lib&#x2F;rt.jar]</span><br><span class="line">[Loaded sun.misc.Launcher from &#x2F;Library&#x2F;Java&#x2F;JavaVirtualMachines&#x2F;jdk1.8.0_181.jdk&#x2F;Contents&#x2F;Home&#x2F;jre&#x2F;lib&#x2F;rt.jar]</span><br><span class="line">[Loaded sun.misc.Launcher$AppClassLoader from &#x2F;Library&#x2F;Java&#x2F;JavaVirtualMachines&#x2F;jdk1.8.0_181.jdk&#x2F;Contents&#x2F;Home&#x2F;jre&#x2F;lib&#x2F;rt.jar]</span><br><span class="line">[Loaded sun.misc.Launcher$ExtClassLoader from &#x2F;Library&#x2F;Java&#x2F;JavaVirtualMachines&#x2F;jdk1.8.0_181.jdk&#x2F;Contents&#x2F;Home&#x2F;jre&#x2F;lib&#x2F;rt.jar]</span><br><span class="line">...</span><br><span class="line">[Loaded sun.launcher.LauncherHelper$FXHelper from &#x2F;Library&#x2F;Java&#x2F;JavaVirtualMachines&#x2F;jdk1.8.0_181.jdk&#x2F;Contents&#x2F;Home&#x2F;jre&#x2F;lib&#x2F;rt.jar]</span><br><span class="line">[Loaded java.lang.Class$MethodArray from &#x2F;Library&#x2F;Java&#x2F;JavaVirtualMachines&#x2F;jdk1.8.0_181.jdk&#x2F;Contents&#x2F;Home&#x2F;jre&#x2F;lib&#x2F;rt.jar]</span><br><span class="line">[Loaded java.net.AbstractPlainSocketImpl$1 from &#x2F;Library&#x2F;Java&#x2F;JavaVirtualMachines&#x2F;jdk1.8.0_181.jdk&#x2F;Contents&#x2F;Home&#x2F;jre&#x2F;lib&#x2F;rt.jar]</span><br><span class="line">[Loaded java.lang.Void from &#x2F;Library&#x2F;Java&#x2F;JavaVirtualMachines&#x2F;jdk1.8.0_181.jdk&#x2F;Contents&#x2F;Home&#x2F;jre&#x2F;lib&#x2F;rt.jar]</span><br><span class="line">[Loaded com.smile.Smile from file:&#x2F;Users&#x2F;smile&#x2F;workSpace&#x2F;resource&#x2F;git&#x2F;temp&#x2F;smile-company&#x2F;target&#x2F;test-classes&#x2F;]</span><br><span class="line">smile static</span><br><span class="line">smile init</span><br><span class="line">---------------</span><br><span class="line">[Loaded java.net.Inet6Address from &#x2F;Library&#x2F;Java&#x2F;JavaVirtualMachines&#x2F;jdk1.8.0_181.jdk&#x2F;Contents&#x2F;Home&#x2F;jre&#x2F;lib&#x2F;rt.jar]</span><br><span class="line">[Loaded com.smile.Lxy from file:&#x2F;Users&#x2F;smile&#x2F;workSpace&#x2F;resource&#x2F;git&#x2F;temp&#x2F;smile-company&#x2F;target&#x2F;test-classes&#x2F;]</span><br><span class="line">lxy static</span><br><span class="line">lxy init</span><br><span class="line">[Loaded java.lang.Shutdown from &#x2F;Library&#x2F;Java&#x2F;JavaVirtualMachines&#x2F;jdk1.8.0_181.jdk&#x2F;Contents&#x2F;Home&#x2F;jre&#x2F;lib&#x2F;rt.jar]</span><br><span class="line">[Loaded java.lang.Shutdown$Lock from &#x2F;Library&#x2F;Java&#x2F;JavaVirtualMachines&#x2F;jdk1.8.0_181.jdk&#x2F;Contents&#x2F;Home&#x2F;jre&#x2F;lib&#x2F;rt.jar]</span><br><span class="line">[Loaded java.net.Inet6Address$Inet6AddressHolder from &#x2F;Library&#x2F;Java&#x2F;JavaVirtualMachines&#x2F;jdk1.8.0_181.jdk&#x2F;Contents&#x2F;Home&#x2F;jre&#x2F;lib&#x2F;rt.jar]</span><br></pre></td></tr></table></figure>
+<h4 id="分析"><a href="#分析" class="headerlink" title="分析"></a>分析</h4><ul>
+<li>从上面轨迹中发现<strong>ClassLoader</strong>,<strong>Launcher</strong>,<strong>AppClassLoader</strong>,<strong>ExtClassLoader</strong>在项目启动时Jvm已初始化;</li>
+<li>类加载器初始化<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Launcher</span> </span>&#123;</span><br><span class="line">    <span class="keyword">private</span> ClassLoader loader;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">Launcher</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="comment">// 1. 创建 Ext 类加载器</span></span><br><span class="line">        ClassLoader extcl;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            extcl = ExtClassLoader.getExtClassLoader(); <span class="comment">// Ext 类加载器</span></span><br><span class="line">        &#125; <span class="keyword">catch</span> (IOException e) &#123;</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> InternalError(</span><br><span class="line">                <span class="string">"Could not create extension class loader"</span>, e);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 2. 创建 App 类加载器(加载器: Ext 类加载器)</span></span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            loader = AppClassLoader.getAppClassLoader(extcl); <span class="comment">// App 类加载</span></span><br><span class="line">        &#125; <span class="keyword">catch</span> (IOException e) &#123;</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> InternalError(</span><br><span class="line">                <span class="string">"Could not create application class loader"</span>, e);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 3. 配置当前线程上下文类加载器为APPClassLoader</span></span><br><span class="line">        Thread.currentThread().setContextClassLoader(loader);</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 4. 配置安全管理器</span></span><br><span class="line">        String s = System.getProperty(<span class="string">"java.security.manager"</span>);</span><br><span class="line">        <span class="keyword">if</span> (s != <span class="keyword">null</span>) &#123;</span><br><span class="line">            SecurityManager sm = <span class="keyword">null</span>;</span><br><span class="line">            <span class="keyword">if</span> (<span class="string">""</span>.equals(s) || <span class="string">"default"</span>.equals(s)) &#123;</span><br><span class="line">                sm = <span class="keyword">new</span> java.lang.SecurityManager();</span><br><span class="line">            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                <span class="keyword">try</span> &#123;</span><br><span class="line">                    sm = (SecurityManager)loader.loadClass(s).newInstance();</span><br><span class="line">                &#125; <span class="keyword">catch</span> (IllegalAccessException e) &#123;</span><br><span class="line">                &#125; <span class="keyword">catch</span> (InstantiationException e) &#123;</span><br><span class="line">                &#125; <span class="keyword">catch</span> (ClassNotFoundException e) &#123;</span><br><span class="line">                &#125; <span class="keyword">catch</span> (ClassCastException e) &#123;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">if</span> (sm != <span class="keyword">null</span>) &#123;</span><br><span class="line">                System.setSecurityManager(sm);</span><br><span class="line">            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                <span class="keyword">throw</span> <span class="keyword">new</span> InternalError(</span><br><span class="line">                    <span class="string">"Could not create SecurityManager: "</span> + s);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">ExtClassLoader</span> <span class="keyword">extends</span> <span class="title">URLClassLoader</span> </span>&#123;</span><br><span class="line">        <span class="keyword">static</span> &#123;</span><br><span class="line">            ClassLoader.registerAsParallelCapable(); <span class="comment">// ExtClassLoader注册为可并行加载</span></span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> ExtClassLoader <span class="title">getExtClassLoader</span><span class="params">()</span> <span class="keyword">throws</span> IOException</span></span><br><span class="line"><span class="function">        </span>&#123;</span><br><span class="line">            <span class="keyword">final</span> File[] dirs = getExtDirs(); <span class="comment">// 拓展文件的加载路径(Jvm启动时可通过'-Djava.ext.dirs'修改)</span></span><br><span class="line"></span><br><span class="line">            <span class="keyword">try</span> &#123;</span><br><span class="line">                <span class="comment">// 以享有“特权”的方式执行run方法中的代码</span></span><br><span class="line">                <span class="keyword">return</span> AccessController.doPrivileged(</span><br><span class="line">                    <span class="keyword">new</span> PrivilegedExceptionAction&lt;ExtClassLoader&gt;() &#123;</span><br><span class="line">                        <span class="function"><span class="keyword">public</span> ExtClassLoader <span class="title">run</span><span class="params">()</span> <span class="keyword">throws</span> IOException </span>&#123;</span><br><span class="line">                            <span class="keyword">int</span> len = dirs.length;</span><br><span class="line">                            <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; len; i++) &#123;</span><br><span class="line">                                MetaIndex.registerDirectory(dirs[i]); <span class="comment">// 注册路径(相关方面请看'MetaIndex'方面文档解释)</span></span><br><span class="line">                            &#125;</span><br><span class="line">                            <span class="keyword">return</span> <span class="keyword">new</span> ExtClassLoader(dirs); <span class="comment">// 创建ExtClassLoader, 通过URL方式加载</span></span><br><span class="line">                        &#125;</span><br><span class="line">                    &#125;);</span><br><span class="line">            &#125; <span class="keyword">catch</span> (java.security.PrivilegedActionException e) &#123;</span><br><span class="line">                <span class="keyword">throw</span> (IOException) e.getException();</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="function"><span class="keyword">public</span> <span class="title">ExtClassLoader</span><span class="params">(File[] dirs)</span> <span class="keyword">throws</span> IOException </span>&#123;</span><br><span class="line">            <span class="keyword">super</span>(getExtURLs(dirs), <span class="keyword">null</span>, factory);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">private</span> <span class="keyword">static</span> File[] getExtDirs() &#123;</span><br><span class="line">            String s = System.getProperty(<span class="string">"java.ext.dirs"</span>);</span><br><span class="line">            File[] dirs;</span><br><span class="line">            <span class="keyword">if</span> (s != <span class="keyword">null</span>) &#123;</span><br><span class="line">                StringTokenizer st =</span><br><span class="line">                    <span class="keyword">new</span> StringTokenizer(s, File.pathSeparator);</span><br><span class="line">                <span class="keyword">int</span> count = st.countTokens();</span><br><span class="line">                dirs = <span class="keyword">new</span> File[count];</span><br><span class="line">                <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; count; i++) &#123;</span><br><span class="line">                    dirs[i] = <span class="keyword">new</span> File(st.nextToken());</span><br><span class="line">                &#125;</span><br><span class="line">            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                dirs = <span class="keyword">new</span> File[<span class="number">0</span>];</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">return</span> dirs;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">AppClassLoader</span> <span class="keyword">extends</span> <span class="title">URLClassLoader</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">static</span> &#123;</span><br><span class="line">            ClassLoader.registerAsParallelCapable(); <span class="comment">// AppClassLoader注册为可并行加载</span></span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> ClassLoader <span class="title">getAppClassLoader</span><span class="params">(<span class="keyword">final</span> ClassLoader extcl)</span></span></span><br><span class="line"><span class="function">            <span class="keyword">throws</span> IOException</span></span><br><span class="line"><span class="function">        </span>&#123;</span><br><span class="line">            <span class="keyword">final</span> String s = System.getProperty(<span class="string">"java.class.path"</span>); <span class="comment">// 应用文件的加载路径(Jvm启动时, 可通过'-Djava.class.path'修改)</span></span><br><span class="line">            <span class="keyword">final</span> File[] path = (s == <span class="keyword">null</span>) ? <span class="keyword">new</span> File[<span class="number">0</span>] : getClassPath(s);</span><br><span class="line"></span><br><span class="line">            <span class="keyword">return</span> AccessController.doPrivileged(</span><br><span class="line">                <span class="keyword">new</span> PrivilegedAction&lt;AppClassLoader&gt;() &#123;</span><br><span class="line">                    <span class="function"><span class="keyword">public</span> AppClassLoader <span class="title">run</span><span class="params">()</span> </span>&#123;</span><br><span class="line">                    URL[] urls =</span><br><span class="line">                        (s == <span class="keyword">null</span>) ? <span class="keyword">new</span> URL[<span class="number">0</span>] : pathToURLs(path);</span><br><span class="line">                    <span class="keyword">return</span> <span class="keyword">new</span> AppClassLoader(urls, extcl); <span class="comment">// 创建AppClassLoader, 通过URL方式加载, 父类'ExtClassLoader'</span></span><br><span class="line">                &#125;</span><br><span class="line">            &#125;);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        AppClassLoader(URL[] urls, ClassLoader parent) &#123;</span><br><span class="line">            <span class="keyword">super</span>(urls, parent, factory);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+<li>从Launcher初始化过程看, 目前的类加载器已有<strong>ExtClassLoader</strong>和<strong>AppClassLoader</strong>, 我们可在Jvm启动时通过指定’-Djava.ext.dirs’,’-Djava.class.path’来修改<strong>ExtClassLoader</strong>和<strong>AppClassLoader</strong>加载文件的路径</li>
+<li>类初始化<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">abstract</span> <span class="class"><span class="keyword">class</span> <span class="title">ClassLoader</span> </span>&#123;</span><br><span class="line">    <span class="keyword">public</span> Class&lt;?&gt; loadClass(String name) <span class="keyword">throws</span> ClassNotFoundException &#123;</span><br><span class="line">        <span class="keyword">return</span> loadClass(name, <span class="keyword">false</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">protected</span> Class&lt;?&gt; loadClass(String name, <span class="keyword">boolean</span> resolve)</span><br><span class="line">        <span class="keyword">throws</span> ClassNotFoundException</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">synchronized</span> (getClassLoadingLock(name)) &#123;</span><br><span class="line">            <span class="comment">// 1. 查看是否已加载</span></span><br><span class="line">            Class&lt;?&gt; c = findLoadedClass(name);</span><br><span class="line">            <span class="keyword">if</span> (c == <span class="keyword">null</span>) &#123; <span class="comment">// 未加载</span></span><br><span class="line">                <span class="keyword">long</span> t0 = System.nanoTime();</span><br><span class="line">                <span class="keyword">try</span> &#123;</span><br><span class="line">                    <span class="keyword">if</span> (parent != <span class="keyword">null</span>) &#123; <span class="comment">// 若父类不为null, 委托父类加载</span></span><br><span class="line">                        c = parent.loadClass(name, <span class="keyword">false</span>);</span><br><span class="line">                    &#125; <span class="keyword">else</span> &#123; <span class="comment">// 父类为null, 委托Bootstrap加载(JNI)</span></span><br><span class="line">                        c = findBootstrapClassOrNull(name);</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125; <span class="keyword">catch</span> (ClassNotFoundException e) &#123;</span><br><span class="line">                    <span class="comment">// ClassNotFoundException thrown if class not found</span></span><br><span class="line">                    <span class="comment">// from the non-null parent class loader</span></span><br><span class="line">                &#125;</span><br><span class="line"></span><br><span class="line">                <span class="keyword">if</span> (c == <span class="keyword">null</span>) &#123; <span class="comment">// 父类中不存在, 从当前加载器中寻找</span></span><br><span class="line">                    <span class="comment">// If still not found, then invoke findClass in order</span></span><br><span class="line">                    <span class="comment">// to find the class.</span></span><br><span class="line">                    <span class="keyword">long</span> t1 = System.nanoTime();</span><br><span class="line">                    c = findClass(name);</span><br><span class="line"></span><br><span class="line">                    <span class="comment">// this is the defining class loader; record the stats</span></span><br><span class="line">                    sun.misc.PerfCounter.getParentDelegationTime().addTime(t1 - t0);</span><br><span class="line">                    sun.misc.PerfCounter.getFindClassTime().addElapsedTimeFrom(t1);</span><br><span class="line">                    sun.misc.PerfCounter.getFindClasses().increment();</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">if</span> (resolve) &#123; <span class="comment">// 是否解析</span></span><br><span class="line">                resolveClass(c);</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">return</span> c;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+<li>可以看到是先从已检测缓存中获取, 有则[解析]返回, 无则委托父类加载.<br><img src="http://image.smilelxy.cn/blog/images/jvm-class-load-extclass-to-top-dependent-graph.png" alt="虚拟机-类加载-ExtClassLoader-依赖"><br><img src="http://image.smilelxy.cn/blog/images/jvm-class-load-appclass-to-top-dependent-graph.png" alt="虚拟机-类加载-AppClassLoader-依赖"></li>
+<li>从依赖图来看, Jvm默认加载的两个类加载器继承ClassLoader, <strong>parent.loadClass(name, false)</strong>, 若子类没重写直接调用父类.<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Launcher</span> </span>&#123;</span><br><span class="line">    <span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">AppClassLoader</span> <span class="keyword">extends</span> <span class="title">URLClassLoader</span> </span>&#123;</span><br><span class="line">        <span class="keyword">public</span> Class&lt;?&gt; loadClass(String name, <span class="keyword">boolean</span> resolve)</span><br><span class="line">            <span class="keyword">throws</span> ClassNotFoundException</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="keyword">int</span> i = name.lastIndexOf(<span class="string">'.'</span>);</span><br><span class="line">            <span class="keyword">if</span> (i != -<span class="number">1</span>) &#123;</span><br><span class="line">                SecurityManager sm = System.getSecurityManager();</span><br><span class="line">                <span class="keyword">if</span> (sm != <span class="keyword">null</span>) &#123;</span><br><span class="line">                    sm.checkPackageAccess(name.substring(<span class="number">0</span>, i)); <span class="comment">// 检测文件路径是否允许访问</span></span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">return</span> (<span class="keyword">super</span>.loadClass(name, resolve));</span><br><span class="line">        &#125;        </span><br><span class="line">    &#125;        </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+<li>若parent不存在, 则调用<strong>findBootstrapClassOrNull(name)</strong>, 则说明除<strong>ExtClassLoader</strong>和<strong>AppClassLoader</strong>以外还有一个<strong>BootstrapClassLoader</strong>, 那为何初始化时没有看见呢…<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">abstract</span> <span class="class"><span class="keyword">class</span> <span class="title">ClassLoader</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> ClassLoader parent;</span><br><span class="line">    <span class="function"><span class="keyword">protected</span> <span class="title">ClassLoader</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">this</span>(checkCreateClassLoader(), getSystemClassLoader());</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">private</span> <span class="title">ClassLoader</span><span class="params">(Void unused, ClassLoader parent)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">this</span>.parent = parent;</span><br><span class="line">        <span class="keyword">if</span> (ParallelLoaders.isRegistered(<span class="keyword">this</span>.getClass())) &#123;</span><br><span class="line">            parallelLockMap = <span class="keyword">new</span> ConcurrentHashMap&lt;&gt;();</span><br><span class="line">            package2certs = <span class="keyword">new</span> ConcurrentHashMap&lt;&gt;();</span><br><span class="line">            domains =</span><br><span class="line">                Collections.synchronizedSet(<span class="keyword">new</span> HashSet&lt;ProtectionDomain&gt;());</span><br><span class="line">            assertionLock = <span class="keyword">new</span> Object();</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            <span class="comment">// no finer-grained lock; lock on the classloader instance</span></span><br><span class="line">            parallelLockMap = <span class="keyword">null</span>;</span><br><span class="line">            package2certs = <span class="keyword">new</span> Hashtable&lt;&gt;();</span><br><span class="line">            domains = <span class="keyword">new</span> HashSet&lt;&gt;();</span><br><span class="line">            assertionLock = <span class="keyword">this</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@CallerSensitive</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> ClassLoader <span class="title">getSystemClassLoader</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        initSystemClassLoader();</span><br><span class="line">        <span class="keyword">if</span> (scl == <span class="keyword">null</span>) &#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        SecurityManager sm = System.getSecurityManager();</span><br><span class="line">        <span class="keyword">if</span> (sm != <span class="keyword">null</span>) &#123;</span><br><span class="line">            checkClassLoaderPermission(scl, Reflection.getCallerClass());</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> scl;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">synchronized</span> <span class="keyword">void</span> <span class="title">initSystemClassLoader</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">if</span> (!sclSet) &#123;</span><br><span class="line">            <span class="keyword">if</span> (scl != <span class="keyword">null</span>)</span><br><span class="line">                <span class="keyword">throw</span> <span class="keyword">new</span> IllegalStateException(<span class="string">"recursive invocation"</span>);</span><br><span class="line">            sun.misc.Launcher l = sun.misc.Launcher.getLauncher();</span><br><span class="line">            <span class="keyword">if</span> (l != <span class="keyword">null</span>) &#123;</span><br><span class="line">                Throwable oops = <span class="keyword">null</span>;</span><br><span class="line">                scl = l.getClassLoader();</span><br><span class="line">                <span class="keyword">try</span> &#123;</span><br><span class="line">                    scl = AccessController.doPrivileged(</span><br><span class="line">                        <span class="keyword">new</span> SystemClassLoaderAction(scl));</span><br><span class="line">                &#125; <span class="keyword">catch</span> (PrivilegedActionException pae) &#123;</span><br><span class="line">                    oops = pae.getCause();</span><br><span class="line">                    <span class="keyword">if</span> (oops <span class="keyword">instanceof</span> InvocationTargetException) &#123;</span><br><span class="line">                        oops = oops.getCause();</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;</span><br><span class="line">                <span class="keyword">if</span> (oops != <span class="keyword">null</span>) &#123;</span><br><span class="line">                    <span class="keyword">if</span> (oops <span class="keyword">instanceof</span> Error) &#123;</span><br><span class="line">                        <span class="keyword">throw</span> (Error) oops;</span><br><span class="line">                    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                        <span class="comment">// wrap the exception</span></span><br><span class="line">                        <span class="keyword">throw</span> <span class="keyword">new</span> Error(oops);</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">            sclSet = <span class="keyword">true</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;    </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+<li>从上所得, BootStrap是在ClassLoader初始化时初始化<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">abstract</span> <span class="class"><span class="keyword">class</span> <span class="title">ClassLoader</span> </span>&#123;</span><br><span class="line">    <span class="keyword">private</span> Class&lt;?&gt; findBootstrapClassOrNull(String name)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">if</span> (!checkName(name)) <span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> findBootstrapClass(name);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">native</span> Class&lt;?&gt; findBootstrapClass(String name);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+<li>发现<strong>findBootstrapClass</strong>标有<strong>native</strong>, 底层实现使用C语言实现的, 所有无法看到java的实现</li>
+<li>若委托父类找不到, 则尝试从当前类加载器中 <strong>findClass(name)</strong> 加载<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">URLClassLoader</span> <span class="keyword">extends</span> <span class="title">SecureClassLoader</span> <span class="keyword">implements</span> <span class="title">Closeable</span> </span>&#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> URLClassPath ucp;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">protected</span> Class&lt;?&gt; findClass(<span class="keyword">final</span> String name)</span><br><span class="line">         <span class="keyword">throws</span> ClassNotFoundException</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            <span class="keyword">return</span> AccessController.doPrivileged(</span><br><span class="line">                <span class="keyword">new</span> PrivilegedExceptionAction&lt;Class&lt;?&gt;&gt;() &#123;</span><br><span class="line">                    <span class="keyword">public</span> Class&lt;?&gt; run() <span class="keyword">throws</span> ClassNotFoundException &#123;</span><br><span class="line">                        String path = name.replace(<span class="string">'.'</span>, <span class="string">'/'</span>).concat(<span class="string">".class"</span>); <span class="comment">// 拼装文件路径</span></span><br><span class="line">                        Resource res = ucp.getResource(path, <span class="keyword">false</span>); <span class="comment">// 从当前类加载器负责加载的路径中获取资源</span></span><br><span class="line">                        <span class="keyword">if</span> (res != <span class="keyword">null</span>) &#123;</span><br><span class="line">                            <span class="keyword">try</span> &#123;</span><br><span class="line">                                <span class="keyword">return</span> defineClass(name, res); <span class="comment">// 将资源转换为Class</span></span><br><span class="line">                            &#125; <span class="keyword">catch</span> (IOException e) &#123;</span><br><span class="line">                                <span class="keyword">throw</span> <span class="keyword">new</span> ClassNotFoundException(name, e);</span><br><span class="line">                            &#125;</span><br><span class="line">                        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                            <span class="keyword">throw</span> <span class="keyword">new</span> ClassNotFoundException(name);</span><br><span class="line">                        &#125;</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;, acc);</span><br><span class="line">        &#125; <span class="keyword">catch</span> (java.security.PrivilegedActionException pae) &#123;</span><br><span class="line">            <span class="keyword">throw</span> (ClassNotFoundException) pae.getException();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> Class&lt;?&gt; defineClass(String name, Resource res) <span class="keyword">throws</span> IOException &#123;</span><br><span class="line">        <span class="keyword">long</span> t0 = System.nanoTime();</span><br><span class="line">        <span class="keyword">int</span> i = name.lastIndexOf(<span class="string">'.'</span>);</span><br><span class="line">        URL url = res.getCodeSourceURL();</span><br><span class="line">        <span class="keyword">if</span> (i != -<span class="number">1</span>) &#123;</span><br><span class="line">            String pkgname = name.substring(<span class="number">0</span>, i);</span><br><span class="line">            <span class="comment">// 检测包是否已加载</span></span><br><span class="line">            Manifest man = res.getManifest(); <span class="comment">// 编译后类的相关属性(编译版本号...)</span></span><br><span class="line">            <span class="keyword">if</span> (getAndVerifyPackage(pkgname, man, url) == <span class="keyword">null</span>) &#123; <span class="comment">// 未加载</span></span><br><span class="line">                <span class="keyword">try</span> &#123;</span><br><span class="line">                    <span class="keyword">if</span> (man != <span class="keyword">null</span>) &#123;</span><br><span class="line">                        definePackage(pkgname, man, url);  <span class="comment">// 定义包</span></span><br><span class="line">                    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                        definePackage(pkgname, <span class="keyword">null</span>, <span class="keyword">null</span>, <span class="keyword">null</span>, <span class="keyword">null</span>, <span class="keyword">null</span>, <span class="keyword">null</span>, <span class="keyword">null</span>);</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125; <span class="keyword">catch</span> (IllegalArgumentException iae) &#123;</span><br><span class="line">                    <span class="comment">// parallel-capable class loaders: re-verify in case of a</span></span><br><span class="line">                    <span class="comment">// race condition</span></span><br><span class="line">                    <span class="keyword">if</span> (getAndVerifyPackage(pkgname, man, url) == <span class="keyword">null</span>) &#123;</span><br><span class="line">                        <span class="comment">// Should never happen</span></span><br><span class="line">                        <span class="keyword">throw</span> <span class="keyword">new</span> AssertionError(<span class="string">"Cannot find package "</span> +</span><br><span class="line">                                                 pkgname);</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">// Now read the class bytes and define the class</span></span><br><span class="line">        java.nio.ByteBuffer bb = res.getByteBuffer(); <span class="comment">// 转换为字节</span></span><br><span class="line">        <span class="keyword">if</span> (bb != <span class="keyword">null</span>) &#123;</span><br><span class="line">            <span class="comment">// Use (direct) ByteBuffer:</span></span><br><span class="line">            CodeSigner[] signers = res.getCodeSigners(); <span class="comment">// 资源签名</span></span><br><span class="line">            CodeSource cs = <span class="keyword">new</span> CodeSource(url, signers); <span class="comment">// 代码源</span></span><br><span class="line">            sun.misc.PerfCounter.getReadClassBytesTime().addElapsedTimeFrom(t0); <span class="comment">// 用来监控加载该资源消耗时间</span></span><br><span class="line">            <span class="keyword">return</span> defineClass(name, bb, cs); <span class="comment">// 转换为Class</span></span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            <span class="keyword">byte</span>[] b = res.getBytes();</span><br><span class="line">            <span class="comment">// must read certificates AFTER reading bytes.</span></span><br><span class="line">            CodeSigner[] signers = res.getCodeSigners();</span><br><span class="line">            CodeSource cs = <span class="keyword">new</span> CodeSource(url, signers);</span><br><span class="line">            sun.misc.PerfCounter.getReadClassBytesTime().addElapsedTimeFrom(t0);</span><br><span class="line">            <span class="keyword">return</span> defineClass(name, b, <span class="number">0</span>, b.length, cs);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;    </span><br><span class="line"></span><br><span class="line"></span><br><span class="line">&#125;    </span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">URLClassPath</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> Resource <span class="title">getResource</span><span class="params">(String name, <span class="keyword">boolean</span> check)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">if</span> (DEBUG) &#123;</span><br><span class="line">            System.err.println(<span class="string">"URLClassPath.getResource(\""</span> + name + <span class="string">"\")"</span>);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        Loader loader;</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; (loader = getLoader(i)) != <span class="keyword">null</span>; i++) &#123;</span><br><span class="line">            Resource res = loader.getResource(name, check);</span><br><span class="line">            <span class="keyword">if</span> (res != <span class="keyword">null</span>) &#123;</span><br><span class="line">                <span class="keyword">return</span> res;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">     <span class="function"><span class="keyword">private</span> <span class="keyword">synchronized</span> Loader <span class="title">getLoader</span><span class="params">(<span class="keyword">int</span> index)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">if</span> (closed) &#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line">        &#125;</span><br><span class="line">         <span class="comment">// Expand URL search path until the request can be satisfied</span></span><br><span class="line">         <span class="comment">// or the URL stack is empty.</span></span><br><span class="line">        <span class="keyword">while</span> (loaders.size() &lt; index + <span class="number">1</span>) &#123;</span><br><span class="line">            <span class="comment">// Pop the next URL from the URL stack</span></span><br><span class="line">            URL url;</span><br><span class="line">            <span class="keyword">synchronized</span> (urls) &#123;</span><br><span class="line">                <span class="keyword">if</span> (urls.empty()) &#123;</span><br><span class="line">                    <span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line">                &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                    url = urls.pop();</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="comment">// Skip this URL if it already has a Loader. (Loader</span></span><br><span class="line">            <span class="comment">// may be null in the case where URL has not been opened</span></span><br><span class="line">            <span class="comment">// but is referenced by a JAR index.)</span></span><br><span class="line">            String urlNoFragString = URLUtil.urlNoFragString(url);</span><br><span class="line">            <span class="keyword">if</span> (lmap.containsKey(urlNoFragString)) &#123;</span><br><span class="line">                <span class="keyword">continue</span>;</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="comment">// Otherwise, create a new Loader for the URL.</span></span><br><span class="line">            Loader loader;</span><br><span class="line">            <span class="keyword">try</span> &#123;</span><br><span class="line">                loader = getLoader(url);</span><br><span class="line">                <span class="comment">// If the loader defines a local class path then add the</span></span><br><span class="line">                <span class="comment">// URLs to the list of URLs to be opened.</span></span><br><span class="line">                URL[] urls = loader.getClassPath();</span><br><span class="line">                <span class="keyword">if</span> (urls != <span class="keyword">null</span>) &#123;</span><br><span class="line">                    push(urls);</span><br><span class="line">                &#125;</span><br><span class="line">            &#125; <span class="keyword">catch</span> (IOException e) &#123;</span><br><span class="line">                <span class="comment">// Silently ignore for now...</span></span><br><span class="line">                <span class="keyword">continue</span>;</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="comment">// Finally, add the Loader to the search path.</span></span><br><span class="line">            loaders.add(loader);</span><br><span class="line">            lmap.put(urlNoFragString, loader);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> loaders.get(index);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/*</span></span><br><span class="line"><span class="comment">     * Returns the Loader for the specified base URL.</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="function"><span class="keyword">private</span> Loader <span class="title">getLoader</span><span class="params">(<span class="keyword">final</span> URL url)</span> <span class="keyword">throws</span> IOException </span>&#123;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            <span class="keyword">return</span> java.security.AccessController.doPrivileged(</span><br><span class="line">                <span class="keyword">new</span> java.security.PrivilegedExceptionAction&lt;Loader&gt;() &#123;</span><br><span class="line">                <span class="function"><span class="keyword">public</span> Loader <span class="title">run</span><span class="params">()</span> <span class="keyword">throws</span> IOException </span>&#123;</span><br><span class="line">                    String file = url.getFile();</span><br><span class="line">                    <span class="keyword">if</span> (file != <span class="keyword">null</span> &amp;&amp; file.endsWith(<span class="string">"/"</span>)) &#123;</span><br><span class="line">                        <span class="keyword">if</span> (<span class="string">"file"</span>.equals(url.getProtocol())) &#123;</span><br><span class="line">                            <span class="keyword">return</span> <span class="keyword">new</span> FileLoader(url);</span><br><span class="line">                        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                            <span class="keyword">return</span> <span class="keyword">new</span> Loader(url);</span><br><span class="line">                        &#125;</span><br><span class="line">                    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                        <span class="keyword">return</span> <span class="keyword">new</span> JarLoader(url, jarHandler, lmap);</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;);</span><br><span class="line">        &#125; <span class="keyword">catch</span> (java.security.PrivilegedActionException pae) &#123;</span><br><span class="line">            <span class="keyword">throw</span> (IOException)pae.getException();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;    </span><br><span class="line"></span><br><span class="line">    <span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">JarLoader</span> <span class="keyword">extends</span> <span class="title">Loader</span> </span>&#123;</span><br><span class="line">        <span class="function">Resource <span class="title">getResource</span><span class="params">(<span class="keyword">final</span> String name, <span class="keyword">boolean</span> check)</span> </span>&#123;</span><br><span class="line">            <span class="keyword">if</span> (metaIndex != <span class="keyword">null</span>) &#123;</span><br><span class="line">                <span class="keyword">if</span> (!metaIndex.mayContain(name)) &#123;</span><br><span class="line">                    <span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            <span class="keyword">try</span> &#123;</span><br><span class="line">                ensureOpen();</span><br><span class="line">            &#125; <span class="keyword">catch</span> (IOException e) &#123;</span><br><span class="line">                <span class="keyword">throw</span> <span class="keyword">new</span> InternalError(e);</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">final</span> JarEntry entry = jar.getJarEntry(name);</span><br><span class="line">            <span class="keyword">if</span> (entry != <span class="keyword">null</span>)</span><br><span class="line">                <span class="keyword">return</span> checkResource(name, check, entry);</span><br><span class="line"></span><br><span class="line">            <span class="keyword">if</span> (index == <span class="keyword">null</span>)</span><br><span class="line">                <span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line"></span><br><span class="line">            HashSet&lt;String&gt; visited = <span class="keyword">new</span> HashSet&lt;String&gt;();</span><br><span class="line">            <span class="keyword">return</span> getResource(name, check, visited);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">ensureOpen</span><span class="params">()</span> <span class="keyword">throws</span> IOException </span>&#123;</span><br><span class="line">            <span class="keyword">if</span> (jar == <span class="keyword">null</span>) &#123;</span><br><span class="line">                <span class="keyword">try</span> &#123;</span><br><span class="line">                    java.security.AccessController.doPrivileged(</span><br><span class="line">                        <span class="keyword">new</span> java.security.PrivilegedExceptionAction&lt;Void&gt;() &#123;</span><br><span class="line">                            <span class="function"><span class="keyword">public</span> Void <span class="title">run</span><span class="params">()</span> <span class="keyword">throws</span> IOException </span>&#123;</span><br><span class="line">                                <span class="keyword">if</span> (DEBUG) &#123;</span><br><span class="line">                                    System.err.println(<span class="string">"Opening "</span> + csu);</span><br><span class="line">                                    Thread.dumpStack();</span><br><span class="line">                                &#125;</span><br><span class="line"></span><br><span class="line">                                jar = getJarFile(csu);</span><br><span class="line">                                index = JarIndex.getJarIndex(jar, metaIndex);</span><br><span class="line">                                <span class="keyword">if</span> (index != <span class="keyword">null</span>) &#123;</span><br><span class="line">                                    String[] jarfiles = index.getJarFiles();</span><br><span class="line">                                <span class="comment">// Add all the dependent URLs to the lmap so that loaders</span></span><br><span class="line">                                <span class="comment">// will not be created for them by URLClassPath.getLoader(int)</span></span><br><span class="line">                                <span class="comment">// if the same URL occurs later on the main class path.  We set</span></span><br><span class="line">                                <span class="comment">// Loader to null here to avoid creating a Loader for each</span></span><br><span class="line">                                <span class="comment">// URL until we actually need to try to load something from them.</span></span><br><span class="line">                                    <span class="keyword">for</span>(<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; jarfiles.length; i++) &#123;</span><br><span class="line">                                        <span class="keyword">try</span> &#123;</span><br><span class="line">                                            URL jarURL = <span class="keyword">new</span> URL(csu, jarfiles[i]);</span><br><span class="line">                                            <span class="comment">// If a non-null loader already exists, leave it alone.</span></span><br><span class="line">                                            String urlNoFragString = URLUtil.urlNoFragString(jarURL);</span><br><span class="line">                                            <span class="keyword">if</span> (!lmap.containsKey(urlNoFragString)) &#123;</span><br><span class="line">                                                lmap.put(urlNoFragString, <span class="keyword">null</span>);</span><br><span class="line">                                            &#125;</span><br><span class="line">                                        &#125; <span class="keyword">catch</span> (MalformedURLException e) &#123;</span><br><span class="line">                                            <span class="keyword">continue</span>;</span><br><span class="line">                                        &#125;</span><br><span class="line">                                    &#125;</span><br><span class="line">                                &#125;</span><br><span class="line">                                <span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line">                            &#125;</span><br><span class="line">                        &#125;</span><br><span class="line">                    );</span><br><span class="line">                &#125; <span class="keyword">catch</span> (java.security.PrivilegedActionException pae) &#123;</span><br><span class="line">                    <span class="keyword">throw</span> (IOException)pae.getException();</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        ....</span><br><span class="line">    &#125;        </span><br><span class="line">&#125; </span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">SecureClassLoader</span> <span class="keyword">extends</span> <span class="title">ClassLoader</span> </span>&#123;</span><br><span class="line">    <span class="keyword">protected</span> <span class="keyword">final</span> Class&lt;?&gt; defineClass(String name,</span><br><span class="line">                                         <span class="keyword">byte</span>[] b, <span class="keyword">int</span> off, <span class="keyword">int</span> len,</span><br><span class="line">                                         CodeSource cs)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">return</span> defineClass(name, b, off, len, getProtectionDomain(cs));</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">protected</span> <span class="keyword">final</span> Class&lt;?&gt; defineClass(String name, <span class="keyword">byte</span>[] b, <span class="keyword">int</span> off, <span class="keyword">int</span> len,</span><br><span class="line">                                         ProtectionDomain protectionDomain)</span><br><span class="line">        <span class="keyword">throws</span> ClassFormatError</span><br><span class="line">    &#123;</span><br><span class="line">        protectionDomain = preDefineClass(name, protectionDomain);</span><br><span class="line">        String source = defineClassSourceLocation(protectionDomain);</span><br><span class="line">        Class&lt;?&gt; c = defineClass1(name, b, off, len, protectionDomain, source);</span><br><span class="line">        postDefineClass(c, protectionDomain);</span><br><span class="line">        <span class="keyword">return</span> c;</span><br><span class="line">    &#125;    </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+<h4 id="结论"><a href="#结论" class="headerlink" title="结论"></a>结论</h4><ul>
+<li>从运行轨迹来看, 可以验证Jvm是<strong>按需加载</strong>Class.</li>
+<li>Jvm默认的类加载器有 <strong>AppClassLoader</strong> -&gt; <strong>ExtClassLoader</strong> -&gt; <strong>BootstrapClassLoader</strong></li>
+</ul>
+<h3 id="破坏双亲委托机制"><a href="#破坏双亲委托机制" class="headerlink" title="破坏双亲委托机制"></a>破坏双亲委托机制</h3><h4 id="缘由"><a href="#缘由" class="headerlink" title="缘由"></a>缘由</h4><ul>
+<li>受加载顺序的约束, 只要父类中含有, 子加载器中的类将无法被加载. 而特殊场景则需要子加载器加载<ul>
+<li>SPI机制(例: JDBC)</li>
+</ul>
+</li>
+<li>受加载顺序的影响, 保证加载一个相同的Class类库, 但特殊场景下需要加载不同版本的类库<ul>
+<li>(例: Tomcat)</li>
+</ul>
+</li>
+</ul>
+<h4 id="案例"><a href="#案例" class="headerlink" title="案例"></a>案例</h4><h5 id="MySQL"><a href="#MySQL" class="headerlink" title="MySQL"></a>MySQL</h5><ul>
+<li>JDBC的核心在Jdk的rt.jar中, 只是提供了统一的接口, 具体实现是各大厂商实现的. 若按照双亲委托的顺序, Jvm是无法加载各大厂商具体实现jar的.</li>
+<li>Driver接口定义在JDK中, 实现由各个数据库的服务商来提供, DriverManager(JDK提供）要加载各个实现了Driver接口的实现类, 然后进行管理. DriverManager由BootStrap类加载器加载, 而其实现是由各服务商提供的, 这时就需要委托子类来加载Driver实现了.</li>
+</ul>
+<h6 id="Java代码-1"><a href="#Java代码-1" class="headerlink" title="Java代码"></a>Java代码</h6><figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">JdbcClassLoaderTest</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">        Enumeration&lt;Driver&gt; drivers = DriverManager.getDrivers();</span><br><span class="line">        <span class="keyword">while</span> (drivers.hasMoreElements()) &#123;</span><br><span class="line">            Driver driver = drivers.nextElement();</span><br><span class="line">            System.out.println(String.format(<span class="string">"driver: %s, classLoader: %s"</span>, driver.getClass(), driver.getClass().getClassLoader().getClass()));</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        System.err.println(String.format(<span class="string">"driver: %s, classLoader: %s"</span>, DriverManager<span class="class">.<span class="keyword">class</span>,</span></span><br><span class="line"><span class="class">            <span class="title">Objects</span>.<span class="title">nonNull</span>(<span class="title">DriverManager</span>.<span class="title">class</span>.<span class="title">getClassLoader</span>()) </span></span><br><span class="line"><span class="class">                ? <span class="title">DriverManager</span>.<span class="title">class</span>.<span class="title">getClassLoader</span>().<span class="title">getClass</span>()</span></span><br><span class="line">                : DriverManager.class.getClassLoader()));</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h6 id="结果展示"><a href="#结果展示" class="headerlink" title="结果展示"></a>结果展示</h6><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">driver: class com.mysql.jdbc.Driver, classLoader: class sun.misc.Launcher$AppClassLoader</span><br><span class="line">driver: class com.mysql.fabric.jdbc.FabricMySQLDriver, classLoader: class sun.misc.Launcher$AppClassLoader</span><br><span class="line">driver: class com.alibaba.druid.proxy.DruidDriver, classLoader: class sun.misc.Launcher$AppClassLoader</span><br><span class="line">driver: class com.alibaba.druid.mock.MockDriver, classLoader: class sun.misc.Launcher$AppClassLoader</span><br><span class="line">driver: class java.sql.DriverManager, classLoader: null</span><br></pre></td></tr></table></figure>
+<h6 id="分析-1"><a href="#分析-1" class="headerlink" title="分析"></a>分析</h6><figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">DriverManager</span> </span>&#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> <span class="keyword">static</span> CopyOnWriteArrayList&lt;DriverInfo&gt; registeredDrivers = <span class="keyword">new</span> CopyOnWriteArrayList&lt;&gt;();</span><br><span class="line"></span><br><span class="line">     <span class="keyword">static</span> &#123;</span><br><span class="line">        loadInitialDrivers(); <span class="comment">// 1. 初始化Drivers</span></span><br><span class="line">        println(<span class="string">"JDBC DriverManager initialized"</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">loadInitialDrivers</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        String drivers;</span><br><span class="line">        <span class="comment">// 2. Jvm启动时指定驱动实现(多个驱动可用':'分隔), 将在下面采用BootStrapClassLoader加载.</span></span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            drivers = AccessController.doPrivileged(<span class="keyword">new</span> PrivilegedAction&lt;String&gt;() &#123;</span><br><span class="line">                <span class="function"><span class="keyword">public</span> String <span class="title">run</span><span class="params">()</span> </span>&#123;</span><br><span class="line">                    <span class="keyword">return</span> System.getProperty(<span class="string">"jdbc.drivers"</span>);</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;);</span><br><span class="line">        &#125; <span class="keyword">catch</span> (Exception ex) &#123;</span><br><span class="line">            drivers = <span class="keyword">null</span>;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 通过SPI机制加载(ServiceLoader.load(Driver.class))</span></span><br><span class="line">        AccessController.doPrivileged(<span class="keyword">new</span> PrivilegedAction&lt;Void&gt;() &#123;</span><br><span class="line">            <span class="function"><span class="keyword">public</span> Void <span class="title">run</span><span class="params">()</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">                ServiceLoader&lt;Driver&gt; loadedDrivers = ServiceLoader.load(Driver<span class="class">.<span class="keyword">class</span>)</span>; <span class="comment">// 3. SPI获取各厂商实现(懒加载)</span></span><br><span class="line">                Iterator&lt;Driver&gt; driversIterator = loadedDrivers.iterator(); <span class="comment">// 4. 转换为Iterator</span></span><br><span class="line"></span><br><span class="line">                <span class="comment">/* Load these drivers, so that they can be instantiated.</span></span><br><span class="line"><span class="comment">                 * It may be the case that the driver class may not be there</span></span><br><span class="line"><span class="comment">                 * i.e. there may be a packaged driver with the service class</span></span><br><span class="line"><span class="comment">                 * as implementation of java.sql.Driver but the actual class</span></span><br><span class="line"><span class="comment">                 * may be missing. In that case a java.util.ServiceConfigurationError</span></span><br><span class="line"><span class="comment">                 * will be thrown at runtime by the VM trying to locate</span></span><br><span class="line"><span class="comment">                 * and load the service.</span></span><br><span class="line"><span class="comment">                 *</span></span><br><span class="line"><span class="comment">                 * Adding a try catch block to catch those runtime errors</span></span><br><span class="line"><span class="comment">                 * if driver not available in classpath but it's</span></span><br><span class="line"><span class="comment">                 * packaged as service and that service is there in classpath.</span></span><br><span class="line"><span class="comment">                 */</span></span><br><span class="line">                <span class="keyword">try</span>&#123;</span><br><span class="line">                    <span class="keyword">while</span>(driversIterator.hasNext()) &#123; <span class="comment">// 5. 是否有元素(执行SPI解析)</span></span><br><span class="line">                        driversIterator.next(); <span class="comment">// 6. 加载文件(Class.forName)</span></span><br><span class="line">                    &#125;</span><br><span class="line">                &#125; <span class="keyword">catch</span>(Throwable t) &#123;</span><br><span class="line">                <span class="comment">// Do nothing</span></span><br><span class="line">                &#125;</span><br><span class="line">                <span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;);</span><br><span class="line"></span><br><span class="line">        println(<span class="string">"DriverManager.initialize: jdbc.drivers = "</span> + drivers);</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (drivers == <span class="keyword">null</span> || drivers.equals(<span class="string">""</span>)) &#123;</span><br><span class="line">            <span class="keyword">return</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        String[] driversList = drivers.split(<span class="string">":"</span>);</span><br><span class="line">        println(<span class="string">"number of Drivers:"</span> + driversList.length);</span><br><span class="line">        <span class="keyword">for</span> (String aDriver : driversList) &#123;</span><br><span class="line">            <span class="keyword">try</span> &#123;</span><br><span class="line">                println(<span class="string">"DriverManager.Initialize: loading "</span> + aDriver);</span><br><span class="line">                Class.forName(aDriver, <span class="keyword">true</span>,</span><br><span class="line">                        ClassLoader.getSystemClassLoader());</span><br><span class="line">            &#125; <span class="keyword">catch</span> (Exception ex) &#123;</span><br><span class="line">                println(<span class="string">"DriverManager.Initialize: load failed: "</span> + ex);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">final</span> <span class="class"><span class="keyword">class</span> <span class="title">ServiceLoader</span>&lt;<span class="title">S</span>&gt; <span class="keyword">implements</span> <span class="title">Iterable</span>&lt;<span class="title">S</span>&gt; </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> String PREFIX = <span class="string">"META-INF/services/"</span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// The class or interface representing the service being loaded</span></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> Class&lt;S&gt; service;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 用于加载对象的类加载器</span></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> ClassLoader loader;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 加载对象时的权限上下文</span></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> AccessControlContext acc;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 缓存</span></span><br><span class="line">    <span class="keyword">private</span> LinkedHashMap&lt;String,S&gt; providers = <span class="keyword">new</span> LinkedHashMap&lt;&gt;();</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 具体实现的迭代器(懒迭代)</span></span><br><span class="line">    <span class="keyword">private</span> LazyIterator lookupIterator;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">    * 使用当前线程类加载器加载具体实现</span></span><br><span class="line"><span class="comment">    */</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> &lt;S&gt; <span class="function">ServiceLoader&lt;S&gt; <span class="title">load</span><span class="params">(Class&lt;S&gt; service)</span> </span>&#123;</span><br><span class="line">        ClassLoader cl = Thread.currentThread().getContextClassLoader(); <span class="comment">// 3.1 获取当前线程类加载器</span></span><br><span class="line">        <span class="keyword">return</span> ServiceLoader.load(service, cl); <span class="comment">// 3.2 使用当前线程类加载读取具体实现(这里就是**破坏双亲委托机制**的地方)</span></span><br><span class="line">    &#125;   </span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> &lt;S&gt; <span class="function">ServiceLoader&lt;S&gt; <span class="title">load</span><span class="params">(Class&lt;S&gt; service, ClassLoader loader)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">new</span> ServiceLoader&lt;&gt;(service, loader); <span class="comment">// 3.2.1 创建对象</span></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">private</span> <span class="title">ServiceLoader</span><span class="params">(Class&lt;S&gt; svc, ClassLoader cl)</span> </span>&#123;</span><br><span class="line">        service = Objects.requireNonNull(svc, <span class="string">"Service interface cannot be null"</span>); </span><br><span class="line">        loader = (cl == <span class="keyword">null</span>) ? ClassLoader.getSystemClassLoader() : cl; <span class="comment">// 3.2.1.1 若没有提供类加载器, 则使用BootStrapClassLoader类加载器</span></span><br><span class="line">        acc = (System.getSecurityManager() != <span class="keyword">null</span>) ? AccessController.getContext() : <span class="keyword">null</span>; <span class="comment">// 3.2.1.2 权限上下文</span></span><br><span class="line">        reload(); <span class="comment">// 3.2.1.3 刷新缓存, 新建迭代器</span></span><br><span class="line">    &#125; </span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">reload</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        providers.clear(); <span class="comment">// 3.2.1.3.1 刷新缓存</span></span><br><span class="line">        lookupIterator = <span class="keyword">new</span> LazyIterator(service, loader); <span class="comment">// 3.2.1.3.2 新建迭代器</span></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">   <span class="comment">/**</span></span><br><span class="line"><span class="comment">    * 封装迭代器</span></span><br><span class="line"><span class="comment">    */</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> Iterator&lt;S&gt; <span class="title">iterator</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">new</span> Iterator&lt;S&gt;() &#123; <span class="comment">// 4.1 转换为迭代器</span></span><br><span class="line"></span><br><span class="line">            Iterator&lt;Map.Entry&lt;String,S&gt;&gt; knownProviders</span><br><span class="line">                = providers.entrySet().iterator();</span><br><span class="line"></span><br><span class="line">            <span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">hasNext</span><span class="params">()</span> </span>&#123; </span><br><span class="line">                <span class="keyword">if</span> (knownProviders.hasNext()) <span class="comment">// 5.1 已知提供者是否存在元素</span></span><br><span class="line">                    <span class="keyword">return</span> <span class="keyword">true</span>;</span><br><span class="line">                <span class="keyword">return</span> lookupIterator.hasNext(); <span class="comment">// 5.2 懒迭代中是否存在</span></span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            <span class="function"><span class="keyword">public</span> S <span class="title">next</span><span class="params">()</span> </span>&#123;</span><br><span class="line">                <span class="keyword">if</span> (knownProviders.hasNext()) <span class="comment">// 6.1 已知提供者是否存在元素</span></span><br><span class="line">                    <span class="keyword">return</span> knownProviders.next().getValue();</span><br><span class="line">                <span class="keyword">return</span> lookupIterator.next(); <span class="comment">// 6.2 懒迭代中获取下一个元素</span></span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">remove</span><span class="params">()</span> </span>&#123;</span><br><span class="line">                <span class="keyword">throw</span> <span class="keyword">new</span> UnsupportedOperationException();</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">        &#125;;</span><br><span class="line">    &#125;   </span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="class"><span class="keyword">class</span> <span class="title">LazyIterator</span> <span class="keyword">implements</span> <span class="title">Iterator</span>&lt;<span class="title">S</span>&gt; </span>&#123;</span><br><span class="line"></span><br><span class="line">        Class&lt;S&gt; service;</span><br><span class="line">        ClassLoader loader;</span><br><span class="line">        Enumeration&lt;URL&gt; configs = <span class="keyword">null</span>;</span><br><span class="line">        Iterator&lt;String&gt; pending = <span class="keyword">null</span>;</span><br><span class="line">        String nextName = <span class="keyword">null</span>;</span><br><span class="line"></span><br><span class="line">        <span class="function"><span class="keyword">private</span> <span class="title">LazyIterator</span><span class="params">(Class&lt;S&gt; service, ClassLoader loader)</span> </span>&#123;</span><br><span class="line">            <span class="keyword">this</span>.service = service; <span class="comment">// 3.2.1.3.2.1 将要加载的接口</span></span><br><span class="line">            <span class="keyword">this</span>.loader = loader; <span class="comment">// 3.2.1.3.2.2 类加载器</span></span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="function"><span class="keyword">private</span> <span class="keyword">boolean</span> <span class="title">hasNextService</span><span class="params">()</span> </span>&#123;</span><br><span class="line">            <span class="keyword">if</span> (nextName != <span class="keyword">null</span>) &#123; <span class="comment">// 5.2.2.1 加载实现的接口名称</span></span><br><span class="line">                <span class="keyword">return</span> <span class="keyword">true</span>;</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">if</span> (configs == <span class="keyword">null</span>) &#123;</span><br><span class="line">                <span class="keyword">try</span> &#123;</span><br><span class="line">                    String fullName = PREFIX + service.getName(); <span class="comment">// 5.2.2.2 SPI读取文件的路径 META-INF/services/java.sql.Driver</span></span><br><span class="line">                    <span class="keyword">if</span> (loader == <span class="keyword">null</span>)</span><br><span class="line">                        configs = ClassLoader.getSystemResources(fullName);</span><br><span class="line">                    <span class="keyword">else</span></span><br><span class="line">                        configs = loader.getResources(fullName); <span class="comment">// 5.2.2.3 类加载器加载资源 ClassLoader#getResources</span></span><br><span class="line">                &#125; <span class="keyword">catch</span> (IOException x) &#123;</span><br><span class="line">                    fail(service, <span class="string">"Error locating configuration files"</span>, x);</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">while</span> ((pending == <span class="keyword">null</span>) || !pending.hasNext()) &#123;</span><br><span class="line">                <span class="keyword">if</span> (!configs.hasMoreElements()) &#123;</span><br><span class="line">                    <span class="keyword">return</span> <span class="keyword">false</span>;</span><br><span class="line">                &#125;</span><br><span class="line">                pending = parse(service, configs.nextElement()); <span class="comment">// 5.2.2.4 解析URL元素获取实现名称s(com.mysql.jdbc.Driver, com.mysql.fabric.jdbc.FabricMySQLDriver)     </span></span><br><span class="line">            &#125;</span><br><span class="line">            nextName = pending.next(); <span class="comment">// 5.2.2.5 下个元素名称</span></span><br><span class="line">            <span class="keyword">return</span> <span class="keyword">true</span>;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="function"><span class="keyword">private</span> S <span class="title">nextService</span><span class="params">()</span> </span>&#123;</span><br><span class="line">            <span class="keyword">if</span> (!hasNextService()) <span class="comment">// 6.2.2.1 是否存在具体实现</span></span><br><span class="line">                <span class="keyword">throw</span> <span class="keyword">new</span> NoSuchElementException();</span><br><span class="line">            String cn = nextName; <span class="comment">// 6.2.2.2 (5.2.2.5 缓存的数据)</span></span><br><span class="line">            nextName = <span class="keyword">null</span>;</span><br><span class="line">            Class&lt;?&gt; c = <span class="keyword">null</span>;</span><br><span class="line">            <span class="keyword">try</span> &#123;</span><br><span class="line">                c = Class.forName(cn, <span class="keyword">false</span>, loader); <span class="comment">// 6.2.2.3 加载实现</span></span><br><span class="line">            &#125; <span class="keyword">catch</span> (ClassNotFoundException x) &#123;</span><br><span class="line">                fail(service,</span><br><span class="line">                     <span class="string">"Provider "</span> + cn + <span class="string">" not found"</span>);</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">if</span> (!service.isAssignableFrom(c)) &#123; <span class="comment">// 6.2.2.4 SPI接口与 加载的类或超类是否相同</span></span><br><span class="line">                fail(service,</span><br><span class="line">                     <span class="string">"Provider "</span> + cn  + <span class="string">" not a subtype"</span>);</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">try</span> &#123;</span><br><span class="line">                S p = service.cast(c.newInstance()); <span class="comment">// 6.2.2.5 强行转换为SPI接口</span></span><br><span class="line">                providers.put(cn, p); <span class="comment">// 6.2.2.6 缓存</span></span><br><span class="line">                <span class="keyword">return</span> p;</span><br><span class="line">            &#125; <span class="keyword">catch</span> (Throwable x) &#123;</span><br><span class="line">                fail(service,</span><br><span class="line">                     <span class="string">"Provider "</span> + cn + <span class="string">" could not be instantiated"</span>,</span><br><span class="line">                     x);</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> Error();          <span class="comment">// This cannot happen</span></span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">hasNext</span><span class="params">()</span> </span>&#123;</span><br><span class="line">            <span class="keyword">if</span> (acc == <span class="keyword">null</span>) &#123; <span class="comment">// 5.2.1 权限上下文是否为null</span></span><br><span class="line">                <span class="keyword">return</span> hasNextService(); <span class="comment">// 5.2.2 真正执行SPI解析</span></span><br><span class="line">            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                PrivilegedAction&lt;Boolean&gt; action = <span class="keyword">new</span> PrivilegedAction&lt;Boolean&gt;() &#123;</span><br><span class="line">                    <span class="function"><span class="keyword">public</span> Boolean <span class="title">run</span><span class="params">()</span> </span>&#123; <span class="keyword">return</span> hasNextService(); &#125;</span><br><span class="line">                &#125;;</span><br><span class="line">                <span class="keyword">return</span> AccessController.doPrivileged(action, acc);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="function"><span class="keyword">public</span> S <span class="title">next</span><span class="params">()</span> </span>&#123;</span><br><span class="line">            <span class="keyword">if</span> (acc == <span class="keyword">null</span>) &#123; <span class="comment">// 6.2.1 权限上下文是否为null</span></span><br><span class="line">                <span class="keyword">return</span> nextService(); <span class="comment">// 6.2.2 类加载</span></span><br><span class="line">            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                PrivilegedAction&lt;S&gt; action = <span class="keyword">new</span> PrivilegedAction&lt;S&gt;() &#123;</span><br><span class="line">                    <span class="function"><span class="keyword">public</span> S <span class="title">run</span><span class="params">()</span> </span>&#123; <span class="keyword">return</span> nextService(); &#125;</span><br><span class="line">                &#125;;</span><br><span class="line">                <span class="keyword">return</span> AccessController.doPrivileged(action, acc);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">remove</span><span class="params">()</span> </span>&#123;</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> UnsupportedOperationException();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><img src="http://image.smilelxy.cn/blog/images/jvm-class-load-spi-mysql.png" alt="虚拟机-类加载-SPI-MySQL"><br><figure class="highlight java"><table><tr><td class="code"><pre><span class="line">com.mysql.jdbc.Driver</span><br><span class="line">com.mysql.fabric.jdbc.FabricMySQLDriver</span><br></pre></td></tr></table></figure></p>
+<h6 id="结论-1"><a href="#结论-1" class="headerlink" title="结论"></a>结论</h6><ul>
+<li>从 3.2 来看, SPI机制采用当前线程的类加载器来加载实现, 这样就破坏双亲委托机制</li>
+</ul>
+<h5 id="Tomcat"><a href="#Tomcat" class="headerlink" title="Tomcat"></a>Tomcat</h5><h6 id="说明"><a href="#说明" class="headerlink" title="说明"></a>说明</h6><ul>
+<li>因本地已没Tomcat的源码, 看下别人的分享吧..</li>
+<li><a href="https://blog.csdn.net/sinat_34976604/article/details/86709870">Tomcat的类加载机制</a></li>
+</ul>
+<h3 id="引用"><a href="#引用" class="headerlink" title="引用"></a>引用</h3><ul>
+<li><a href="https://www.cnblogs.com/joemsu/p/9310226.html">浅谈双亲委派和破坏双亲委派</a></li>
+<li><a href="https://blog.csdn.net/briblue/article/details/54973413">超详细java中的ClassLoader详解</a></li>
+<li><a href="https://blog.csdn.net/sinat_34976604/article/details/86723663">双亲委派模式破坏-JDBC</a></li>
+</ul>
+
+            
+        </div>
+        
+    </div>
+    
+    
+    <div class="copyright">
+        <p><span>本文标题:</span><a href="/2019/jvm-class-loader-mechanism/">JVM类加载机制</a></p>
+        <p><span>文章作者:</span><a href="/" title="回到主页">水云游</a></p>
+        <p><span>发布时间:</span>2019-11-20, 00:00:00</p>
+        <p><span>最后更新:</span>2021-05-28, 01:24:28</p>
+        <p>
+            <span>原始链接:</span><a class="post-url" href="/2019/jvm-class-loader-mechanism/" title="JVM类加载机制">https://blog.smilelxy.cn/2019/jvm-class-loader-mechanism/</a>
+            <span class="copy-path" data-clipboard-text="原文: https://blog.smilelxy.cn/2019/jvm-class-loader-mechanism/　　作者: 水云游" title="点击复制文章链接"><i class="fa fa-clipboard"></i></span>
+            <script> var clipboard = new Clipboard('.copy-path'); </script>
+        </p>
+        <p>
+            <span>许可协议:</span><i class="fa fa-creative-commons"></i> <a rel="license" href="http://creativecommons.org/licenses/by-nc-sa/4.0/" title="CC BY-NC-SA 4.0 International" target = "_blank">"署名-非商用-相同方式共享"</a> 转载请保留原文链接及作者。
+        </p>
+    </div>
+
+
+
+    <nav id="article-nav">
+        
+            <div id="article-nav-newer" class="article-nav-title">
+                <a href="/2019/jvm-running-data-area/">
+                    Jvm运行时数据区
+                </a>
+            </div>
+        
+        
+            <div id="article-nav-older" class="article-nav-title">
+                <a href="/2019/framework-distributed-transaction/">
+                    分布式事务总结
+                </a>
+            </div>
+        
+    </nav>
+
+    
+    <script>
+
+        function getPgjs() {
+            var agent = navigator.userAgent.toLowerCase();
+            var res = agent.match(/android/);
+            if (res == "android")
+                return res;
+            res = agent.match(/iphone/);
+            if (res == "iphone")
+                return "ios";
+            res = agent.match(/ipad/);
+            if (res == "ipad")
+                return "ios";
+            res = agent.match(/windows/);
+            if (res == "windows")
+                return "wp";
+            return "pc";
+        }
+
+        function loadImage(id) {
+            var page = window.location.pathname
+            if (page.indexOf("about") !== -1) {
+                return;
+            }
+//            var result = getPgjs();
+//            if(result=="wp"){
+//                $(".fengmian").hide();
+//                console.log(result);
+//                return;
+//            }
+            var backgroundnum = 40;
+            var randomIndex = Math.ceil(Math.random() * backgroundnum);
+            var result = randomIndex + "?version=" + (new Date() / 1000);
+            var backgroundimg = "http://image.smilelxy.cn/blog/abridge/bg-number.jpg".replace(/number/gi, randomIndex);
+            var key = "#" + id;
+            $(key).attr("src", backgroundimg);
+            $(".fengmian").show();
+        }
+
+        (function () {
+            var page = window.location.pathname
+            if (page.indexOf("about") !== -1) {
+                console.log(page)
+                $(".fenagmian").hide();
+//                $("#comments").remove();
+            }
+        })()
+    </script>
+</article>
+<!-- 代码1：放在页面需要展示的位置  -->
+<!-- 如果您配置过sourceid，建议在div标签中配置sourceid、cid(分类id)，没有请忽略  -->
+<!--<div id="cyReward" role="cylabs" data-use="reward" style="margin-left: 45%" ></div>-->
+<!--<div id="cyEmoji" role="cylabs" data-use="emoji"></div>-->
+
+
+<!--<script>-->
+<!--(function(){-->
+<!--var path = window.location.pathname;-->
+<!--if (path ==="/" || path=== undefined || path === null || path.indexOf("page") !== -1){-->
+<!--$("#cyReward").remove();-->
+<!--$("#cyEmoji").remove();-->
+<!--}-->
+<!--})()-->
+
+
+<!--</script>-->
+
+<!-- 代码2：用来读取评论框配置，此代码需放置在代码1之后。 -->
+<!-- 如果当前页面有评论框，代码2请勿放置在评论框代码之前。 -->
+<!-- 如果页面同时使用多个实验室项目，以下代码只需要引入一次，只配置上面的div标签即可 -->
+<!--<script type="text/javascript" charset="utf-8" src="https://changyan.sohu.com/js/changyan.labs.https.js?appid=cysUkgluO"></script>-->
+
+<div id="toc" class="toc-article">
+    <strong class="toc-title">文章目录</strong>
+    <ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#前言"><span class="toc-number">1.</span> <span class="toc-text">前言</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#双亲委托机制"><span class="toc-number">2.</span> <span class="toc-text">双亲委托机制</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#Java代码"><span class="toc-number">2.1.</span> <span class="toc-text">Java代码</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#jvm中添加"><span class="toc-number">2.2.</span> <span class="toc-text">jvm中添加</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#轨迹展示"><span class="toc-number">2.3.</span> <span class="toc-text">轨迹展示</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#分析"><span class="toc-number">2.4.</span> <span class="toc-text">分析</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#结论"><span class="toc-number">2.5.</span> <span class="toc-text">结论</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#破坏双亲委托机制"><span class="toc-number">3.</span> <span class="toc-text">破坏双亲委托机制</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#缘由"><span class="toc-number">3.1.</span> <span class="toc-text">缘由</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#案例"><span class="toc-number">3.2.</span> <span class="toc-text">案例</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#MySQL"><span class="toc-number">3.2.1.</span> <span class="toc-text">MySQL</span></a><ol class="toc-child"><li class="toc-item toc-level-6"><a class="toc-link" href="#Java代码-1"><span class="toc-number">3.2.1.1.</span> <span class="toc-text">Java代码</span></a></li><li class="toc-item toc-level-6"><a class="toc-link" href="#结果展示"><span class="toc-number">3.2.1.2.</span> <span class="toc-text">结果展示</span></a></li><li class="toc-item toc-level-6"><a class="toc-link" href="#分析-1"><span class="toc-number">3.2.1.3.</span> <span class="toc-text">分析</span></a></li><li class="toc-item toc-level-6"><a class="toc-link" href="#结论-1"><span class="toc-number">3.2.1.4.</span> <span class="toc-text">结论</span></a></li></ol></li><li class="toc-item toc-level-5"><a class="toc-link" href="#Tomcat"><span class="toc-number">3.2.2.</span> <span class="toc-text">Tomcat</span></a><ol class="toc-child"><li class="toc-item toc-level-6"><a class="toc-link" href="#说明"><span class="toc-number">3.2.2.1.</span> <span class="toc-text">说明</span></a></li></ol></li></ol></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#引用"><span class="toc-number">4.</span> <span class="toc-text">引用</span></a></li></ol>
+</div>
+<style>
+    .left-col .switch-btn,
+    .left-col .switch-area {
+        display: none;
+    }
+</style>
+
+<input type="button" id="tocButton" value="隐藏目录"  title="点击按钮隐藏或者显示文章目录">
+
+<script>
+    yiliaConfig.toc = ["隐藏目录", "显示目录", !!"false"];
+</script>
+
+
+
+
+<link rel="stylesheet" href="https://unpkg.com/gitalk/dist/gitalk.css">
+<script src="https://unpkg.com/gitalk/dist/gitalk.min.js"></script>
+<hr/>
+<br/>
+<br/>
+<br/>
+<div id="gitalk-container" style="margin: 1% 3%"></div>
+<h3 style="text-align: center">如果想及时收到回复,可在 <a href="https://github.com/settings/notifications" target="_blank">订阅中心</a>的 <code>Participating</code>中勾选Email</h3>
+<script type="text/javascript">
+    var gitalk = new Gitalk({
+        clientID: '1305dbf64dd1101187a6',
+        clientSecret: '67f4a6ebee76801d436ab55d771e105c37255690',
+        id: window.location.pathname,
+        repo: 'blog',
+        owner: 'smile-lxy',
+        admin: 'smile-lxy',
+        distractionFreeMode: false
+    })
+    gitalk.render('gitalk-container')
+</script>
+
+
+
+
+
+
+    <div class="scroll" id="post-nav-button">
+        
+            <a href="/2019/jvm-running-data-area/" title="上一篇: Jvm运行时数据区">
+                <i class="fa fa-angle-left"></i>
+            </a>
+        
+
+        <a title="文章列表"><i class="fa fa-bars"></i><i class="fa fa-times"></i></a>
+
+        
+            <a href="/2019/framework-distributed-transaction/" title="下一篇: 分布式事务总结">
+                <i class="fa fa-angle-right"></i>
+            </a>
+        
+    </div>
+
+    <ul class="post-list"><li class="post-list-item"><a class="post-list-link" href="/2021/fukushi-kannjyoukeiyoushi/">学习-日语-感情形容词</a></li><li class="post-list-item"><a class="post-list-link" href="/2021/fukushi-zokuseikeiyoushi/">学习-日语-属性形容词</a></li><li class="post-list-item"><a class="post-list-link" href="/2021/fukushi-wagoshi-meishi/">学习-日语-和语词和名词</a></li><li class="post-list-item"><a class="post-list-link" href="/2021/fukushi-katarikuchi-koou/">学习-日语-副词(语气和呼应)</a></li><li class="post-list-item"><a class="post-list-link" href="/2021/nihonngo-bunnpou-chigai/">学习-日语-语法的区别总结</a></li><li class="post-list-item"><a class="post-list-link" href="/2021/nihonngo-bunpou/">学习-日语-语法总结(N3-2)</a></li><li class="post-list-item"><a class="post-list-link" href="/2021/nihonngo-tanngo/">学习-日语-单词要点</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/nihonngo-%20poinnto/">学习-日语-要点</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/nihonngo-henkei/">学习-日语-日语动词变形总结</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/nihonngo-bunpou/">学习-日语-语法总结</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/framework-study-seata-top/">Seata总结</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/egg-toon/">生活-美食-鸡蛋爆香椿</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/jvm-tools-instruct/">Java性能调优-指令(Java8)</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/jvm-carbage-collect/">Jvm垃圾回收</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/jvm-running-data-area/">Jvm运行时数据区</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/jvm-class-loader-mechanism/">JVM类加载机制</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/framework-distributed-transaction/">分布式事务总结</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/exp-db-data-pagination/">分库分表后-数据分页</a></li></ul>
+
+<style>
+    #post-nav-button a{
+        background-color: skyblue;
+    }
+</style>
+
+
+
+<script>
+    
+</script>
+
+</div>
+      <footer id="footer">
+    <div class="outer">
+        <div id="footer-info">
+            <div class="footer-left">
+                <i class="fa fa-copyright"></i>
+                
+                    2020-
+                
+                2021 水云游
+                
+            </div>
+            <div class="footer-right">
+                <a href="https://blog.smilelxy.cn/" target="_blank" title="欢迎来到水云游的博客">Blog </a> Created by <a
+                        href="https://github.com/smile-lxy" target="_blank" rel="external nofollow"
+                        title="希望这里的文章对你有所帮助  v3.0">shuiyy</a>
+                <a href="/record.html"><i class="fa fa-heart animated infinite pulse"></i></a>
+            </div>
+        </div>
+        
+            <div class="visit">
+                
+                    <span id="busuanzi_container_site_pv" style='display:none'>
+                        <span id="site-visit">总访问数:
+                            <span id="busuanzi_value_site_pv"></span>
+                        </span>
+                    </span>
+                
+                <span style="color: grey;">(<a href="https://www.upyun.com/" rel="external nofollow" target="_blank">背景随机加载-资源存储于又拍云</a>) | 本站己运行<span
+                            id="day_count">222</span>天<span id="time_now">1</span></span>
+            </div>
+        
+    </div>
+    <script src="/js/activate-power-mode.js" ></script>
+</footer>
+<script>
+    // 添加输入效果
+    POWERMODE.colorful = true; // make power mode colorful
+    POWERMODE.shake = false; // turn off shake
+    document.body.addEventListener('input', POWERMODE);
+
+    (function () {
+        function current() {
+            var d = new Date(), str = '';
+            str += d.getHours() + '小时';
+            str += d.getMinutes() + '分';
+            str += d.getSeconds() + '秒';
+            return str;
+        }
+
+        setInterval(function () {
+            $("#time_now").html(current)
+        }, 1000);
+
+        var dateFrom = new Date(2020, 2, 1);
+        var dateTo = new Date();
+        var diff = dateTo.valueOf() - dateFrom.valueOf();
+        var diff_day = parseInt(diff / (1000 * 60 * 60 * 24));
+        $("#day_count").html(diff_day);
+    })();
+</script>
+<a href="https://github.com/smile-lxy/blog"><img style="position: fixed; top: 0;left: 0;" width="140" height="140" src="https://github.blog/wp-content/uploads/2008/12/forkme_left_gray_6d6d6d.png?resize=149%2C149" class="attachment-full size-full" alt="Fork me on GitHub" data-recalc-dims="1"></a>
+
+    </div>
+    
+    
+<script src="/js/GithubRepoWidget.js"></script>
+
+
+<script data-main="/js/main.js" src="//cdn.bootcss.com/require.js/2.2.0/require.min.js"></script>
+
+    <script>
+        $(document).ready(function() {
+            var iPad = window.navigator.userAgent.indexOf('iPad');
+            if (iPad > -1 || $(".left-col").css("display") === "none") {
+                var bgColorList = ["#9db3f4", "#414141", "#e5a859", "#f5dfc6", "#c084a0", "#847e72", "#cd8390", "#996731"];
+                var bgColor = Math.ceil(Math.random() * (bgColorList.length - 1));
+                $("body").css({"background-color": bgColorList[bgColor], "background-size": "cover"});
+            }
+            else {
+                var backgroundnum = 36;
+                // var randomIndex = Math.ceil(Math.random() * backgroundnum);
+                var randomIndex = 1;
+                var result = randomIndex+".jpg?version="+(new Date()/1000);
+                var backgroundimg = "url(http://image.smilelxy.cn/blog/background/bg-number)".replace(/number/gi,result);
+//                console.info("加载图片"+backgroundimg);
+                $("body").css({"background": backgroundimg, "background-attachment": "fixed", "background-size": "cover","background-color":"rgba(255,255,255,0.5)","background-blend-mode":"lighten"});
+            }
+        })
+    </script>
+
+
+    <script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+    tex2jax: {
+        inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+        processEscapes: true,
+        skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+    }
+});
+
+MathJax.Hub.Queue(function() {
+    var all = MathJax.Hub.getAllJax(), i;
+    for(i=0; i < all.length; i += 1) {
+        all[i].SourceElement().parentNode.className += ' has-jax';                 
+    }       
+});
+</script>
+
+<script src="//cdn.bootcss.com/mathjax/2.6.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script>
+
+
+<div class="scroll" id="scroll">
+    <a href="#" title="返回顶部"><i class="fa fa-arrow-up"></i></a>
+    <a href="#comments" onclick="load$hide();" title="查看评论"><i class="fa fa-comments-o"></i></a>
+    <a href="#footer" title="转到底部"><i class="fa fa-arrow-down"></i></a>
+</div>
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+  </div>
+</body>
+</html>

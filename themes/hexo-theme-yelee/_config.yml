@@ -7,7 +7,7 @@ Yelee: "3.0"
 ## About Page: `hexo new page about`
 ## Tags Cloud Page: `hexo new page tags`
 menu:
-  回到主站: //smilelxy.cn
+  回到主站: //blog.smilelxy.cn
   技术系列: /categories/技术/
 #  技术-经验系列: /categories/技术/经验/
 #  技术-Java系列: /categories/技术/Java
@@ -70,7 +70,7 @@ subnav:
 
 # 网易云音乐插件
 music:
-  enable: true
+  enable: false
   id: 2109140602  # 网易云分享的ID
 # >>> Conments 评论系统 <<<
 # Chose ONE as your comment system and keep others disable.

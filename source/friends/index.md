@@ -1,39 +1,31 @@
-<br><br><br><br><br><br><br><br><br>
+---
+title: 友情链接
+keywords: 友情链接
+description: 霜月琉璃的小伙伴们
+copyright: false
+---
 
+# 本站信息
+- 站名： 湖心小筑
+- 站长： 冴羽　逸秋
+- 地址： https://blog.smilelxy.ac.cn
+- 标志： ![冴羽　逸秋](https://cdn.jsdelivr.net/gh/smile-lxy/resources@latest/images/avatar.jpg){height="100" width="100"}
+- 简介： 欲を捨てて、今を生きる！
 
-需要互换友链的和我联系哦！
-- [小莫](https://blog.xiaomo.info/)
+# 申请方法
+- 添加本站后，在本页留言，格式如下
 
+~~~yml
+```yml
+- site: #网站的名字
+  owner: #您的名字
+  url: #您的网址
+  desc: #简短描述
+  image: #一张图片
+  color: #方块颜色
+```
+~~~
 
-<style>
-.article-entry ul{
-    padding: 0; 
-}
-.article-entry ul>li{
-    list-style: none;
-    display: inline-block;
-    margin: 0 3px;
-}
-.article-entry ul>li a{
-    color: #2E9FFF;
-    text-decoration: none;
-    
-}
+# 小伙伴们
+{% linksfile friends/_data.yml %}
 
-.article-entry ul>li a:hover{
-    text-decoration: underline; 
-}
-.article-entry ul>li:before{width:0;height:0;border:0 }
-li:before
-    {
-    content:"";
-    width: 0;
-    border:0;
-    height: 0;
-    background:rgba(0,0,0,0)
-    }
-
-li{
-    display: block;
-}
-</style>

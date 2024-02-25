@@ -29,13 +29,13 @@
 &lt;p&gt;&lt;span class=&#34;exturl&#34; data-url=&#34;aHR0cHM6Ly93d3cuYmUtZmFybWVyLmpwL3N1cHBvcnQv&#34;&gt;農業をはじめる&lt;/span&gt;&lt;/p&gt;
 &lt;/li&gt;
 &lt;li&gt;
-&lt;p&gt;&lt;span class=&#34;exturl&#34; data-url=&#34;aHR0cHM6Ly93d3cubWFmZi5nby5qcC9qL25ld19mYXJtZXIvbl9zeXVub3Uvcm91ZG91Lmh0bWwjI2ppc3Nla2k=&#34;&gt;就農準備資金・経営開始資金（農業次世代人材投資資金）&lt;/span&gt;&lt;/p&gt;
-&lt;/li&gt;
-&lt;li&gt;
 &lt;p&gt;&lt;span class=&#34;exturl&#34; data-url=&#34;aHR0cHM6Ly93d3cubmNhLm9yLmpwLw==&#34;&gt;全国農業会議所&lt;/span&gt;&lt;/p&gt;
 &lt;/li&gt;
 &lt;li&gt;
 &lt;p&gt;&lt;span class=&#34;exturl&#34; data-url=&#34;aHR0cHM6Ly93d3cubmFyby5nby5qcC9pbmRleC5odG1s&#34;&gt;農研機構&lt;/span&gt;&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;span class=&#34;exturl&#34; data-url=&#34;aHR0cHM6Ly93d3cuYWRob2trYWlkby5vci5qcC9uaW5haXRlLw==&#34;&gt;北海道農業担い手育成センター&lt;/span&gt;&lt;/p&gt;
 &lt;/li&gt;
 &lt;li&gt;
 &lt;p&gt;&lt;span class=&#34;exturl&#34; data-url=&#34;aHR0cHM6Ly93d3cuc2hpam91LmNpdHkub3Nha2EuanAvc2lreW8vbmlwcG91L3N5dXJ1aS5odG1s&#34;&gt;市況情報&lt;/span&gt;&lt;/p&gt;
@@ -99,12 +99,94 @@
 &lt;/ul&gt;
 &lt;/li&gt;
 &lt;/ul&gt;
+&lt;h4 id=&#34;支援金の種類&#34;&gt;&lt;a class=&#34;anchor&#34; href=&#34;#支援金の種類&#34;&gt;#&lt;/a&gt; 支援金の種類&lt;/h4&gt;
+&lt;blockquote&gt;
+&lt;p&gt;なお、実際に受給対象と認定されるには細かな条件があるため、まずは都道府県や市町村に問い合わせる形となる。&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h5 id=&#34;農業次世代人材投資資金旧青年就農給付金&#34;&gt;&lt;a class=&#34;anchor&#34; href=&#34;#農業次世代人材投資資金旧青年就農給付金&#34;&gt;#&lt;/a&gt; 農業次世代人材投資資金（旧青年就農給付金）&lt;sup class=&#34;footnote-ref&#34;&gt;&lt;a href=&#34;#fn1&#34; id=&#34;fnref1&#34;&gt;[1]&lt;/a&gt;&lt;/sup&gt;&lt;/h5&gt;
+&lt;pre&gt;&lt;code&gt;次世代を担う農業者となることを志向する者に対し、就農前の研修を後押しする資金（準備型）及び就農直後の経営確立を支援する資金（経営開始型）を交付する支援金のこと。
+
+年齢条件: 原則49歳以下
+
+&lt;/code&gt;&lt;/pre&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th style=&#34;text-align:left&#34;&gt;&lt;/th&gt;
+&lt;th style=&#34;text-align:left&#34;&gt;準備型&lt;/th&gt;
+&lt;th style=&#34;text-align:left&#34;&gt;経営開始型&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;支援金額&lt;/td&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;最大 150 万円 / 年&lt;/td&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;1～3 年目：最大 150 万円 / 年、4～5 年目：最大 120 万円 / 年&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;期間&lt;/td&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;最長 2 年間&lt;/td&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;最長 5 年間&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;想定対象&lt;/td&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;都道府県が認める農業大学校などの研修機関で研修を受ける就農希望者。&lt;/td&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;独立・自営した形で新規就農をする方。&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;h5 id=&#34;青年等就農資金&#34;&gt;&lt;a class=&#34;anchor&#34; href=&#34;#青年等就農資金&#34;&gt;#&lt;/a&gt; 青年等就農資金&lt;/h5&gt;
+&lt;pre&gt;&lt;code&gt;新たに農業経営を営もうとする青年等に対し、農業経営を開始するために必要な資金を長期、無利子で貸し付ける青年等就農資金のこと。
+
+農地の改良や農業機械の購入など認められる使途も幅広く、重宝するだろう。
+
+年齢条件: 18歳以上45歳未満の青年や、65歳未満のすでに知識や技能を有するものが対象となる。
+
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h5 id=&#34;農業近代化支援金&#34;&gt;&lt;a class=&#34;anchor&#34; href=&#34;#農業近代化支援金&#34;&gt;#&lt;/a&gt; 農業近代化支援金&lt;/h5&gt;
+&lt;pre&gt;&lt;code&gt;「意欲ある農業者等が経営改善を図るのに必要な長期かつ低利の資金」を借り入れられる制度のこと。
+
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h5 id=&#34;移住支援金&#34;&gt;&lt;a class=&#34;anchor&#34; href=&#34;#移住支援金&#34;&gt;#&lt;/a&gt; 移住支援金&lt;/h5&gt;
+&lt;pre&gt;&lt;code&gt;東京23区に在住または通勤する方が、東京圏外へ移住し、起業や就業等を行う方に、都道府県・市町村が共同で交付金を支給する事業のこと。
+
+&lt;/code&gt;&lt;/pre&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th style=&#34;text-align:left&#34;&gt;&lt;/th&gt;
+&lt;th style=&#34;text-align:left&#34;&gt;&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;対象&lt;/td&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;移住直前の 10 年間で、通算 5 年以上かつ直近 1 年以上、東京 23 区内に在住もしくは通勤していた方&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;金額&lt;/td&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;100 万円（単身は 60 万円）&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;認められる移住先&lt;/td&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;一部例外を除き東京圏外&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;条件&lt;/td&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;・移住先の中小企業への就職 ・テレワークによる移住前の業務の継続 ・移住先で社会的起業などを実施のいずれかを満たすこと。&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;h5 id=&#34;地域おこし協力隊&#34;&gt;&lt;a class=&#34;anchor&#34; href=&#34;#地域おこし協力隊&#34;&gt;#&lt;/a&gt; 地域おこし協力隊&lt;/h5&gt;
+&lt;pre&gt;&lt;code&gt;都市地域から過疎地域等の条件不利地域に住民票を異動し、地域ブランドや地場産品の開発・販売・PR等の地域おこし支援や、農林水産業への従事、住民支援などの“地域協力活動”を行いながら、その地域への定住・定着を図る取組みと定められている、総務省の施策のひとつ。
+
+&lt;/code&gt;&lt;/pre&gt;
 &lt;h3 id=&#34;面積&#34;&gt;&lt;a class=&#34;anchor&#34; href=&#34;#面積&#34;&gt;#&lt;/a&gt; 面積&lt;/h3&gt;
 &lt;h4 id=&#34;中国&#34;&gt;&lt;a class=&#34;anchor&#34; href=&#34;#中国&#34;&gt;#&lt;/a&gt; 中国&lt;/h4&gt;
 &lt;blockquote&gt;
 &lt;p&gt;一亩 = 666.6m2&lt;/p&gt;
 &lt;/blockquote&gt;
-&lt;h4 id=&#34;日本&#34;&gt;&lt;a class=&#34;anchor&#34; href=&#34;#日本&#34;&gt;#&lt;/a&gt; 日本&lt;sup class=&#34;footnote-ref&#34;&gt;&lt;a href=&#34;#fn1&#34; id=&#34;fnref1&#34;&gt;[1]&lt;/a&gt;&lt;/sup&gt;:&lt;/h4&gt;
+&lt;h4 id=&#34;日本&#34;&gt;&lt;a class=&#34;anchor&#34; href=&#34;#日本&#34;&gt;#&lt;/a&gt; 日本&lt;sup class=&#34;footnote-ref&#34;&gt;&lt;a href=&#34;#fn2&#34; id=&#34;fnref2&#34;&gt;[2]&lt;/a&gt;&lt;/sup&gt;:&lt;/h4&gt;
 &lt;pre&gt;&lt;code&gt;通常使われる単位→畳（じょう）・坪（つぼ）・平米（へいべい）
 農業で使われる単位→a（アール）・ha（ヘクタール）・歩（ぶ）・反（たん）・町（ちょう）
 
@@ -281,7 +363,9 @@
 &lt;hr class=&#34;footnotes-sep&#34; /&gt;
 &lt;section class=&#34;footnotes&#34;&gt;
 &lt;ol class=&#34;footnotes-list&#34;&gt;
-&lt;li id=&#34;fn1&#34; class=&#34;footnote-item&#34;&gt;&lt;p&gt;&lt;span class=&#34;exturl&#34; data-url=&#34;aHR0cHM6Ly93d3cuYWdyaWN1bHR1cmUtZ2lybC5jb20vYWdyaWN1bHR1cmFsLWluZm9ybWF0aW9uL3VuaXQtdXNlZC1mb3ItZmFybWxhbmQtYXJlYQ==&#34;&gt;農業で使われる面積の単位とは？&lt;/span&gt; &lt;a href=&#34;#fnref1&#34; class=&#34;footnote-backref&#34;&gt;↩︎&lt;/a&gt;&lt;/p&gt;
+&lt;li id=&#34;fn1&#34; class=&#34;footnote-item&#34;&gt;&lt;p&gt;&lt;span class=&#34;exturl&#34; data-url=&#34;aHR0cHM6Ly93d3cubWFmZi5nby5qcC9qL25ld19mYXJtZXIvbl9zeXVub3Uvcm91ZG91Lmh0bWw=&#34;&gt;就農準備資金・経営開始資金（農業次世代人材投資資金）&lt;/span&gt; &lt;a href=&#34;#fnref1&#34; class=&#34;footnote-backref&#34;&gt;↩︎&lt;/a&gt;&lt;/p&gt;
+&lt;/li&gt;
+&lt;li id=&#34;fn2&#34; class=&#34;footnote-item&#34;&gt;&lt;p&gt;&lt;span class=&#34;exturl&#34; data-url=&#34;aHR0cHM6Ly93d3cuYWdyaWN1bHR1cmUtZ2lybC5jb20vYWdyaWN1bHR1cmFsLWluZm9ybWF0aW9uL3VuaXQtdXNlZC1mb3ItZmFybWxhbmQtYXJlYQ==&#34;&gt;農業で使われる面積の単位とは？&lt;/span&gt; &lt;a href=&#34;#fnref2&#34; class=&#34;footnote-backref&#34;&gt;↩︎&lt;/a&gt;&lt;/p&gt;
 &lt;/li&gt;
 &lt;/ol&gt;
 &lt;/section&gt;

@@ -7,17 +7,6 @@
     "home_page_url": "https://blog.issyuu.com",
     "items": [
         {
-            "id": "https://blog.issyuu.com/nougyou-shienseisaku",
-            "url": "https://blog.issyuu.com/nougyou-shienseisaku",
-            "title": "農業-支援政策",
-            "date_published": "2024-09-08T15:00:00.000Z",
-            "content_html": "<ul>\n<li>恵まれた環境と恵まれた能力とを恵まれない人々を貶めるためにではなく、そういう人々を助けるために使ってください。<br />\n<span id=\"more\"></span></li>\n</ul>\n<h2 id=\"国\"><a class=\"anchor\" href=\"#国\">#</a> 国</h2>\n<h3 id=\"研修中\"><a class=\"anchor\" href=\"#研修中\">#</a> 研修中</h3>\n<ul>\n<li>新規就農者育成総合対策 (就農準備資金)\n<ul>\n<li>150 万円 / 年　(最長２年)</li>\n</ul>\n</li>\n</ul>\n<h3 id=\"開始\"><a class=\"anchor\" href=\"#開始\">#</a> 開始</h3>\n<ul>\n<li>新規就農者育成総合対策 (経営開始資金)\n<ul>\n<li>150 万円 / 年　(最長３・５年)</li>\n</ul>\n</li>\n<li>青年等就農資金\n<ul>\n<li>最大 3,700 万円 (無利子)</li>\n</ul>\n</li>\n<li>経営体育成強化資金\n<ul>\n<li>最大 500 万円融資 (農地購入費)</li>\n</ul>\n</li>\n<li>新規就農者育成総合対策 (経営発展支援事業)\n<ul>\n<li>3 の 4 支援 (機械・施設等 (上限あり))</li>\n</ul>\n</li>\n</ul>\n<h2 id=\"市\"><a class=\"anchor\" href=\"#市\">#</a> 市</h2>\n<h3 id=\"研修中-2\"><a class=\"anchor\" href=\"#研修中-2\">#</a> 研修中</h3>\n<ul>\n<li>住宅家賃助成\n<ul>\n<li>5,000・1 万円 / 月</li>\n</ul>\n</li>\n</ul>\n<h3 id=\"開始-2\"><a class=\"anchor\" href=\"#開始-2\">#</a> 開始</h3>\n<ul>\n<li>就農支援資金\n<ul>\n<li>200 万円 (農外者)</li>\n</ul>\n</li>\n</ul>\n",
-            "tags": [
-                "農業",
-                "支援政策"
-            ]
-        },
-        {
             "id": "https://blog.issyuu.com/nougyou-nouyaku",
             "url": "https://blog.issyuu.com/nougyou-nouyaku",
             "title": "農業-農薬",
@@ -26,6 +15,17 @@
             "tags": [
                 "農業",
                 "農薬"
+            ]
+        },
+        {
+            "id": "https://blog.issyuu.com/nougyou-shienseisaku",
+            "url": "https://blog.issyuu.com/nougyou-shienseisaku",
+            "title": "農業-支援政策",
+            "date_published": "2024-09-08T15:00:00.000Z",
+            "content_html": "<ul>\n<li>恵まれた環境と恵まれた能力とを恵まれない人々を貶めるためにではなく、そういう人々を助けるために使ってください。<br />\n<span id=\"more\"></span></li>\n</ul>\n<h2 id=\"国\"><a class=\"anchor\" href=\"#国\">#</a> 国</h2>\n<h3 id=\"研修中\"><a class=\"anchor\" href=\"#研修中\">#</a> 研修中</h3>\n<ul>\n<li>新規就農者育成総合対策 (就農準備資金)\n<ul>\n<li>150 万円 / 年　(最長２年)</li>\n</ul>\n</li>\n</ul>\n<h3 id=\"開始\"><a class=\"anchor\" href=\"#開始\">#</a> 開始</h3>\n<ul>\n<li>新規就農者育成総合対策 (経営開始資金)\n<ul>\n<li>150 万円 / 年　(最長３・５年)</li>\n</ul>\n</li>\n<li>青年等就農資金\n<ul>\n<li>最大 3,700 万円 (無利子)</li>\n</ul>\n</li>\n<li>経営体育成強化資金\n<ul>\n<li>最大 500 万円融資 (農地購入費)</li>\n</ul>\n</li>\n<li>新規就農者育成総合対策 (経営発展支援事業)\n<ul>\n<li>3 の 4 支援 (機械・施設等 (上限あり))</li>\n</ul>\n</li>\n</ul>\n<h2 id=\"市\"><a class=\"anchor\" href=\"#市\">#</a> 市</h2>\n<h3 id=\"研修中-2\"><a class=\"anchor\" href=\"#研修中-2\">#</a> 研修中</h3>\n<ul>\n<li>住宅家賃助成\n<ul>\n<li>5,000・1 万円 / 月</li>\n</ul>\n</li>\n</ul>\n<h3 id=\"開始-2\"><a class=\"anchor\" href=\"#開始-2\">#</a> 開始</h3>\n<ul>\n<li>就農支援資金\n<ul>\n<li>200 万円 (農外者)</li>\n</ul>\n</li>\n</ul>\n",
+            "tags": [
+                "農業",
+                "支援政策"
             ]
         },
         {

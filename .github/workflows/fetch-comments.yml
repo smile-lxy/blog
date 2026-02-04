@@ -1,0 +1,42 @@
+name: Fetch Recent Comments
+
+on:
+  push:
+    branches: [ main, master ]
+  schedule:
+    - cron: '0 3 * * *' # every day at 03:00 UTC
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_TOKEN: ${{ secrets.PERSO_GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Install dependencies
+        run: |
+          npm ci || true
+
+      - name: Fetch recent comments
+        run: |
+          node scripts/fetch_comments.js
+
+      - name: Commit generated data
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add source/_data/recent_comments.json || true
+          if ! git diff --staged --quiet; then
+            git commit -m "chore: update recent_comments.json [skip ci]" || true
+            git push
+          else
+            echo "No changes"
+          fi

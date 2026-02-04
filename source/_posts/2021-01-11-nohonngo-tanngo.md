@@ -8,7 +8,7 @@ category:
 - 日本
 - 学习
 - 日语
-permalink: nihonngo-tanngo
+permalink: nihonngo-tanngo/
 ---
 - 水滴石穿, 非一日之功.
 <!-- more -->

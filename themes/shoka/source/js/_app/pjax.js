@@ -55,21 +55,6 @@ const siteRefresh = function (reload) {
   vendorJs('copy_tex');
   vendorCss('mermaid');
   vendorJs('chart');
-  vendorJs('valine', function() {
-    var options = Object.assign({}, CONFIG.valine);
-    options = Object.assign(options, LOCAL.valine||{});
-    options.el = '#comments';
-    options.pathname = LOCAL.path;
-    options.pjax = pjax;
-    options.lazyload = lazyload;
-
-    new MiniValine(options);
-
-    setTimeout(function(){
-      positionInit(1);
-      postFancybox('.v');
-    }, 1000);
-  }, window.MiniValine);
 
   if(!reload) {
     $.each('script[data-pjax]', pjaxScript);
@@ -99,6 +84,35 @@ const siteRefresh = function (reload) {
   cardActive()
 
   lazyload.observe()
+
+  // Reinitialize giscus after PJAX navigation
+  var giscusContainer = document.getElementById('giscus_container');
+  if (giscusContainer) {
+    // Find the original giscus script to get config
+    var originalScript = document.querySelector('script[src="https://giscus.app/client.js"]');
+    if (originalScript) {
+      // Clear the container but preserve the config
+      giscusContainer.innerHTML = '';
+      
+      // Create new script with same attributes
+      var script = document.createElement('script');
+      script.src = 'https://giscus.app/client.js';
+      script.dataset.repo = originalScript.dataset.repo;
+      script.dataset.repoId = originalScript.dataset.repoId;
+      script.dataset.categoryId = originalScript.dataset.categoryId;
+      script.dataset.mapping = originalScript.dataset.mapping;
+      script.dataset.strict = originalScript.dataset.strict;
+      script.dataset.reactionsEnabled = originalScript.dataset.reactionsEnabled;
+      script.dataset.emitMetadata = originalScript.dataset.emitMetadata;
+      script.dataset.inputPosition = originalScript.dataset.inputPosition;
+      script.dataset.theme = originalScript.dataset.theme;
+      script.dataset.lang = originalScript.dataset.lang;
+      script.dataset.loading = 'lazy';
+      script.crossOrigin = 'anonymous';
+      script.async = true;
+      giscusContainer.appendChild(script);
+    }
+  }
 }
 
 const siteInit = function () {
@@ -141,4 +155,4 @@ const siteInit = function () {
 
 window.addEventListener('DOMContentLoaded', siteInit);
 
-console.log('%c Theme.Shoka v' + CONFIG.version + ' %c https://shoka.lostyu.me/ ', 'color: white; background: #e9546b; padding:5px 0;', 'padding:4px;border:1px solid #e9546b;')
+

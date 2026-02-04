@@ -8,7 +8,7 @@ copyright: false
 # 本站信息
 - 站名： 湖心小筑
 - 站长： 冴羽　逸秋
-- 地址： https://blog.smilelxy.ac.cn
+- 地址： https://blog.issyuu.com
 - 标志： ![冴羽　逸秋](https://cdn.jsdelivr.net/gh/smile-lxy/resources@latest/images/avatar.jpg){height="100" width="100"}
 - 简介： 欲を捨てて、今を生きる！
 

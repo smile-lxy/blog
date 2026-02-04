@@ -1,0 +1,118 @@
+{# 最新评论模块：优先使用构建时生成的静态数据 source/_data/recent_comments.json，如果不存在则显示占位并可回退到客户端请求 #}
+{% set recent = site.data.recent_comments or [] %}
+<div class="recent-comments-widget pjax">
+  <h2>{{ __('index.recent-comments') or 'Recent Comments' }}</h2>
+  <div class="recent-comments" id="recent-comments">
+    <ul>
+      {%- if recent.length > 0 %}
+        {%- for c in recent[:5] %}
+          <li class="item">
+            {%- set articlePath = '/' + c.title | lower | replace('[^a-z0-9-]', '-') | replace('--', '-') | replace('^-|-$', '') + '/' %}
+            <a href="{{ articlePath }}" title="{{ c.title }}">
+              <strong>{{ c.title }}</strong>
+            </a>
+            <div class="comment-meta">
+              <small class="author">by {{ c.commentAuthor or 'Anonymous' }} · {{ c.commentCreatedAt or c.updatedAt }}</small>
+            </div>
+          </li>
+        {%- endfor %}
+      {%- else %}
+        <li class="loading">Loading comments...</li>
+      {%- endif %}
+    </ul>
+  </div>
+</div>
+
+{# 如果需要客户端回退（例如本地预览没有构建数据），保留一个轻量的 JS 回退逻辑仅在未生成数据时启用 #}
+{% if not site.data.recent_comments %}
+<script>
+(async function(){
+  try {
+    const resp = await fetch('/api/_recent_comments_fallback.json');
+    if (!resp.ok) return;
+    const data = await resp.json();
+    const container = document.getElementById('recent-comments');
+    if (!container) return;
+    let html = '<ul>';
+    data.slice(0,5).forEach(c => {
+      const path = '/' + (c.title || '').toLowerCase().replace(/[^a-z0-9-]/g, '-').replace(/-+/g, '-') + '/';
+      html += `<li class="item"><a href="${path}" title="${c.title}"><strong>${c.title}</strong></a><div class="comment-meta"><small>${c.commentAuthor||'Anonymous'} · ${c.commentCreatedAt||c.updatedAt}</small></div></li>`;
+    });
+    html += '</ul>';
+    container.innerHTML = html;
+  } catch(e) {
+    // ignore fallback errors
+  }
+})();
+</script>
+{% endif %}
+
+<style>
+.recent-comments-widget { margin-bottom: 2rem; }
+.recent-comments-widget h2 { font-size: 1.2rem; margin-bottom: 1rem; font-weight: 600; }
+.recent-comments ul{ list-style:none; padding:0; margin:0 }
+.recent-comments .item{ padding:0.75rem 0; border-bottom:1px solid #eee }
+.recent-comments .item:last-child{ border-bottom:none }
+.recent-comments .item a{ color:#333; text-decoration:none; display:block }
+.recent-comments .item a:hover{ color:#4a90e2 }
+.recent-comments .item strong{ display:block; margin-bottom:.25rem; font-weight:500 }
+.recent-comments .comment-meta{ font-size:.85rem; color:#999 }
+.recent-comments .no-comments, .recent-comments .loading{ text-align:center; color:#999; padding:1rem 0 }
+</style>
+}
+
+.recent-comments-widget h2 {
+  font-size: 1.2rem;
+  margin-bottom: 1rem;
+  font-weight: 600;
+}
+
+.recent-comments ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.recent-comments .item {
+  padding: 0.75rem 0;
+  border-bottom: 1px solid #eee;
+}
+
+.recent-comments .item:last-child {
+  border-bottom: none;
+}
+
+.recent-comments .item a {
+  color: #333;
+  text-decoration: none;
+  display: block;
+  transition: color 0.3s ease;
+}
+
+.recent-comments .item a:hover {
+  color: #4a90e2;
+}
+
+.recent-comments .item strong {
+  display: block;
+  margin-bottom: 0.25rem;
+  font-weight: 500;
+}
+
+.recent-comments .comment-meta {
+  font-size: 0.85rem;
+  color: #999;
+}
+
+.recent-comments .no-comments {
+  text-align: center;
+  color: #999;
+  padding: 1rem 0;
+}
+
+.recent-comments .loading {
+  text-align: center;
+  color: #999;
+  padding: 1rem 0;
+}
+</style>

@@ -413,21 +413,6 @@ const loadComments = function () {
   } else {
     goToComment.display("")
   }
-
-  if (!window.IntersectionObserver) {
-    vendorCss('valine');
-  } else {
-    var io = new IntersectionObserver(function(entries, observer) {
-      var entry = entries[0];
-      vendorCss('valine');
-      if (entry.isIntersecting || entry.intersectionRatio > 0) {
-        transition($('#comments'), 'bounceUpIn');
-        observer.disconnect();
-      }
-    });
-
-    io.observe(element);
-  }
 }
 
 const algoliaSearch = function(pjax) {

@@ -9,14 +9,24 @@
   </span>
   {%- endif %}
 
-  {%- if theme.valine.appId and theme.valine.appKey and theme.valine.visitor %}
-  <span id="{{ page.path | replace('index.html', '') }}" class="item leancloud_visitors" data-flag-title="{{ post.title }}" title="{{ __('post.views') }}">
-      <span class="icon">
-        <i class="ic i-eye"></i>
-      </span>
-      <span class="text">{{ __('post.views') }}</span>
-      <span class="leancloud-visitors-count"></span>
-      <span class="text">{{ __('symbols_count_time.view') }}</span>
-  </span>
+  {# Giscus 评论嵌入 #}
+  {%- if theme.giscus.enable and theme.giscus.repo and theme.giscus.repoId and theme.giscus.categoryId %}
+  <div id="giscus_container" class="post-comments">
+    <script src="https://giscus.app/client.js"
+      data-repo="{{ theme.giscus.repo }}"
+      data-repo-id="{{ theme.giscus.repoId }}"
+      data-category-id="{{ theme.giscus.categoryId }}"
+      data-mapping="{{ theme.giscus.mapping or 'pathname' }}"
+      data-strict="{{ theme.giscus.strict or '0' }}"
+      data-reactions-enabled="{{ theme.giscus.reactionsEnabled or '1' }}"
+      data-emit-metadata="{{ theme.giscus.emitMetadata or '0' }}"
+      data-input-position="{{ theme.giscus.inputPosition or 'bottom' }}"
+      data-theme="{{ theme.giscus.theme or 'light' }}"
+      data-lang="{{ theme.giscus.lang or 'zh-CN' }}"
+      data-loading="lazy"
+      crossorigin="anonymous"
+      async>
+    </script>
+  </div>
   {%- endif %}
 </div>

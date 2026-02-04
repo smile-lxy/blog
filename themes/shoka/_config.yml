@@ -130,9 +130,7 @@ sidebar:
 widgets:
   # if true, will show random posts
   random_posts: true
-  # if true, will show recent comments
-  recent_comments: true
-
+  
 footer:
   # Specify the date when the site was setup. If not defined, current year will be used.
   since: 2020
@@ -181,37 +179,21 @@ creative_commons:
   language: deed.zh
 
 # Comments
-# Valine
-# For more information: https://github.com/amehime/MiniValine
-valine:
-  appId: mrHQhsKEK7RoLxmsKQwD4Wbe-gzGzoHsz
-  appKey: 04p9fAThgVtHqkCvXI2VwtZa
-  placeholder: ヽ(○´∀`)ﾉ♪ # Comment box placeholder
-  avatar: mp # Gravatar style : mp, identicon, monsterid, wavatar, robohash, retro
-  pageSize: 10 # Pagination size
-  lang: en
-  visitor: true # Article reading statistic
-  NoRecordIP: false # Whether to record the commenter IP
-  serverURLs: # When the custom domain name is enabled, fill it in here (it will be detected automatically by default, no need to fill in)
-  powerMode: true
-  tagMeta:
-    visitor: 新朋友
-    master: 主人
-    friend: 小伙伴
-    investor: 金主粑粑
-  tagColor:
-    master: "var(--color-orange)"
-    friend: "var(--color-aqua)"
-    investor: "var(--color-pink)"
-  tagMember:
-    master:
-      # - hash of master@email.com
-      # - hash of master2@email.com
-    friend:
-      # - hash of friend@email.com
-      # - hash of friend2@email.com
-    investor:
-      # - hash of investor1@email.com
+# Giscus 评论系统配置 (https://giscus.app)
+giscus:
+  enable: true
+  repo: smile-lxy/blog-talk
+  repoId: MDEwOlJlcG9zaXRvcnkyNDI3MzY5MzE=
+  categoryId: DIC_kwDODnffI84C128e
+  mapping: pathname
+  strict: 0
+  reactionsEnabled: 1
+  emitMetadata: 0
+  inputPosition: bottom
+  theme: preferred_color_scheme
+  lang: zh-CN
+
+
 
 # bgm
 audio:
@@ -298,6 +280,5 @@ vendors:
     lazyload: npm/lozad@1/dist/lozad.min.js
     quicklink: npm/quicklink@2/dist/quicklink.umd.js
     fancybox: combine/npm/jquery@3.5.1/dist/jquery.min.js,npm/@fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.js,npm/justifiedGallery@3.8.1/dist/js/jquery.justifiedGallery.min.js
-    valine: gh/amehime/MiniValine@4.2.2-beta10/dist/MiniValine.min.js
     copy_tex: npm/katex@0.12.0/dist/contrib/copy-tex.min.js
     chart: npm/frappe-charts@1.5.0/dist/frappe-charts.min.iife.min.js

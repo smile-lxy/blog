@@ -13,9 +13,9 @@ timezone: 'Asia/Tokyo'
 
 # URL
 ## If your site is put in a subdirectory, set url as 'http://yoursite.com/child' and root as '/child/'
-url: https://blog.smilelxy.ac.cn
+url: https://blog.issyuu.com
 root: /
-permalink: :title/ # edit for Theme.shoka
+permalink: :title/
 permalink_defaults:
 
 # Directory
@@ -103,7 +103,7 @@ markdown:
     xhtmlOut: true # 使用 '/' 来闭合单标签 （比如 <br />）。
     breaks: true # 转换段落里的 '\n' 到 <br>。
     linkify: true # 将类似 URL 的文本自动转换为链接。
-    typographer:
+    typographer: true
     quotes: '“”‘’'
   plugins: # markdown-it插件设置
     - hexo-algoliasearch
@@ -155,22 +155,22 @@ minify:
       - '**/*.min.js'
 
 algolia:
-  appId: "PLT8NJAYWJ"
-  apiKey: "f68c877af6452729a2c788633d47c2d9"
-  adminApiKey: "ff8409b00a80cc085f02bff5642a635c"
+  appId: "YTJ6RP2VUK"
+  apiKey: "80d2001c9d8ccdf03f37b087d34af11c"
+  adminApiKey: "36003cc6737263c27564ad3065ad21cb"
   chunkSize: 5000
   indexName: "smile-lxy-blog"
   fields:
-    - content:strip:truncate,0,4000
+    - title
+    - path
+    - categories
+    - content:strip:truncate,0,300
     - excerpt:strip
     - gallery
     - permalink
-    - categories 
     - photos
     - slug
     - tags
-    - title
-    - path
 
 feed:
     limit: 20
